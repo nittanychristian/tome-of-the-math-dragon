@@ -307,7 +307,18 @@ actionButtons state =
                         ]
                         [ text "ASK THE TOME" ]
                     ]
-                , exitBtn
+                , button
+                    [ onClick BackToMap
+                    , style "background" T.bgBlack
+                    , style "color" T.cream
+                    , style "font-family" T.fontFamily
+                    , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")
+                    , style "border" ("1px solid " ++ T.cream)
+                    , style "padding" "8px 14px"
+                    , style "cursor" "pointer"
+                    , style "letter-spacing" "1px"
+                    ]
+                    [ text "← MAP" ]
                 ]
 
         ShowResult _ ->

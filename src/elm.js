@@ -23246,7 +23246,27 @@ var $author$project$View$Battle$actionButtons = function (state) {
 										$elm$html$Html$text('ASK THE TOME')
 									]))
 							])),
-						$author$project$View$Battle$exitBtn
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Types$BackToMap),
+								A2($elm$html$Html$Attributes$style, 'background', $author$project$View$Theme$bgBlack),
+								A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream),
+								A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
+								A2(
+								$elm$html$Html$Attributes$style,
+								'font-size',
+								$elm$core$String$fromInt($author$project$View$Theme$fontSizeSmall) + 'px'),
+								A2($elm$html$Html$Attributes$style, 'border', '1px solid ' + $author$project$View$Theme$cream),
+								A2($elm$html$Html$Attributes$style, 'padding', '8px 14px'),
+								A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+								A2($elm$html$Html$Attributes$style, 'letter-spacing', '1px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('← MAP')
+							]))
 					]));
 		case 'ShowResult':
 			return $elm$html$Html$text('');
