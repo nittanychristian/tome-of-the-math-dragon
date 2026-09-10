@@ -23565,6 +23565,14 @@ var $author$project$View$Input$viewChoiceInput = F2(
 				choices));
 	});
 var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $author$project$View$Input$inputAttrs = function (width) {
 	return _List_fromArray(
 		[
@@ -23578,7 +23586,8 @@ var $author$project$View$Input$inputAttrs = function (width) {
 			A2($elm$html$Html$Attributes$style, 'border', '2px solid ' + $author$project$View$Theme$cream),
 			A2($elm$html$Html$Attributes$style, 'padding', '6px'),
 			A2($elm$html$Html$Attributes$style, 'width', width),
-			A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box')
+			A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box'),
+			A2($elm$html$Html$Attributes$attribute, 'inputmode', 'decimal')
 		]);
 };
 var $author$project$View$Input$onEnter = function (msg) {
@@ -27589,6 +27598,9 @@ var $author$project$View$Title$viewPasscode = F2(
 											$elm$html$Html$Events$onInput($author$project$Types$SetPasscodeDraft),
 											$author$project$View$Input$onEnter($author$project$Types$SubmitPasscode),
 											$elm$html$Html$Attributes$placeholder('word word word word'),
+											A2($elm$html$Html$Attributes$attribute, 'autocapitalize', 'none'),
+											A2($elm$html$Html$Attributes$attribute, 'autocorrect', 'off'),
+											A2($elm$html$Html$Attributes$attribute, 'spellcheck', 'false'),
 											A2($elm$html$Html$Attributes$style, 'background', $author$project$View$Theme$bgBlack),
 											A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream),
 											A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),

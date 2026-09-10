@@ -1,7 +1,7 @@
 module View.Title exposing (viewTitle, viewNameEntry, viewPasscode)
 
 import Html exposing (Html, br, button, div, input, p, span, text)
-import Html.Attributes exposing (placeholder, style, type_, value)
+import Html.Attributes exposing (attribute, placeholder, style, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Types exposing (Msg(..))
 import View.Input exposing (onEnter)
@@ -121,6 +121,9 @@ viewPasscode draft hasError =
                     , onInput SetPasscodeDraft
                     , onEnter SubmitPasscode
                     , placeholder "word word word word"
+                    , attribute "autocapitalize" "none"
+                    , attribute "autocorrect" "off"
+                    , attribute "spellcheck" "false"
                     , style "background" T.bgBlack
                     , style "color" T.cream
                     , style "font-family" T.fontFamily

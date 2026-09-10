@@ -1,7 +1,7 @@
 module View.Input exposing (onEnter, viewChoiceInput, viewInput)
 
 import Html exposing (Html, button, div, input, span, text)
-import Html.Attributes exposing (style, type_, value)
+import Html.Attributes exposing (attribute, style, type_, value)
 import Html.Events exposing (on, onClick, onInput)
 import Json.Decode as Decode
 import Types exposing (AnswerInput(..), InequalityDir(..), Msg(..))
@@ -286,4 +286,5 @@ inputAttrs width =
     , style "padding" "6px"
     , style "width" width
     , style "box-sizing" "border-box"
+    , attribute "inputmode" "decimal"
     ]
