@@ -1,9 +1,10 @@
-module Sprite.Lookup exposing (spriteFor)
+module Sprite.Lookup exposing (spriteFor, questSpriteFor)
 
 import Sprite.Act1 as Act1
 import Sprite.Act2 as Act2
 import Sprite.Act3 as Act3
 import Sprite.Act4 as Act4
+import Sprite.Quest as Quest
 import Types exposing (BossSprite, Course(..), UnitId)
 
 
@@ -21,3 +22,8 @@ spriteFor uid =
 
         Algebra1 ->
             Act4.spriteFor uid
+
+
+questSpriteFor : UnitId -> BossSprite
+questSpriteFor _ =
+    Quest.questSprite

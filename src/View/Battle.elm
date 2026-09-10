@@ -42,7 +42,13 @@ viewBattle playerName state =
 viewFightScreen : String -> BattleState -> Html Msg
 viewFightScreen playerName state =
     let
-        sprite = Sprite.spriteFor state.unit
+        sprite =
+            case state.mode of
+                BossMode ->
+                    Sprite.spriteFor state.unit
+
+                QuestMode _ ->
+                    Sprite.questSpriteFor state.unit
         spriteW = sprite.pixelSize * 20
         spriteH = sprite.pixelSize * 24
 
@@ -175,6 +181,9 @@ enemyArea sprite spriteW spriteH state =
 
 playerStatusBar : String -> BattleState -> Html Msg
 playerStatusBar playerName state =
+    let
+        isBoss = state.mode == BossMode
+    in
     div
         [ style "padding" "6px 12px"
         , style "display" "flex"
@@ -190,7 +199,10 @@ playerStatusBar playerName state =
                 , style "margin-bottom" "2px"
                 ]
                 [ text playerName ]
-            , hpBar "HP" state.playerHp Config.playerMaxHp
+            , if isBoss then
+                hpBar "HP" state.playerHp Config.playerMaxHp
+              else
+                text ""
             ]
         , div [ style "text-align" "right" ]
             [ div
@@ -199,12 +211,15 @@ playerStatusBar playerName state =
                 , style "color" T.streakGem
                 ]
                 [ text ("STREAK " ++ String.fromInt state.streak) ]
-            , div
-                [ style "font-family" T.fontFamily
-                , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")
-                , style "color" T.gold
-                ]
-                [ text ("ATK " ++ Config.multiplierLabel state.streak) ]
+            , if isBoss then
+                div
+                    [ style "font-family" T.fontFamily
+                    , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")
+                    , style "color" T.gold
+                    ]
+                    [ text ("ATK " ++ Config.multiplierLabel state.streak) ]
+              else
+                text ""
             ]
         ]
 

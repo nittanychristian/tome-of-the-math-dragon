@@ -98,166 +98,167 @@ numberGolem =
     }
 
 
--- Generic helper for color-swapped boss variants
-genericBoss : String -> List ( Char, String ) -> BossSprite
-genericBoss name palette =
+-- Course 1 Unit Boss shape: a hunched stone beast — broad head, stumpy legs, rocky texture
+-- Used as the base shape for units 2-8, with palette swaps
+stoneCreature : String -> List ( Char, String ) -> BossSprite
+stoneCreature name palette =
     { name = name
     , palette = palette
     , pixelSize = 8
     , frameA =
-        [ "........BBBBBBBB......"
-        , ".......BBBBBBBBBBB...."
-        , "......BBBSSBBBSSBBB..."
-        , "......BBBSSBBBSSBBB..."
-        , ".....BBBBBBBBBBBBBBBB."
-        , ".....BBEWWBBBBBWWEBBB."
-        , ".....BBWRRWBBBWRRWBBB."
-        , ".....BBWRRWBBBWRRWBBB."
-        , ".....BBEWWBBBBBWWEBB.."
-        , ".....BBBBBBBBBBBBBBBB."
-        , ".....BBBSSSSSSSSBBBB.."
-        , "......BBBBBBBBBBBBB..."
-        , ".......SSSBBBBSSS....."
-        , "......BBBBBBBBBBBBB..."
-        , ".....BBBBBBBBBBBBBBB.."
-        , "....SSBBBBBBBBBBBBBSS."
-        , "....BBBBBSSSSSSSBBBB.."
-        , "....BBBSSSSSSSSSSSBB.."
-        , "....TTTBBBBBBBBBBTTT.."
-        , "....TTTSSSSSSSSSSTTT.."
-        , ".....TTTTTTTTTTTTTTT.."
-        , "......TTTTTTTTTTTTT..."
-        , ".......SSSSSSSSSSS...."
-        , "...................... "
+        [ "......BBBBBBBBBBBB...."
+        , ".....BBBBBBBBBBBBBB..."
+        , "....BBBBSSBBBSSBBBBB.."
+        , "....BBBSSSBBBBSSSBBB.."
+        , "....BBBBBBBBBBBBBBBB.."
+        , "....BBEWWBBBBBWWEBBB.."
+        , "....BBWRRWBBBWRRWBBB.."
+        , "....BBWRRWBBBWRRWBBB.."
+        , "....BBEWWBBBBBWWEBB..."
+        , "....BBBBBBBBBBBBBBBB.."
+        , "...SBBBBBBBBBBBBBBBS.."
+        , "...SBBBBBBBBBBBBBBBS.."
+        , "....BBSSBBBBBBSSBB...."
+        , "....BBBBBBBBBBBBBBB..."
+        , "...BBBBBBBBBBBBBBBBB.."
+        , "...BBBBSSSSSSSSBBBBB.."
+        , "....BBBSSSSSSSSBBB...."
+        , ".....BBBBBBBBBBBBB...."
+        , "....TTBBBBBBBBBBBTT..."
+        , "....TTTSSSSSSSSTTTT..."
+        , "....TTTTTTTTTTTTTT...."
+        , ".....TTTTTTTTTTTTT...."
+        , "......SSSSSSSSSSSS...."
+        , "......................  "
         ]
     , frameB =
-        [ "........BBBBBBBB......"
-        , ".......BBBBBBBBBBB...."
-        , "......BBBSSBBBSSBBB..."
-        , "......BBBSSBBBSSBBB..."
-        , ".....BBBBBBBBBBBBBBBB."
-        , ".....BBEWWBBBBBWWEBBB."
-        , ".....BBWSSWBBBWSSWBBB."
-        , ".....BBWSSWBBBWSSWBBB."
-        , ".....BBEWWBBBBBWWEBB.."
-        , ".....BBBBBBBBBBBBBBBB."
-        , ".....BBBSSSSSSSSBBBB.."
-        , "......BBBBBBBBBBBBB..."
-        , ".......SSSBBBBSSS....."
-        , "......BBBBBBBBBBBBB..."
-        , ".....BBBBBBBBBBBBBBB.."
-        , "....SSBBBBBBBBBBBBBSS."
-        , "....BBBBBSSSSSSSBBBB.."
-        , "....BBBSSSSSSSSSSSBB.."
-        , "....TTTBBBBBBBBBBTTT.."
-        , "....TTTSSSSSSSSSSTTT.."
-        , ".....TTTTTTTTTTTTTTT.."
-        , "......TTTTTTTTTTTTT..."
-        , ".......SSSSSSSSSSS...."
-        , "...................... "
+        [ "......BBBBBBBBBBBB...."
+        , ".....BBBBBBBBBBBBBB..."
+        , "....BBBBSSBBBSSBBBBB.."
+        , "....BBBSSSBBBBSSSBBB.."
+        , "....BBBBBBBBBBBBBBBB.."
+        , "....BBEWWBBBBBWWEBBB.."
+        , "....BBWSSWBBBWSSWBBB.."
+        , "....BBWSSWBBBWSSWBBB.."
+        , "....BBEWWBBBBBWWEBB..."
+        , "....BBBBBBBBBBBBBBBB.."
+        , "...SBBBBBBBBBBBBBBBS.."
+        , "...SBBBBBBBBBBBBBBBS.."
+        , "....BBSSBBBBBBSSBB...."
+        , "....BBBBBBBBBBBBBBB..."
+        , "...BBBBBBBBBBBBBBBBB.."
+        , "...BBBBSSSSSSSSBBBBB.."
+        , "....BBBSSSSSSSSBBB...."
+        , ".....BBBBBBBBBBBBB...."
+        , "....TTBBBBBBBBBBBTT..."
+        , "....TTTSSSSSSSSTTTT..."
+        , "....TTTTTTTTTTTTTT...."
+        , ".....TTTTTTTTTTTTT...."
+        , "......SSSSSSSSSSSS...."
+        , "......................  "
         ]
     }
 
 
--- Fraction Phantom — Unit 2 boss (purple ghost)
+-- Fraction Phantom — Unit 2 boss (split-color purple/gold stone creature)
 fractionPhantom : BossSprite
 fractionPhantom =
-    genericBoss "Fraction Phantom"
-        [ ( 'B', "#8844cc" )
-        , ( 'S', "#553388" )
-        , ( 'E', "#ddbbff" )
+    stoneCreature "Fraction Phantom"
+        [ ( 'B', "#7744bb" )
+        , ( 'S', "#441177" )
+        , ( 'E', "#eeccff" )
         , ( 'W', "#ffffff" )
         , ( 'R', "#ff44ff" )
-        , ( 'T', "#553388" )
+        , ( 'T', "#332266" )
         ]
 
 
--- Decimal Drake — Unit 3 boss (teal dragon)
+-- Decimal Drake — Unit 3 boss (teal stone creature with cyan accents)
 decimalDrake : BossSprite
 decimalDrake =
-    genericBoss "Decimal Drake"
-        [ ( 'B', "#228877" )
-        , ( 'S', "#115544" )
-        , ( 'E', "#aaffee" )
+    stoneCreature "Decimal Drake"
+        [ ( 'B', "#117766" )
+        , ( 'S', "#005544" )
+        , ( 'E', "#aaffdd" )
         , ( 'W', "#ffffff" )
-        , ( 'R', "#00ffcc" )
-        , ( 'T', "#664400" )
+        , ( 'R', "#00ffaa" )
+        , ( 'T', "#003322" )
         ]
 
 
--- Expression Eel — Unit 4 boss (blue serpent)
+-- Expression Eel — Unit 4 boss (deep blue stone creature)
 expressionEel : BossSprite
 expressionEel =
-    genericBoss "Expression Eel"
-        [ ( 'B', "#2244aa" )
-        , ( 'S', "#112266" )
+    stoneCreature "Expression Eel"
+        [ ( 'B', "#223399" )
+        , ( 'S', "#111155" )
         , ( 'E', "#aabbff" )
         , ( 'W', "#ffffff" )
-        , ( 'R', "#4488ff" )
-        , ( 'T', "#334488" )
+        , ( 'R', "#5599ff" )
+        , ( 'T', "#112277" )
         ]
 
 
--- Equation Ettin — Unit 5 boss (two-headed red ogre)
+-- Equation Ettin — Unit 5 boss (two-headed crimson stone creature)
 equationEttin : BossSprite
 equationEttin =
-    genericBoss "Equation Ettin"
+    stoneCreature "Equation Ettin"
         [ ( 'B', "#aa2222" )
         , ( 'S', "#661111" )
-        , ( 'E', "#ffbbbb" )
+        , ( 'E', "#ffcccc" )
         , ( 'W', "#ffffff" )
-        , ( 'R', "#ff4444" )
-        , ( 'T', "#883311" )
+        , ( 'R', "#ff5555" )
+        , ( 'T', "#440000" )
         ]
 
 
--- Ratio Raven — Unit 6 boss (black bird)
+-- Ratio Raven — Unit 6 boss (obsidian black stone creature)
 ratioRaven : BossSprite
 ratioRaven =
-    genericBoss "Ratio Raven"
+    stoneCreature "Ratio Raven"
         [ ( 'B', "#222233" )
         , ( 'S', "#111122" )
-        , ( 'E', "#aaaacc" )
+        , ( 'E', "#aaaadd" )
         , ( 'W', "#ffffff" )
-        , ( 'R', "#8844ff" )
-        , ( 'T', "#444455" )
+        , ( 'R', "#aa88ff" )
+        , ( 'T', "#000011" )
         ]
 
 
--- Geometry Gargoyle — Unit 7 boss (stone grey with wing hints)
+-- Geometry Gargoyle — Unit 7 boss (slate grey stone creature)
 geometryGargoyle : BossSprite
 geometryGargoyle =
-    genericBoss "Geometry Gargoyle"
-        [ ( 'B', "#778899" )
-        , ( 'S', "#445566" )
-        , ( 'E', "#ddeeff" )
+    stoneCreature "Geometry Gargoyle"
+        [ ( 'B', "#667788" )
+        , ( 'S', "#334455" )
+        , ( 'E', "#cceeff" )
         , ( 'W', "#ffffff" )
-        , ( 'R', "#44aaff" )
-        , ( 'T', "#556677" )
+        , ( 'R', "#55ccff" )
+        , ( 'T', "#223344" )
         ]
 
 
--- Data Digger — Unit 8 boss (brown mole)
+-- Data Digger — Unit 8 boss (earthy brown stone creature)
 dataDigger : BossSprite
 dataDigger =
-    genericBoss "Data Digger"
-        [ ( 'B', "#885533" )
-        , ( 'S', "#553311" )
-        , ( 'E', "#ffddbb" )
+    stoneCreature "Data Digger"
+        [ ( 'B', "#775533" )
+        , ( 'S', "#443311" )
+        , ( 'E', "#ffddaa" )
         , ( 'W', "#ffffff" )
-        , ( 'R', "#ff8844" )
-        , ( 'T', "#442211" )
+        , ( 'R', "#ff9944" )
+        , ( 'T', "#221100" )
         ]
 
 
 -- Act 1 MegaBoss — Chaos Wyrm (gold/dark, bigger presence)
 act1MegaBoss : BossSprite
 act1MegaBoss =
-    genericBoss "Chaos Wyrm"
-        [ ( 'B', "#c8a000" )
+    stoneCreature "Chaos Wyrm"
+        [ ( 'B', "#b89000" )
         , ( 'S', "#664400" )
         , ( 'E', "#fff8cc" )
         , ( 'W', "#ffffff" )
         , ( 'R', "#ff6600" )
-        , ( 'T', "#882200" )
+        , ( 'T', "#332200" )
         ]
