@@ -1,35 +1,35 @@
 module Sprite.Act1 exposing
     ( numberGolem
+    , integerImp
     , fractionPhantom
-    , decimalDrake
-    , expressionEel
-    , equationEttin
-    , ratioRaven
+    , expressionElemental
+    , equationKnight
+    , ratioSerpent
     , geometryGargoyle
-    , dataDigger
+    , statsSphinx
     , act1MegaBoss
     , spriteFor
     )
 
-import Types exposing (AnimFrame(..), BossSprite, Course(..), UnitId, UnitSlot(..))
+import Types exposing (BossSprite, Course(..), UnitId, UnitSlot(..))
 
 
 spriteFor : UnitId -> BossSprite
 spriteFor uid =
     case ( uid.course, uid.unit ) of
         ( Course1, Unit 1 ) -> numberGolem
-        ( Course1, Unit 2 ) -> fractionPhantom
-        ( Course1, Unit 3 ) -> decimalDrake
-        ( Course1, Unit 4 ) -> expressionEel
-        ( Course1, Unit 5 ) -> equationEttin
-        ( Course1, Unit 6 ) -> ratioRaven
+        ( Course1, Unit 2 ) -> integerImp
+        ( Course1, Unit 3 ) -> fractionPhantom
+        ( Course1, Unit 4 ) -> expressionElemental
+        ( Course1, Unit 5 ) -> equationKnight
+        ( Course1, Unit 6 ) -> ratioSerpent
         ( Course1, Unit 7 ) -> geometryGargoyle
-        ( Course1, Unit 8 ) -> dataDigger
+        ( Course1, Unit 8 ) -> statsSphinx
         ( Course1, MegaBoss ) -> act1MegaBoss
         _ -> numberGolem
 
 
--- Number Golem — Unit 1 boss (20×24 pixel grid, px=8)
+-- Number Golem — Unit 1 boss (keep as-is)
 -- Palette: G=grey body, D=dark grey shadow, W=white eyes, R=red pupils, B=brown base
 numberGolem : BossSprite
 numberGolem =
@@ -98,167 +98,601 @@ numberGolem =
     }
 
 
--- Course 1 Unit Boss shape: a hunched stone beast — broad head, stumpy legs, rocky texture
--- Used as the base shape for units 2-8, with palette swaps
-stoneCreature : String -> List ( Char, String ) -> BossSprite
-stoneCreature name palette =
+-- IMP shape — small mischievous creature with pointy horns, claws, curling tail
+-- B=body, S=dark shadow, H=horn, E=eye white, P=pupil, C=claw/tail, F=face
+imp : String -> List ( Char, String ) -> BossSprite
+imp name palette =
     { name = name
     , palette = palette
     , pixelSize = 8
     , frameA =
-        [ "......BBBBBBBBBBBB...."
-        , ".....BBBBBBBBBBBBBB..."
-        , "....BBBBSSBBBSSBBBBB.."
-        , "....BBBSSSBBBBSSSBBB.."
-        , "....BBBBBBBBBBBBBBBB.."
-        , "....BBEWWBBBBBWWEBBB.."
-        , "....BBWRRWBBBWRRWBBB.."
-        , "....BBWRRWBBBWRRWBBB.."
-        , "....BBEWWBBBBBWWEBB..."
-        , "....BBBBBBBBBBBBBBBB.."
-        , "...SBBBBBBBBBBBBBBBS.."
-        , "...SBBBBBBBBBBBBBBBS.."
-        , "....BBSSBBBBBBSSBB...."
-        , "....BBBBBBBBBBBBBBB..."
-        , "...BBBBBBBBBBBBBBBBB.."
-        , "...BBBBSSSSSSSSBBBBB.."
-        , "....BBBSSSSSSSSBBB...."
-        , ".....BBBBBBBBBBBBB...."
-        , "....TTBBBBBBBBBBBTT..."
-        , "....TTTSSSSSSSSTTTT..."
-        , "....TTTTTTTTTTTTTT...."
-        , ".....TTTTTTTTTTTTT...."
-        , "......SSSSSSSSSSSS...."
-        , "......................  "
+        [ "..H...........H........"
+        , "..HH.........HH........"
+        , "...HH.......HH........."
+        , "...HBBBBBBBBH.........."
+        , "...BBBBBBBBBBB........."
+        , "..BBBBBBBBBBBBB........"
+        , "..BBEPPEBBBEPPED......."
+        , "..BBPSSPBBBPSSPB......."
+        , "..BBEPPEBBBEPPED......."
+        , "..BBBBBBBBBBBBB........"
+        , "..BBBBBBBBBBBBBB......."
+        , "...SSBBBBBBBBSS........"
+        , "...BBBBFBBBBBB........."
+        , "....BBBBBBBBB.........."
+        , "....BBBBBBBBB.......C.."
+        , "....BBBBBBBBBBBBBBCC..."
+        , "...CBBBB....BBBBBBBC..."
+        , "..CCBB........BBCC....."
+        , "..CCBB........BBCC....."
+        , "..CBBB........BBBC....."
+        , "..CCBB........BBCC....."
+        , "..CSBB........BBSC....."
+        , "..CCCC........CCCC....."
+        , "......................."
         ]
     , frameB =
-        [ "......BBBBBBBBBBBB...."
-        , ".....BBBBBBBBBBBBBB..."
-        , "....BBBBSSBBBSSBBBBB.."
-        , "....BBBSSSBBBBSSSBBB.."
-        , "....BBBBBBBBBBBBBBBB.."
-        , "....BBEWWBBBBBWWEBBB.."
-        , "....BBWSSWBBBWSSWBBB.."
-        , "....BBWSSWBBBWSSWBBB.."
-        , "....BBEWWBBBBBWWEBB..."
-        , "....BBBBBBBBBBBBBBBB.."
-        , "...SBBBBBBBBBBBBBBBS.."
-        , "...SBBBBBBBBBBBBBBBS.."
-        , "....BBSSBBBBBBSSBB...."
-        , "....BBBBBBBBBBBBBBB..."
-        , "...BBBBBBBBBBBBBBBBB.."
-        , "...BBBBSSSSSSSSBBBBB.."
-        , "....BBBSSSSSSSSBBB...."
-        , ".....BBBBBBBBBBBBB...."
-        , "....TTBBBBBBBBBBBTT..."
-        , "....TTTSSSSSSSSTTTT..."
-        , "....TTTTTTTTTTTTTT...."
-        , ".....TTTTTTTTTTTTT...."
-        , "......SSSSSSSSSSSS...."
-        , "......................  "
+        [ "..H...........H........"
+        , "..HH.........HH........"
+        , "...HH.......HH........."
+        , "...HBBBBBBBBH.........."
+        , "...BBBBBBBBBBB........."
+        , "..BBBBBBBBBBBBB........"
+        , "..BBEPPEBBBEPPED......."
+        , "..BBPBBPBBBPBBPB......."
+        , "..BBEPPEBBBEPPED......."
+        , "..BBBBBBBBBBBBB........"
+        , "..BBBBBBBBBBBBBB......."
+        , "...SSBBBBBBBBSS........"
+        , "...BBBBFBBBBBB........."
+        , "....BBBBBBBBB.........."
+        , ".....BBBBBBBBB......C.."
+        , "....BBBBBBBBBBBBBBCC..."
+        , "...CBBBB....BBBBBBBC..."
+        , "..CCBB........BBCC....."
+        , "..CCBB........BBCC....."
+        , "..CBBB........BBBC....."
+        , "..CCBB........BBCC....."
+        , "..CSBB........BBSC....."
+        , "..CCCC........CCCC....."
+        , "......................."
         ]
     }
 
 
--- Fraction Phantom — Unit 2 boss (split-color purple/gold stone creature)
+-- Integer Imp — Unit 2 (red body, yellow eyes, dark horns)
+integerImp : BossSprite
+integerImp =
+    imp "Integer Imp"
+        [ ( 'B', "#cc3322" )
+        , ( 'S', "#881100" )
+        , ( 'H', "#332200" )
+        , ( 'E', "#ffee88" )
+        , ( 'P', "#ddaa00" )
+        , ( 'C', "#881100" )
+        , ( 'F', "#ff6655" )
+        , ( 'D', "#882200" )
+        ]
+
+
+-- GHOST shape — wide domed head, large glowing eyes, wispy tendrils
+-- B=body, S=shadow, E=eye surround, W=eye white, P=pupil, T=tendril
+ghost : String -> List ( Char, String ) -> BossSprite
+ghost name palette =
+    { name = name
+    , palette = palette
+    , pixelSize = 8
+    , frameA =
+        [ "........BBBBB.........."
+        , "......BBBBBBBBBBB......"
+        , ".....BBBBBBBBBBBBB....."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBSSBBBBBSSBBBB.."
+        , "....BBBBSSBBBBBSSBBBB.."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "...BBEWWBBBBBBWWEBBB..."
+        , "...BBWPPWBBBBWPPWBBB..."
+        , "...BBWPPWBBBBWPPWBBB..."
+        , "...BBEWWBBBBBBWWEBBB..."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBSSSSSSBBBB....."
+        , "....BBBBBBBBBBBBB......"
+        , ".....BBBBBBBBBBB......."
+        , "...BBBB.....BBBB......."
+        , "..TBBBB.......BBBBT...."
+        , "..TBBB.........BBBT...."
+        , "...TBB..........BT....."
+        , "....TB..........BT....."
+        , ".....TT.........TT....."
+        , "......TT.......TT......"
+        , "......................."
+        ]
+    , frameB =
+        [ "........BBBBB.........."
+        , "......BBBBBBBBBBB......"
+        , ".....BBBBBBBBBBBBB....."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBSSBBBBBSSBBBB.."
+        , "....BBBBSSBBBBBSSBBBB.."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "...BBEWWBBBBBBWWEBBB..."
+        , "...BBWBBWBBBBWBBWBBB..."
+        , "...BBWBBWBBBBWBBWBBB..."
+        , "...BBEWWBBBBBBWWEBBB..."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBSSSSSSBBBB....."
+        , "....BBBBBBBBBBBBB......"
+        , ".....BBBBBBBBBBB......."
+        , "....BBBB.....BBBB......"
+        , "...TBBBB.......BBBBT..."
+        , "...TBBB.........BBBT..."
+        , "....TBB..........BT...."
+        , ".....TB..........BT...."
+        , "......TT........TT....."
+        , ".......TT......TT......"
+        , "......................."
+        ]
+    }
+
+
+-- Fraction Phantom — Unit 3 (purple/lavender, pink pupils)
 fractionPhantom : BossSprite
 fractionPhantom =
-    stoneCreature "Fraction Phantom"
-        [ ( 'B', "#7744bb" )
-        , ( 'S', "#441177" )
+    ghost "Fraction Phantom"
+        [ ( 'B', "#9966cc" )
+        , ( 'S', "#553388" )
         , ( 'E', "#eeccff" )
         , ( 'W', "#ffffff" )
-        , ( 'R', "#ff44ff" )
-        , ( 'T', "#332266" )
+        , ( 'P', "#ff88ff" )
+        , ( 'T', "#331166" )
         ]
 
 
--- Decimal Drake — Unit 3 boss (teal stone creature with cyan accents)
-decimalDrake : BossSprite
-decimalDrake =
-    stoneCreature "Decimal Drake"
-        [ ( 'B', "#117766" )
-        , ( 'S', "#005544" )
-        , ( 'E', "#aaffdd" )
-        , ( 'W', "#ffffff" )
-        , ( 'R', "#00ffaa" )
-        , ( 'T', "#003322" )
+-- ELEMENTAL shape — swirling asymmetric energy mass, core + radiating wisps
+-- C=core, B=bright inner, W=wisp outer, S=shadow/dark wisp, G=glow accent
+elemental : String -> List ( Char, String ) -> BossSprite
+elemental name palette =
+    { name = name
+    , palette = palette
+    , pixelSize = 8
+    , frameA =
+        [ "..........W............"
+        , ".........WWW..........."
+        , "......WWWWWWWWWW......."
+        , ".....WWWWBBBBWWWWW....."
+        , "....WWWWBBBBBBWWWWW...."
+        , "....WWWBBBCCCBBBWWW...."
+        , "...WWWBBBCCGCCBBBWWWW.."
+        , "...WWWBBBCCGCCBBBWWW..."
+        , "...WWWWBBBCCCBBBWWWWW.."
+        , "....WWWWBBBBBBBWWWWW..."
+        , ".....WWWWWWWWWWWWWW...."
+        , "......WWWWWWWWWWWWWW..."
+        , ".....SWWWWWWWWWWWWS...."
+        , "....SWWWWWWWWWWWWWSS..."
+        , "....SWWWWWWWWWWWWSS...."
+        , ".....SWWWWWWWWWWSS....."
+        , "......SWWWWWWWWSS......"
+        , ".....SSSWWWWWWSSS......"
+        , "....SSWWW...WWWSS......"
+        , "...SSW.........WSS....."
+        , "..SS............SS....."
+        , "...SS..........SS......"
+        , "....SSS......SSS......."
+        , "......................."
+        ]
+    , frameB =
+        [ "............W.........."
+        , "...........WWW........."
+        , "......WWWWWWWWWWW......"
+        , ".....WWWWBBBBWWWWW....."
+        , "....WWWWBBBBBBWWWWWW..."
+        , "....WWWBBBCCCBBBWWWW..."
+        , "...WWWWBBBCCGCCBBBWWW.."
+        , "...WWWBBBCCGCCBBBWWWWW."
+        , "...WWWWBBBCCCBBBWWWWW.."
+        , "....WWWWBBBBBBBWWWWW..."
+        , ".....WWWWWWWWWWWWWWW..."
+        , "......WWWWWWWWWWWWWWW.."
+        , ".....SWWWWWWWWWWWWSS..."
+        , "....SWWWWWWWWWWWWSS...."
+        , "....SWWWWWWWWWWWSS....."
+        , ".....SWWWWWWWWSS......."
+        , "......SWWWWWWSS........"
+        , ".....SSWWWWWWSS........"
+        , "....SSWWW...WWSS......."
+        , "...SSW.........WSS....."
+        , "..SS............SS....."
+        , "...SS..........SS......"
+        , "....SSS......SSS......."
+        , "......................."
+        ]
+    }
+
+
+-- Expression Elemental — Unit 4 (electric blue/cyan)
+expressionElemental : BossSprite
+expressionElemental =
+    elemental "Expression Elemental"
+        [ ( 'C', "#ffffff" )
+        , ( 'G', "#aaffff" )
+        , ( 'B', "#44bbff" )
+        , ( 'W', "#0077cc" )
+        , ( 'S', "#003366" )
         ]
 
 
--- Expression Eel — Unit 4 boss (deep blue stone creature)
-expressionEel : BossSprite
-expressionEel =
-    stoneCreature "Expression Eel"
-        [ ( 'B', "#223399" )
-        , ( 'S', "#111155" )
-        , ( 'E', "#aabbff" )
-        , ( 'W', "#ffffff" )
-        , ( 'R', "#5599ff" )
-        , ( 'T', "#112277" )
+-- KNIGHT shape — armored humanoid, distinct helmet, broad pauldrons, wide stance
+-- B=armor body, S=shadow/dark, H=helm, E=eye slit, R=eye glow, P=pauldron, T=boot
+knight : String -> List ( Char, String ) -> BossSprite
+knight name palette =
+    { name = name
+    , palette = palette
+    , pixelSize = 8
+    , frameA =
+        [ "......PPPPPPPPPPP......"
+        , ".....PPPPPPPPPPPPP....."
+        , "....PPPPPHHHHHHPPPPP..."
+        , "....PPPPHHHHHHHPPPP...."
+        , ".....PPHHHHHHHHHPP....."
+        , ".....PPHEEEEEEEHPP....."
+        , ".....PPHERRRREHPP......"
+        , ".....PPHEEEEEEEHPP....."
+        , ".....PPHHHHHHHHHPP....."
+        , "....BBBBBBBBBBBBBBBB..."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "...BBBSSBBBBBBSSBBBB..."
+        , "...BBBBBBBBBBBBBBBB...."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBSSSSSSSSBBBB...."
+        , "....BBBBBBBBBBBBBB....."
+        , "....TBBBB.....BBBBT...."
+        , "....TBBBB.....BBBBT...."
+        , "....TSSBB.....BSSST...."
+        , "....TTTBB.....BBBTT...."
+        , ".....TTTT.....TTTT....."
+        , "......................."
+        ]
+    , frameB =
+        [ "......PPPPPPPPPPP......"
+        , ".....PPPPPPPPPPPPP....."
+        , "....PPPPPHHHHHHPPPPP..."
+        , "....PPPPHHHHHHHPPPP...."
+        , ".....PPHHHHHHHHHPP....."
+        , ".....PPHEEEEEEEHPP....."
+        , ".....PPHEBBBBEHPP......"
+        , ".....PPHEEEEEEEHPP....."
+        , ".....PPHHHHHHHHHPP....."
+        , "....BBBBBBBBBBBBBBBB..."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "...BBBSSBBBBBBSSBBBB..."
+        , "...BBBBBBBBBBBBBBBB...."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBSSSSSSSSBBBB...."
+        , "....BBBBBBBBBBBBBB....."
+        , "....TBBBB.....BBBBT...."
+        , "....TBBBB.....BBBBT...."
+        , "....TSSBB.....BSSST...."
+        , "....TTTBB.....BBBTT...."
+        , ".....TTTT.....TTTT....."
+        , "......................."
+        ]
+    }
+
+
+-- Equation Knight — Unit 5 (silver/steel armor, blue visor glow)
+equationKnight : BossSprite
+equationKnight =
+    knight "Equation Knight"
+        [ ( 'B', "#aabbcc" )
+        , ( 'S', "#667788" )
+        , ( 'H', "#889aaa" )
+        , ( 'E', "#cce0ff" )
+        , ( 'R', "#4499ff" )
+        , ( 'P', "#99aabb" )
+        , ( 'T', "#334455" )
         ]
 
 
--- Equation Ettin — Unit 5 boss (two-headed crimson stone creature)
-equationEttin : BossSprite
-equationEttin =
-    stoneCreature "Equation Ettin"
-        [ ( 'B', "#aa2222" )
-        , ( 'S', "#661111" )
-        , ( 'E', "#ffcccc" )
-        , ( 'W', "#ffffff" )
-        , ( 'R', "#ff5555" )
-        , ( 'T', "#440000" )
+-- SERPENT shape — coiled snake, diamond head, forked tongue, scale pattern
+-- B=body scale A, D=body scale B (alternating), H=head, E=eye, T=tongue, S=shadow
+serpent : String -> List ( Char, String ) -> BossSprite
+serpent name palette =
+    { name = name
+    , palette = palette
+    , pixelSize = 8
+    , frameA =
+        [ ".....HHHHHHH..........."
+        , "....HHHHHHHHHH........."
+        , "...HHHEHHHHHHHHH......."
+        , "...HHHEHHHHHHHHHH......"
+        , "...HHHHHHHHHHHHHH......"
+        , "....HHHHHHHHHHHHH......"
+        , "....HHHTTHHHHHHH......."
+        , ".....HHTTHHHHHH........"
+        , "......BDBDBBBB........."
+        , ".....BDBDBDBDBBB......."
+        , "....BDBDBDBDBDBBB......"
+        , "....BDBDBDBDBDBDBB....."
+        , "...BDBDBDBDBDBDBDBB...."
+        , "...BDBDBDBDBDBDBDBB...."
+        , "....BDBDBDBDBDBDBB....."
+        , ".....BDBDBDBDBBB......."
+        , "......BDBDBDBB........."
+        , ".......BDBDBB.........."
+        , ".......SSBDB..........."
+        , "........SSSBD.........."
+        , ".........SSBD.........."
+        , "..........SSD.........."
+        , "...........SS.........."
+        , "......................."
+        ]
+    , frameB =
+        [ ".....HHHHHHH..........."
+        , "....HHHHHHHHHH........."
+        , "...HHHEHHHHHHHHH......."
+        , "...HHHEHHHHHHHHHH......"
+        , "...HHHHHHHHHHHHHH......"
+        , "....HHHHHHHHHHHHH......"
+        , "....HHHTTHHHHHHH......."
+        , ".....HTTHHHHHH........."
+        , "......BDBDBBBB........."
+        , ".....BDBDBDBDBBB......."
+        , "....BDBDBDBDBDBBB......"
+        , "....BDBDBDBDBDBDBB....."
+        , "...BDBDBDBDBDBDBDBB...."
+        , "...BDBDBDBDBDBDBDBB...."
+        , "....BDBDBDBDBDBDBB....."
+        , ".....BDBDBDBDBBB......."
+        , "......BDBDBDBB........."
+        , "......SBDBDBB.........."
+        , ".......SSSBD..........."
+        , "........SSSB..........."
+        , ".........SSBD.........."
+        , "..........SSD.........."
+        , "...........SS.........."
+        , "......................."
+        ]
+    }
+
+
+-- Ratio Serpent — Unit 6 (green/dark-green, yellow eyes)
+ratioSerpent : BossSprite
+ratioSerpent =
+    serpent "Ratio Serpent"
+        [ ( 'B', "#226633" )
+        , ( 'D', "#115522" )
+        , ( 'H', "#338844" )
+        , ( 'E', "#ffee00" )
+        , ( 'T', "#ff4444" )
+        , ( 'S', "#113322" )
         ]
 
 
--- Ratio Raven — Unit 6 boss (obsidian black stone creature)
-ratioRaven : BossSprite
-ratioRaven =
-    stoneCreature "Ratio Raven"
-        [ ( 'B', "#222233" )
-        , ( 'S', "#111122" )
-        , ( 'E', "#aaaadd" )
-        , ( 'W', "#ffffff" )
-        , ( 'R', "#aa88ff" )
-        , ( 'T', "#000011" )
+-- GARGOYLE shape — crouching stone creature, wings spread wide, horned head
+-- B=stone body, D=dark stone, W=wing membrane, E=eye, G=glow, H=horn, C=claw
+gargoyle : String -> List ( Char, String ) -> BossSprite
+gargoyle name palette =
+    { name = name
+    , palette = palette
+    , pixelSize = 8
+    , frameA =
+        [ "W.....HBBBBBH.....W...."
+        , "WW....BBBBBBBB....WW..."
+        , "WWW..BBBBBBBBBBB..WWW.."
+        , "WWWWBBBBBBBBBBBBWWWWW.."
+        , "WWWWBBBDDBBBDDBBWWWW..."
+        , "WWWWBBBDDBBBDDBBWWWWW.."
+        , "WWWBBBBBBBBBBBBBBBWWW.."
+        , "WWWBBEGBBBBBBGEBWWWW..."
+        , "WWWBBGGGBBBBBGGGBWWWW.."
+        , "WWWBBEGBBBBBBGEBWWWW..."
+        , "WWWBBBBBBBBBBBBBBBWWW.."
+        , "WWWWBBBBBBBBBBBBWWWW..."
+        , "WWWWWBBBBBBBBBBWWWWWW.."
+        , ".WWWWWBBBBBBBBBWWWWW..."
+        , "..WWWWBBBBBBBBWWWWW...."
+        , "...WWWBBBBBBBWWWWW....."
+        , ".....CBBBBBBBBC........"
+        , ".....CBBDDDBBBC........"
+        , "....CCBBDDDBBBBCC......"
+        , "....CCBBDBBDBBCC......."
+        , "....CCCBBBBBBBCCC......"
+        , ".....CCCBBBBBCCC......."
+        , "......CCCDDDDCCC......."
+        , "......................."
         ]
+    , frameB =
+        [ "W.....HBBBBBH.....W...."
+        , "WW....BBBBBBBB....WW..."
+        , "WWW..BBBBBBBBBBB..WWW.."
+        , "WWWWBBBBBBBBBBBBWWWWW.."
+        , "WWWWBBBDDBBBDDBBWWWW..."
+        , "WWWWBBBDDBBBDDBBWWWWW.."
+        , "WWWBBBBBBBBBBBBBBBWWW.."
+        , "WWWBBEGBBBBBBGEBWWWW..."
+        , "WWWBBGBBBBBBBBGBBWWWW.."
+        , "WWWBBEGBBBBBBGEBWWWW..."
+        , "WWWBBBBBBBBBBBBBBBWWW.."
+        , "WWWWBBBBBBBBBBBBWWWWW.."
+        , "WWWWWBBBBBBBBBBWWWWWWW."
+        , ".WWWWWBBBBBBBBBWWWWWW.."
+        , "..WWWWBBBBBBBBWWWWWW..."
+        , "...WWWBBBBBBBWWWWWW...."
+        , ".....CBBBBBBBBC........"
+        , ".....CBBDDDBBBC........"
+        , "....CCBBDDDBBBBCC......"
+        , "....CCBBDBBDBBCC......."
+        , "....CCCBBBBBBBCCC......"
+        , ".....CCCBBBBBCCC......."
+        , "......CCCDDDDCCC......."
+        , "......................."
+        ]
+    }
 
 
--- Geometry Gargoyle — Unit 7 boss (slate grey stone creature)
+-- Geometry Gargoyle — Unit 7 (grey stone, blue glow eyes)
 geometryGargoyle : BossSprite
 geometryGargoyle =
-    stoneCreature "Geometry Gargoyle"
-        [ ( 'B', "#667788" )
-        , ( 'S', "#334455" )
+    gargoyle "Geometry Gargoyle"
+        [ ( 'B', "#778899" )
+        , ( 'D', "#445566" )
+        , ( 'W', "#aabbcc" )
         , ( 'E', "#cceeff" )
-        , ( 'W', "#ffffff" )
-        , ( 'R', "#55ccff" )
-        , ( 'T', "#223344" )
+        , ( 'G', "#55ccff" )
+        , ( 'H', "#334455" )
+        , ( 'C', "#223344" )
         ]
 
 
--- Data Digger — Unit 8 boss (earthy brown stone creature)
-dataDigger : BossSprite
-dataDigger =
-    stoneCreature "Data Digger"
-        [ ( 'B', "#775533" )
-        , ( 'S', "#443311" )
+-- SPHINX shape — wide cat body, human head at top, paws extended, regal pose
+-- B=body fur, D=dark shadow, H=head skin, E=eye, P=pupil, W=wing suggestion, F=face feature
+sphinx : String -> List ( Char, String ) -> BossSprite
+sphinx name palette =
+    { name = name
+    , palette = palette
+    , pixelSize = 8
+    , frameA =
+        [ ".........HHH..........."
+        , "........HHHHH.........."
+        , "........HEHEH.........."
+        , "........HPPHH.........."
+        , "........HHHHH.........."
+        , ".......BHHHHHHB........"
+        , "......BBBHHHHBBBB......"
+        , ".....BBBBBBBBBBBBB....."
+        , "....BBBBBBBBBBBBBBB...."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "...BBBBDBBBBBBBDBBBBB.."
+        , "...BBBBDBBBBBBBDBBBBB.."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , "..BBBBDDDBBBBBBDDDBBBB."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , ".PBBBB...........BBBBP."
+        , ".PBBBBB.........BBBBBP."
+        , ".PBBBBBB.......BBBBBBP."
+        , ".PPBBBBBB.....BBBBBBPP."
+        , "..PPPPBBBB...BBBBPPPP.."
+        , "......................."
+        ]
+    , frameB =
+        [ ".........HHH..........."
+        , "........HHHHH.........."
+        , "........HEHEH.........."
+        , "........HHHPH.........."
+        , "........HHHHH.........."
+        , ".......BHHHHHHB........"
+        , "......BBBHHHHBBBB......"
+        , ".....BBBBBBBBBBBBB....."
+        , "....BBBBBBBBBBBBBBB...."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "...BBBBDBBBBBBBDBBBBB.."
+        , "...BBBBDBBBBBBBDBBBBB.."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , "..BBBBDDDBBBBBBDDDBBBB."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , "..BBBBBBBBBBBBBBBBBBBB."
+        , ".PBBBB...........BBBBP."
+        , ".PBBBBB.........BBBBBP."
+        , ".PBBBBBB.......BBBBBBP."
+        , ".PPBBBBBB.....BBBBBBPP."
+        , "..PPPPBBBB...BBBBPPPP.."
+        , "......................."
+        ]
+    }
+
+
+-- Stats Sphinx — Unit 8 (sandy gold, amber eyes)
+statsSphinx : BossSprite
+statsSphinx =
+    sphinx "Stats Sphinx"
+        [ ( 'B', "#cc9944" )
+        , ( 'D', "#885522" )
+        , ( 'H', "#ffcc88" )
         , ( 'E', "#ffddaa" )
-        , ( 'W', "#ffffff" )
-        , ( 'R', "#ff9944" )
-        , ( 'T', "#221100" )
+        , ( 'P', "#884400" )
+        , ( 'W', "#ddbb66" )
+        , ( 'F', "#aa6600" )
         ]
 
 
--- Act 1 MegaBoss — Chaos Wyrm (gold/dark, bigger presence)
+-- Act 1 MegaBoss — Chaos Wyrm (keep as-is, same shape as before but gold wyrm palette)
 act1MegaBoss : BossSprite
 act1MegaBoss =
-    stoneCreature "Chaos Wyrm"
+    { name = "Chaos Wyrm"
+    , palette =
         [ ( 'B', "#b89000" )
         , ( 'S', "#664400" )
         , ( 'E', "#fff8cc" )
         , ( 'W', "#ffffff" )
         , ( 'R', "#ff6600" )
         , ( 'T', "#332200" )
+        , ( 'P', "#aa7700" )
+        , ( 'H', "#553300" )
+        , ( 'D', "#997700" )
         ]
+    , pixelSize = 8
+    , frameA =
+        [ "......PPPPPPPPPPP......"
+        , ".....PPPPPPPPPPPPP....."
+        , "....PPPPPHHHHHHPPPPP..."
+        , "....PPPPHHHHHHHPPPP...."
+        , ".....PPHHHHHHHHHPP....."
+        , ".....PPHEEEEEEHPP......"
+        , ".....PPHERRRREHPP......"
+        , ".....PPHEEEEEEHPP......"
+        , ".....PPHHHHHHHHHPP....."
+        , "....BBBBBBBBBBBBBBBB..."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "...BBBSSBBBBBBSSBBBB..."
+        , "...BBBBBBBBBBBBBBBB...."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBSSSSSSSSBBBB...."
+        , "....BBBBBBBBBBBBBB....."
+        , "....TBBBB.....BBBBT...."
+        , "....TBBBB.....BBBBT...."
+        , "....TSSBB.....BSSST...."
+        , "....TTTBB.....BBBTT...."
+        , ".....TTTT.....TTTT....."
+        , "......................."
+        ]
+    , frameB =
+        [ "......PPPPPPPPPPP......"
+        , ".....PPPPPPPPPPPPP....."
+        , "....PPPPPHHHHHHPPPPP..."
+        , "....PPPPHHHHHHHPPPP...."
+        , ".....PPHHHHHHHHHPP....."
+        , ".....PPHEEEEEEHPP......"
+        , ".....PPHEDDDDEHPP......"
+        , ".....PPHEEEEEEHPP......"
+        , ".....PPHHHHHHHHHPP....."
+        , "....BBBBBBBBBBBBBBBB..."
+        , "...BBBBBBBBBBBBBBBBBB.."
+        , "...BBBSSBBBBBBSSBBBB..."
+        , "...BBBBBBBBBBBBBBBB...."
+        , "...BBBBBBBBBBBBBBBBB..."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBBBBBBBBBBBBB...."
+        , "....BBBSSSSSSSSBBBB...."
+        , "....BBBBBBBBBBBBBB....."
+        , "....TBBBB.....BBBBT...."
+        , "....TBBBB.....BBBBT...."
+        , "....TSSBB.....BSSST...."
+        , "....TTTBB.....BBBTT...."
+        , ".....TTTT.....TTTT....."
+        , "......................."
+        ]
+    }
