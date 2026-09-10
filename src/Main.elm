@@ -1,6 +1,7 @@
 port module Main exposing (main)
 
 import Browser
+import Browser.Events
 import Config
 import Game.Battle as Battle
 import Game.Curriculum as Curriculum
@@ -9,6 +10,7 @@ import Game.Problem as Problem
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import Json.Decode as Decode
 import Process
 import Random
 import Task
@@ -24,6 +26,9 @@ import View.Victory as VictoryView
 
 
 port saveName : String -> Cmd msg
+
+
+port focusFirstInput : () -> Cmd msg
 
 
 -- Flags: "playerName\tseedInt" from localStorage + Date.now()
@@ -100,6 +105,9 @@ update msg model =
 
         CancelExit ->
             ( { model | confirmingExit = False }, Cmd.none )
+
+        GoToAct course ->
+            ( { model | screen = MapScreen { course = course } }, Cmd.none )
 
         SetNameDraft draft ->
             case model.screen of
@@ -210,7 +218,7 @@ update msg model =
         BeginQuest ->
             case model.screen of
                 BattleScreen state ->
-                    ( { model | screen = BattleScreen { state | phase = Idle } }, Cmd.none )
+                    ( { model | screen = BattleScreen { state | phase = Idle } }, focusFirstInput () )
 
                 _ ->
                     ( model, Cmd.none )
@@ -256,7 +264,7 @@ update msg model =
                 BattleScreen state ->
                     case state.phase of
                         ShowResult _ ->
-                            ( { model | screen = BattleScreen { state | phase = Idle } }, Cmd.none )
+                            ( { model | screen = BattleScreen { state | phase = Idle } }, focusFirstInput () )
 
                         _ ->
                             ( model, Cmd.none )
@@ -314,7 +322,7 @@ update msg model =
                                 }
                         , seed = newSeed
                       }
-                    , Cmd.none
+                    , focusFirstInput ()
                     )
 
                 _ ->
@@ -397,7 +405,7 @@ update msg model =
                                 }
                         , seed = newSeed
                       }
-                    , Cmd.none
+                    , focusFirstInput ()
                     )
 
                 _ ->
@@ -631,7 +639,7 @@ startBoss uid model =
         | screen = BattleScreen (Battle.initialBattleState uid problem)
         , seed = newSeed
       }
-    , Cmd.none
+    , focusFirstInput ()
     )
 
 
@@ -642,12 +650,53 @@ flashCmd =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.screen of
-        BattleScreen _ ->
-            Time.every Config.animIntervalMs (\_ -> AnimTick)
+    Sub.batch
+        [ case model.screen of
+            BattleScreen _ ->
+                Time.every Config.animIntervalMs (\_ -> AnimTick)
 
-        _ ->
-            Sub.none
+            _ ->
+                Sub.none
+        , Browser.Events.onKeyDown (enterDecoder model)
+        ]
+
+
+enterDecoder : Model -> Decode.Decoder Msg
+enterDecoder model =
+    Decode.field "key" Decode.string
+        |> Decode.andThen
+            (\key ->
+                if key /= "Enter" then
+                    Decode.fail "not enter"
+
+                else
+                    case model.screen of
+                        BattleScreen state ->
+                            case state.phase of
+                                QuestComplete ->
+                                    Decode.succeed NextQuest
+
+                                QuestIntro ->
+                                    Decode.succeed BeginQuest
+
+                                BattleWon ->
+                                    Decode.succeed BackToMap
+
+                                BattleLost ->
+                                    Decode.succeed RetryUnit
+
+                                _ ->
+                                    Decode.fail "input phase"
+
+                        VictoryScreen _ ->
+                            Decode.succeed BackToMap
+
+                        GameOverScreen _ ->
+                            Decode.succeed RetryUnit
+
+                        _ ->
+                            Decode.fail "no enter action"
+            )
 
 
 view : Model -> Html Msg

@@ -30,6 +30,7 @@ type Msg
     | RetryUnit
     | RequestExit
     | CancelExit
+    | GoToAct Course
 
 
 -- SCREENS

@@ -18,7 +18,7 @@ viewMap playerName course highestUnlocked =
         , style "padding" "16px"
         , style "gap" "12px"
         ]
-        [ header playerName course
+        [ header playerName course highestUnlocked
         , unitList course highestUnlocked
         , div [ style "display" "flex", style "justify-content" "flex-end" ]
             [ button
@@ -37,19 +37,66 @@ viewMap playerName course highestUnlocked =
         ]
 
 
-header : String -> Course -> Html Msg
-header playerName course =
+header : String -> Course -> UnitId -> Html Msg
+header playerName course highestUnlocked =
+    let
+        prevCourse =
+            case course of
+                Course1 -> Nothing
+                Course2 -> Just Course1
+                PreAlgebra -> Just Course2
+                Algebra1 -> Just PreAlgebra
+
+        nextCourse =
+            case course of
+                Course1 -> Just Course2
+                Course2 -> Just PreAlgebra
+                PreAlgebra -> Just Algebra1
+                Algebra1 -> Nothing
+
+        actUnlocked c =
+            compareUnits (Curriculum.firstUnit c) highestUnlocked /= GT
+
+        navBtn label maybeCourse =
+            case maybeCourse of
+                Nothing ->
+                    div [ style "width" "48px" ] []
+
+                Just c ->
+                    if actUnlocked c then
+                        button
+                            [ onClick (GoToAct c)
+                            , style "background" "transparent"
+                            , style "color" T.gold
+                            , style "font-family" T.fontFamily
+                            , style "font-size" (String.fromInt T.fontSizeLarge ++ "px")
+                            , style "border" "none"
+                            , style "cursor" "pointer"
+                            , style "padding" "0 4px"
+                            ]
+                            [ text label ]
+                    else
+                        div [ style "width" "48px" ] []
+    in
     div
         [ style "display" "flex"
         , style "justify-content" "space-between"
         , style "align-items" "center"
         ]
         [ div
-            [ style "font-family" T.fontFamily
-            , style "font-size" (String.fromInt T.fontSizeLarge ++ "px")
-            , style "color" T.gold
+            [ style "display" "flex"
+            , style "align-items" "center"
+            , style "gap" "8px"
             ]
-            [ text (courseLabel course) ]
+            [ navBtn "◀" prevCourse
+            , div
+                [ style "font-family" T.fontFamily
+                , style "font-size" (String.fromInt T.fontSizeLarge ++ "px")
+                , style "color" T.gold
+                ]
+                [ text (courseLabel course) ]
+            , navBtn "▶" nextCourse
+            ]
         , div
             [ style "font-family" T.fontFamily
             , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")

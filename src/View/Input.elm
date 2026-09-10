@@ -1,8 +1,9 @@
-module View.Input exposing (viewChoiceInput, viewInput)
+module View.Input exposing (onEnter, viewChoiceInput, viewInput)
 
 import Html exposing (Html, button, div, input, span, text)
 import Html.Attributes exposing (style, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (on, onClick, onInput)
+import Json.Decode as Decode
 import Types exposing (AnswerInput(..), InequalityDir(..), Msg(..))
 import View.Theme as T
 
@@ -70,6 +71,20 @@ viewChoiceInput choices selected =
         )
 
 
+onEnter : Msg -> Html.Attribute Msg
+onEnter msg =
+    on "keydown"
+        (Decode.field "key" Decode.string
+            |> Decode.andThen
+                (\key ->
+                    if key == "Enter" then
+                        Decode.succeed msg
+                    else
+                        Decode.fail "not enter"
+                )
+        )
+
+
 numericInput : String -> (String -> Msg) -> String -> Html Msg
 numericInput val toMsg width =
     input
@@ -77,6 +92,7 @@ numericInput val toMsg width =
             ++ [ type_ "text"
                , value val
                , onInput toMsg
+               , onEnter SubmitAnswer
                ]
         )
         []
@@ -95,6 +111,7 @@ fractionInput num den =
                 ++ [ type_ "text"
                    , value num
                    , onInput (\v -> UpdateInput (IFraction { num = v, den = den }))
+                   , onEnter SubmitAnswer
                    , style "text-align" "center"
                    ]
             )
@@ -110,6 +127,7 @@ fractionInput num den =
                 ++ [ type_ "text"
                    , value den
                    , onInput (\v -> UpdateInput (IFraction { num = num, den = v }))
+                   , onEnter SubmitAnswer
                    , style "text-align" "center"
                    ]
             )
@@ -178,6 +196,7 @@ inequalityInput dir val =
                     ++ [ type_ "text"
                        , value val
                        , onInput (\v -> UpdateInput (IInequality { dir = dir, val = v }))
+                       , onEnter SubmitAnswer
                        ]
                 )
                 []
@@ -200,6 +219,7 @@ systemInput x y =
                     ++ [ type_ "text"
                        , value x
                        , onInput (\v -> UpdateInput (ISystem { x = v, y = y }))
+                       , onEnter SubmitAnswer
                        ]
                 )
                 []
@@ -212,6 +232,7 @@ systemInput x y =
                     ++ [ type_ "text"
                        , value y
                        , onInput (\v -> UpdateInput (ISystem { x = x, y = v }))
+                       , onEnter SubmitAnswer
                        ]
                 )
                 []
@@ -234,6 +255,7 @@ rootsInput r1 r2 =
                     ++ [ type_ "text"
                        , value r1
                        , onInput (\v -> UpdateInput (IRoots { r1 = v, r2 = r2 }))
+                       , onEnter SubmitAnswer
                        ]
                 )
                 []
@@ -246,6 +268,7 @@ rootsInput r1 r2 =
                     ++ [ type_ "text"
                        , value r2
                        , onInput (\v -> UpdateInput (IRoots { r1 = r1, r2 = v }))
+                       , onEnter SubmitAnswer
                        ]
                 )
                 []

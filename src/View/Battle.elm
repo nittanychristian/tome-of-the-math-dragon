@@ -12,6 +12,7 @@ import Svg.Attributes as SA
 import Types exposing (AnswerInput(..), BattleMode(..), BattlePhase(..), BattleState, BossSprite, CorrectAnswer(..), HintData, HitOutcome(..), InequalityDir(..), InputType(..), Msg(..), Problem, UnitSlot(..))
 import View.HpBar exposing (hpBar)
 import View.Input exposing (viewChoiceInput, viewInput)
+import View.Math exposing (renderMath)
 import View.Theme as T
 import View.Window as W
 
@@ -221,12 +222,13 @@ problemArea state =
         [ W.windowTitle "QUESTION"
             [ p
                 [ style "font-family" T.fontFamily
-                , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
+                , style "font-size" (String.fromInt T.fontSizeLarge ++ "px")
                 , style "color" T.cream
-                , style "line-height" "1.8"
+                , style "line-height" "2"
                 , style "white-space" "pre-wrap"
+                , style "word-break" "break-word"
                 ]
-                [ text state.problem.prompt ]
+                [ renderMath state.problem.prompt ]
             ]
         , case state.problem.inputType of
             TChoice choices ->
@@ -373,11 +375,12 @@ viewTutorial problem stepsShown =
             [ text "NOT QUITE — HERE'S HOW" ]
         , W.windowTitle "THE PROBLEM"
             [ p [ style "font-family" T.fontFamily
-                , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
+                , style "font-size" (String.fromInt T.fontSizeLarge ++ "px")
                 , style "color" T.cream
-                , style "line-height" "1.8"
+                , style "line-height" "2"
+                , style "word-break" "break-word"
                 ]
-                [ text problem.prompt ]
+                [ renderMath problem.prompt ]
             , p [ style "font-family" T.fontFamily
                 , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
                 , style "color" T.gold
@@ -403,7 +406,7 @@ viewTutorial problem stepsShown =
                                 , style "color" T.cream
                                 , style "line-height" "1.7"
                                 ]
-                                [ text step ]
+                                [ renderMath step ]
                             ]
                     )
                     visibleSteps

@@ -4,6 +4,7 @@ import Html exposing (Html, br, button, div, input, p, span, text)
 import Html.Attributes exposing (placeholder, style, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Types exposing (Msg(..))
+import View.Input exposing (onEnter)
 import View.Theme as T
 import View.Window as W
 
@@ -81,6 +82,7 @@ viewNameEntry draft =
                     [ type_ "text"
                     , value draft
                     , onInput SetNameDraft
+                    , onEnter SubmitName
                     , placeholder "HERO"
                     , style "background" T.bgBlack
                     , style "color" T.cream
@@ -117,6 +119,7 @@ viewPasscode draft hasError =
                     [ type_ "text"
                     , value draft
                     , onInput SetPasscodeDraft
+                    , onEnter SubmitPasscode
                     , placeholder "word word word word"
                     , style "background" T.bgBlack
                     , style "color" T.cream

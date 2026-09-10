@@ -4,6 +4,7 @@ import Html exposing (Html, button, div, p, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Types exposing (BattleState, HelpState, Msg(..))
+import View.Math exposing (renderMath)
 import View.Theme as T
 import View.Window as W
 
@@ -47,7 +48,7 @@ hintSection helpState =
             , style "line-height" "1.8"
             , style "white-space" "pre-wrap"
             ]
-            [ text helpState.hint.prompt ]
+            [ renderMath helpState.hint.prompt ]
         , p
             [ style "font-family" T.fontFamily
             , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
@@ -91,7 +92,7 @@ stepSection helpState =
                             , style "line-height" "1.7"
                             , style "white-space" "pre-wrap"
                             ]
-                            [ text step ]
+                            [ renderMath step ]
                         ]
                 )
                 visibleSteps

@@ -294,12 +294,15 @@ genOrderOfOps =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "2 + 3 × 4 − 1 = ?"
-                                , answer = "13"
+                                { prompt =
+                                    String.fromInt r.a ++ " + " ++ String.fromInt r.b
+                                        ++ " × " ++ String.fromInt r.c
+                                        ++ " − " ++ String.fromInt r.d ++ " = ?"
+                                , answer = String.fromInt correct
                                 , steps =
-                                    [ "Multiply first (PEMDAS): 3 × 4 = 12"
-                                    , "Then left to right: 2 + 12 = 14"
-                                    , "Finally: 14 − 1 = 13"
+                                    [ "Multiply first (PEMDAS): " ++ String.fromInt r.b ++ " × " ++ String.fromInt r.c ++ " = " ++ String.fromInt (r.b * r.c)
+                                    , "Then add: " ++ String.fromInt r.a ++ " + " ++ String.fromInt (r.b * r.c) ++ " = " ++ String.fromInt (r.a + r.b * r.c)
+                                    , "Finally subtract: " ++ String.fromInt (r.a + r.b * r.c) ++ " − " ++ String.fromInt r.d ++ " = " ++ String.fromInt correct
                                     ]
                                 }
                             }
@@ -320,12 +323,14 @@ genEvalExpr =
                 , inputType = TInteger
                 , answer = AInt (a * x + b)
                 , hint =
-                    { prompt = "Evaluate 3x + 5 when x = 2"
-                    , answer = "11"
+                    { prompt =
+                        "Evaluate " ++ String.fromInt a ++ "x + " ++ String.fromInt b
+                            ++ " when x = " ++ String.fromInt x
+                    , answer = String.fromInt (a * x + b)
                     , steps =
-                        [ "Substitute: 3(2) + 5"
-                        , "Multiply: 6 + 5"
-                        , "Add: 11"
+                        [ "Substitute x = " ++ String.fromInt x ++ ": " ++ String.fromInt a ++ "(" ++ String.fromInt x ++ ") + " ++ String.fromInt b
+                        , "Multiply: " ++ String.fromInt (a * x) ++ " + " ++ String.fromInt b
+                        , "Add: " ++ String.fromInt (a * x + b)
                         ]
                     }
                 }
@@ -349,12 +354,11 @@ genAbsoluteValue =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "|−7| = ?"
-                                , answer = "7"
+                                { prompt = "|" ++ String.fromInt n ++ "| = ?"
+                                , answer = String.fromInt correct
                                 , steps =
-                                    [ "Absolute value is the distance from zero"
-                                    , "Always non-negative"
-                                    , "|−7| = 7"
+                                    [ "Absolute value is the distance from zero — always non-negative"
+                                    , "|" ++ String.fromInt n ++ "| = " ++ String.fromInt correct
                                     ]
                                 }
                             }
@@ -380,11 +384,12 @@ genCombineLike =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "3x + 5x = ?x"
-                                , answer = "8x"
+                                { prompt =
+                                    String.fromInt a ++ "x + " ++ String.fromInt b ++ "x = ?x"
+                                , answer = String.fromInt correct ++ "x"
                                 , steps =
-                                    [ "Add the coefficients: 3 + 5 = 8"
-                                    , "Keep the variable: 8x"
+                                    [ "Add the coefficients: " ++ String.fromInt a ++ " + " ++ String.fromInt b ++ " = " ++ String.fromInt correct
+                                    , "Keep the variable: " ++ String.fromInt correct ++ "x"
                                     ]
                                 }
                             }
@@ -408,11 +413,12 @@ genTranslateExpr =
                                     , inputType = TInteger
                                     , answer = AInt (x + k)
                                     , hint =
-                                        { prompt = "\"5 more than a number\" when the number is 3"
-                                        , answer = "8"
+                                        { prompt =
+                                            "\"" ++ String.fromInt k ++ " more than a number\" — evaluate when the number is " ++ String.fromInt x
+                                        , answer = String.fromInt (x + k)
                                         , steps =
-                                            [ "Translate: x + 5"
-                                            , "Substitute x = 3: 3 + 5 = 8"
+                                            [ "Translate: x + " ++ String.fromInt k
+                                            , "Substitute x = " ++ String.fromInt x ++ ": " ++ String.fromInt x ++ " + " ++ String.fromInt k ++ " = " ++ String.fromInt (x + k)
                                             ]
                                         }
                                     }
@@ -427,11 +433,12 @@ genTranslateExpr =
                                     , inputType = TInteger
                                     , answer = AInt (k * x)
                                     , hint =
-                                        { prompt = "\"4 times a number\" when the number is 3"
-                                        , answer = "12"
+                                        { prompt =
+                                            "\"" ++ String.fromInt k ++ " times a number\" — evaluate when the number is " ++ String.fromInt x
+                                        , answer = String.fromInt (k * x)
                                         , steps =
-                                            [ "Translate: 4x"
-                                            , "Substitute x = 3: 4(3) = 12"
+                                            [ "Translate: " ++ String.fromInt k ++ "x"
+                                            , "Substitute x = " ++ String.fromInt x ++ ": " ++ String.fromInt k ++ "(" ++ String.fromInt x ++ ") = " ++ String.fromInt (k * x)
                                             ]
                                         }
                                     }
@@ -446,11 +453,12 @@ genTranslateExpr =
                                     , inputType = TInteger
                                     , answer = AInt x
                                     , hint =
-                                        { prompt = "\"A number decreased by 3\" when the number is 7"
-                                        , answer = "4"
+                                        { prompt =
+                                            "\"A number decreased by " ++ String.fromInt k ++ "\" — evaluate when the number is " ++ String.fromInt (x + k)
+                                        , answer = String.fromInt x
                                         , steps =
-                                            [ "Translate: x − 3"
-                                            , "Substitute x = 7: 7 − 3 = 4"
+                                            [ "Translate: n − " ++ String.fromInt k
+                                            , "Substitute n = " ++ String.fromInt (x + k) ++ ": " ++ String.fromInt (x + k) ++ " − " ++ String.fromInt k ++ " = " ++ String.fromInt x
                                             ]
                                         }
                                     }
@@ -473,11 +481,12 @@ genTwoStepEquation =
                 , inputType = TInteger
                 , answer = AInt x
                 , hint =
-                    { prompt = "2x + 3 = 11"
-                    , answer = "x = 4"
+                    { prompt =
+                        String.fromInt a ++ "x + " ++ String.fromInt b ++ " = " ++ String.fromInt c
+                    , answer = "x = " ++ String.fromInt x
                     , steps =
-                        [ "Subtract 3 from both sides: 2x = 8"
-                        , "Divide both sides by 2: x = 4"
+                        [ "Subtract " ++ String.fromInt b ++ " from both sides: " ++ String.fromInt a ++ "x = " ++ String.fromInt (c - b)
+                        , "Divide both sides by " ++ String.fromInt a ++ ": x = " ++ String.fromInt x
                         ]
                     }
                 }
@@ -506,11 +515,12 @@ genTwoStepInequality =
                 , inputType = TInequality
                 , answer = AInequality dirType x0
                 , hint =
-                    { prompt = "2x + 1 > 7"
-                    , answer = "x > 3"
+                    { prompt =
+                        String.fromInt r.a ++ "x + " ++ String.fromInt r.b ++ dir ++ String.fromInt c
+                    , answer = "x " ++ symStr ++ " " ++ String.fromInt r.x
                     , steps =
-                        [ "Subtract 1: 2x > 6"
-                        , "Divide by 2: x > 3"
+                        [ "Subtract " ++ String.fromInt r.b ++ " from both sides: " ++ String.fromInt r.a ++ "x " ++ symStr ++ " " ++ String.fromInt (c - r.b)
+                        , "Divide by " ++ String.fromInt r.a ++ ": x " ++ symStr ++ " " ++ String.fromInt r.x
                         ]
                     }
                 }
@@ -534,11 +544,12 @@ genMultiStepEq =
                 , inputType = TInteger
                 , answer = AInt x
                 , hint =
-                    { prompt = "3(x + 2) = 15"
-                    , answer = "x = 3"
+                    { prompt =
+                        String.fromInt a ++ "(x + " ++ String.fromInt b ++ ") = " ++ String.fromInt c
+                    , answer = "x = " ++ String.fromInt x
                     , steps =
-                        [ "Divide both sides by 3: x + 2 = 5"
-                        , "Subtract 2: x = 3"
+                        [ "Divide both sides by " ++ String.fromInt a ++ ": x + " ++ String.fromInt b ++ " = " ++ String.fromInt (c // a)
+                        , "Subtract " ++ String.fromInt b ++ ": x = " ++ String.fromInt x
                         ]
                     }
                 }
@@ -563,12 +574,13 @@ genVarsBothSides =
                 , inputType = TInteger
                 , answer = AInt r.x
                 , hint =
-                    { prompt = "5x + 2 = 3x + 8"
-                    , answer = "x = 3"
+                    { prompt =
+                        aStr ++ " + " ++ String.fromInt r.b ++ " = " ++ cStr ++ " + " ++ String.fromInt d
+                    , answer = "x = " ++ String.fromInt r.x
                     , steps =
-                        [ "Subtract 3x from both sides: 2x + 2 = 8"
-                        , "Subtract 2: 2x = 6"
-                        , "Divide by 2: x = 3"
+                        [ "Subtract " ++ cStr ++ " from both sides: " ++ String.fromInt (r.a - r.c) ++ "x + " ++ String.fromInt r.b ++ " = " ++ String.fromInt d
+                        , "Subtract " ++ String.fromInt r.b ++ ": " ++ String.fromInt (r.a - r.c) ++ "x = " ++ String.fromInt (d - r.b)
+                        , "Divide by " ++ String.fromInt (r.a - r.c) ++ ": x = " ++ String.fromInt r.x
                         ]
                     }
                 }
@@ -597,11 +609,13 @@ genAlgebraicProportion =
                                 , inputType = TChoice choices
                                 , answer = AChoice 0
                                 , hint =
-                                    { prompt = "3/4 = 6/x"
-                                    , answer = "x = 8"
+                                    { prompt =
+                                        String.fromInt a ++ "/" ++ String.fromInt b
+                                            ++ " = " ++ String.fromInt c ++ "/x"
+                                    , answer = "x = " ++ String.fromInt x
                                     , steps =
-                                        [ "Cross-multiply: 3x = 24"
-                                        , "Divide: x = 8"
+                                        [ "Cross-multiply: " ++ String.fromInt a ++ "x = " ++ String.fromInt (b * c)
+                                        , "Divide by " ++ String.fromInt a ++ ": x = " ++ String.fromInt x
                                         ]
                                     }
                                 }
@@ -627,12 +641,13 @@ genAbsValueEq =
                 , inputType = TRoots
                 , answer = ARoots r1 r2
                 , hint =
-                    { prompt = "|2x + 3| = 7"
-                    , answer = "x = 2 or x = −5"
+                    { prompt =
+                        "|" ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ "| = " ++ String.fromInt c
+                    , answer = "x = " ++ String.fromFloat r1 ++ " or x = " ++ String.fromFloat r2
                     , steps =
-                        [ "Set up two cases: 2x+3 = 7 and 2x+3 = −7"
-                        , "Case 1: 2x = 4, x = 2"
-                        , "Case 2: 2x = −10, x = −5"
+                        [ "Set up two cases: " ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ " = " ++ String.fromInt c ++ " and " ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ " = −" ++ String.fromInt c
+                        , "Case 1: " ++ String.fromInt a ++ "x = " ++ String.fromInt (c - b) ++ ", x = " ++ String.fromFloat r1
+                        , "Case 2: " ++ String.fromInt a ++ "x = " ++ String.fromInt (-c - b) ++ ", x = " ++ String.fromFloat r2
                         ]
                     }
                 }
@@ -652,11 +667,12 @@ genLiteralEq =
                 , inputType = TInteger
                 , answer = AInt w
                 , hint =
-                    { prompt = "P = 2l + 2w. Find w when P = 20 and l = 6."
-                    , answer = "w = 4"
+                    { prompt =
+                        "Perimeter P = 2l + 2w. Find w when P = " ++ String.fromInt p ++ " and l = " ++ String.fromInt l
+                    , answer = "w = " ++ String.fromInt w
                     , steps =
-                        [ "Substitute: 20 = 2(6) + 2w"
-                        , "20 = 12 + 2w → 2w = 8 → w = 4"
+                        [ "Substitute: " ++ String.fromInt p ++ " = 2(" ++ String.fromInt l ++ ") + 2w"
+                        , String.fromInt p ++ " = " ++ String.fromInt (2 * l) ++ " + 2w → 2w = " ++ String.fromInt (p - 2 * l) ++ " → w = " ++ String.fromInt w
                         ]
                     }
                 }
@@ -684,11 +700,12 @@ genMultiStepIneq =
                 , inputType = TInequality
                 , answer = AInequality dirType x0
                 , hint =
-                    { prompt = "3x − 2 > 7"
-                    , answer = "x > 3"
+                    { prompt =
+                        String.fromInt r.a ++ "x − " ++ String.fromInt r.b ++ dirStr ++ String.fromInt c
+                    , answer = "x " ++ (if r.t == 0 then ">" else "<") ++ " " ++ String.fromInt r.x
                     , steps =
-                        [ "Add 2 to both sides: 3x > 9"
-                        , "Divide by 3: x > 3"
+                        [ "Add " ++ String.fromInt r.b ++ " to both sides: " ++ String.fromInt r.a ++ "x " ++ (if r.t == 0 then ">" else "<") ++ " " ++ String.fromInt (c + r.b)
+                        , "Divide by " ++ String.fromInt r.a ++ ": x " ++ (if r.t == 0 then ">" else "<") ++ " " ++ String.fromInt r.x
                         ]
                     }
                 }
@@ -716,11 +733,16 @@ genDomainRange =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "Domain of {(1,2),(3,4),(5,6)}?"
-                                , answer = "The domain is {1, 3, 5}"
+                                { prompt =
+                                    "The relation is {(" ++ String.fromInt r.a ++ ", 2), ("
+                                        ++ String.fromInt r.b ++ ", 5), ("
+                                        ++ String.fromInt r.c ++ ", 3), ("
+                                        ++ String.fromInt r.d ++ ", 8)}. What is the smallest element of the domain?"
+                                , answer = String.fromInt r.a
                                 , steps =
                                     [ "The domain is the set of all x-values (first coordinates)"
-                                    , "List first elements: 1, 3, 5"
+                                    , "x-values: " ++ String.fromInt r.a ++ ", " ++ String.fromInt r.b ++ ", " ++ String.fromInt r.c ++ ", " ++ String.fromInt r.d
+                                    , "Smallest: " ++ String.fromInt r.a
                                     ]
                                 }
                             }
@@ -740,11 +762,11 @@ genIsFunction =
                         , inputType = TChoice [ "Yes", "No" ]
                         , answer = AChoice 0
                         , hint =
-                            { prompt = "Is {(1,2),(2,3)} a function?"
+                            { prompt = "Is this a function? {(1,2), (2,3), (3,4), (4,5)}"
                             , answer = "Yes"
                             , steps =
                                 [ "Each x-value maps to exactly one y-value"
-                                , "No repeated x-values → it is a function"
+                                , "x-values 1, 2, 3, 4 are all different → it is a function"
                                 ]
                             }
                         }
@@ -754,7 +776,7 @@ genIsFunction =
                         , inputType = TChoice [ "Yes", "No" ]
                         , answer = AChoice 1
                         , hint =
-                            { prompt = "Is {(1,2),(1,3)} a function?"
+                            { prompt = "Is this a function? {(1,2), (1,3), (2,4)}"
                             , answer = "No"
                             , steps =
                                 [ "The x-value 1 maps to both 2 and 3"
@@ -768,11 +790,11 @@ genIsFunction =
                         , inputType = TChoice [ "Yes", "No" ]
                         , answer = AChoice 0
                         , hint =
-                            { prompt = "Is {(2,5),(3,5),(4,5)} a function?"
+                            { prompt = "Is this a function? {(2,5), (3,5), (4,5)}"
                             , answer = "Yes"
                             , steps =
-                                [ "Each x maps to exactly one y (even if y is the same)"
-                                , "No repeated x-values → it is a function"
+                                [ "Each x maps to exactly one y (even if y repeats)"
+                                , "x-values 2, 3, 4 are all different → it is a function"
                                 ]
                             }
                         }
@@ -782,10 +804,10 @@ genIsFunction =
                         , inputType = TChoice [ "Yes", "No" ]
                         , answer = AChoice 1
                         , hint =
-                            { prompt = "Is {(0,1),(0,−1)} a function?"
+                            { prompt = "Is this a function? {(0,1), (0,−1), (1,0)}"
                             , answer = "No"
                             , steps =
-                                [ "x = 0 maps to 1 and also to −1"
+                                [ "x = 0 maps to both 1 and −1"
                                 , "One input with two outputs → not a function"
                                 ]
                             }
@@ -806,11 +828,13 @@ genEvalFunction =
                 , inputType = TInteger
                 , answer = AInt (a * x + b)
                 , hint =
-                    { prompt = "f(x) = 2x + 1. Find f(3)."
-                    , answer = "7"
+                    { prompt =
+                        "f(x) = " ++ String.fromInt a ++ "x + " ++ String.fromInt b
+                            ++ ". Find f(" ++ String.fromInt x ++ ")."
+                    , answer = String.fromInt (a * x + b)
                     , steps =
-                        [ "Substitute x = 3: f(3) = 2(3) + 1"
-                        , "= 6 + 1 = 7"
+                        [ "Substitute x = " ++ String.fromInt x ++ ": f(" ++ String.fromInt x ++ ") = " ++ String.fromInt a ++ "(" ++ String.fromInt x ++ ") + " ++ String.fromInt b
+                        , "= " ++ String.fromInt (a * x) ++ " + " ++ String.fromInt b ++ " = " ++ String.fromInt (a * x + b)
                         ]
                     }
                 }
@@ -830,11 +854,13 @@ genFunctionTable =
                 , inputType = TInteger
                 , answer = AInt (a * x + b)
                 , hint =
-                    { prompt = "f(x) = 3x + 2. Find f(4)."
-                    , answer = "14"
+                    { prompt =
+                        "Complete the table for f(x) = " ++ String.fromInt a ++ "x + " ++ String.fromInt b
+                            ++ ". What is f(" ++ String.fromInt x ++ ")?"
+                    , answer = String.fromInt (a * x + b)
                     , steps =
-                        [ "Replace x with 4: 3(4) + 2"
-                        , "= 12 + 2 = 14"
+                        [ "Replace x with " ++ String.fromInt x ++ ": " ++ String.fromInt a ++ "(" ++ String.fromInt x ++ ") + " ++ String.fromInt b
+                        , "= " ++ String.fromInt (a * x) ++ " + " ++ String.fromInt b ++ " = " ++ String.fromInt (a * x + b)
                         ]
                     }
                 }
@@ -867,11 +893,16 @@ genArithmeticSeq =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "Find the next term: 3, 7, 11, 15, ?"
-                                , answer = "19"
+                                { prompt =
+                                    "Find the next term: "
+                                        ++ String.fromInt a1 ++ ", "
+                                        ++ String.fromInt a2 ++ ", "
+                                        ++ String.fromInt a3 ++ ", "
+                                        ++ String.fromInt a4 ++ ", ?"
+                                , answer = String.fromInt a5
                                 , steps =
-                                    [ "Common difference: 7 − 3 = 4"
-                                    , "Next term: 15 + 4 = 19"
+                                    [ "Common difference: " ++ String.fromInt a2 ++ " − " ++ String.fromInt a1 ++ " = " ++ String.fromInt d
+                                    , "Next term: " ++ String.fromInt a4 ++ " + " ++ String.fromInt d ++ " = " ++ String.fromInt a5
                                     ]
                                 }
                             }
@@ -918,11 +949,15 @@ genSlopeFromPoints =
                                 , inputType = TChoice choices
                                 , answer = AChoice 0
                                 , hint =
-                                    { prompt = "Slope through (1, 2) and (3, 6)?"
-                                    , answer = "2"
+                                    { prompt =
+                                        "Find the slope through ("
+                                            ++ String.fromInt r.x1 ++ ", " ++ String.fromInt r.y1
+                                            ++ ") and ("
+                                            ++ String.fromInt x2 ++ ", " ++ String.fromInt y2 ++ ")."
+                                    , answer = slopeStr
                                     , steps =
                                         [ "m = (y₂ − y₁) / (x₂ − x₁)"
-                                        , "= (6 − 2) / (3 − 1) = 4/2 = 2"
+                                        , "= (" ++ String.fromInt y2 ++ " − " ++ String.fromInt r.y1 ++ ") / (" ++ String.fromInt x2 ++ " − " ++ String.fromInt r.x1 ++ ") = " ++ String.fromInt r.dy ++ "/" ++ String.fromInt r.dx ++ " = " ++ slopeStr
                                         ]
                                     }
                                 }
@@ -945,12 +980,12 @@ genSlopeIntercept =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "y-intercept of y = 3x + 5?"
-                                , answer = "5"
+                                { prompt =
+                                    "What is the y-intercept of y = " ++ showSigned m ++ "x + " ++ String.fromInt b ++ "?"
+                                , answer = String.fromInt b
                                 , steps =
                                     [ "The y-intercept is the value of b in y = mx + b"
-                                    , "When x = 0: y = b"
-                                    , "Answer: 5"
+                                    , "When x = 0: y = " ++ String.fromInt b
                                     ]
                                 }
                             }
@@ -977,11 +1012,13 @@ genYIntercept =
                 , inputType = TInteger
                 , answer = AInt yInt
                 , hint =
-                    { prompt = "2x + 3y = 12. Find the y-intercept."
-                    , answer = "4"
+                    { prompt =
+                        String.fromInt a ++ "x + " ++ String.fromInt bAdj ++ "y = " ++ String.fromInt c
+                            ++ ". Find the y-intercept."
+                    , answer = String.fromInt yInt
                     , steps =
-                        [ "Set x = 0: 3y = 12"
-                        , "Divide: y = 4"
+                        [ "Set x = 0: " ++ String.fromInt bAdj ++ "y = " ++ String.fromInt c
+                        , "Divide: y = " ++ String.fromInt yInt
                         ]
                     }
                 }
@@ -1005,11 +1042,13 @@ genXIntercept =
                 , inputType = TInteger
                 , answer = AInt xInt
                 , hint =
-                    { prompt = "2x + 3y = 10. Find the x-intercept."
-                    , answer = "5"
+                    { prompt =
+                        String.fromInt aAdj ++ "x + " ++ String.fromInt b ++ "y = " ++ String.fromInt c
+                            ++ ". Find the x-intercept."
+                    , answer = String.fromInt xInt
                     , steps =
-                        [ "Set y = 0: 2x = 10"
-                        , "Divide: x = 5"
+                        [ "Set y = 0: " ++ String.fromInt aAdj ++ "x = " ++ String.fromInt c
+                        , "Divide: x = " ++ String.fromInt xInt
                         ]
                     }
                 }
@@ -1036,12 +1075,16 @@ genPointSlopeEq =
                 , inputType = TInteger
                 , answer = AInt yTarget
                 , hint =
-                    { prompt = "Through (1, 2) with slope 3. Find y when x = 3."
-                    , answer = "8"
+                    { prompt =
+                        "A line passes through ("
+                            ++ String.fromInt r.x1 ++ ", " ++ String.fromInt r.y1
+                            ++ ") with slope " ++ showSigned r.m
+                            ++ ". Find y when x = " ++ String.fromInt xTarget ++ "."
+                    , answer = String.fromInt yTarget
                     , steps =
-                        [ "y − 2 = 3(x − 1)"
-                        , "y − 2 = 3(3 − 1) = 6"
-                        , "y = 8"
+                        [ "y − " ++ String.fromInt r.y1 ++ " = " ++ String.fromInt r.m ++ "(x − " ++ String.fromInt r.x1 ++ ")"
+                        , "y − " ++ String.fromInt r.y1 ++ " = " ++ String.fromInt r.m ++ "(" ++ String.fromInt xTarget ++ " − " ++ String.fromInt r.x1 ++ ") = " ++ String.fromInt (r.m * r.x)
+                        , "y = " ++ String.fromInt yTarget
                         ]
                     }
                 }
@@ -1064,11 +1107,13 @@ genParallelSlope =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "Slope of a line parallel to y = 4x + 1?"
-                                , answer = "4"
+                                { prompt =
+                                    "A line parallel to y = " ++ showSigned m ++ "x + " ++ String.fromInt b
+                                        ++ " has what slope?"
+                                , answer = String.fromInt m
                                 , steps =
                                     [ "Parallel lines have the same slope"
-                                    , "Slope of y = 4x + 1 is 4"
+                                    , "Slope of y = " ++ showSigned m ++ "x + " ++ String.fromInt b ++ " is " ++ String.fromInt m
                                     ]
                                 }
                             }
@@ -1102,11 +1147,13 @@ genPerpSlope =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Slope perpendicular to y = 2x + 1?"
-                        , answer = "−1/2"
+                        { prompt =
+                            "A line perpendicular to y = " ++ String.fromInt m ++ "x + " ++ String.fromInt b
+                                ++ " has what slope?"
+                        , answer = perpStr
                         , steps =
-                            [ "Perpendicular slope = negative reciprocal"
-                            , "Flip and negate 2: −1/2"
+                            [ "Perpendicular slope = negative reciprocal of " ++ String.fromInt m
+                            , "Negate and flip: " ++ perpStr
                             ]
                         }
                     }
@@ -1133,12 +1180,14 @@ genSystemSubstitution =
                 , inputType = TSystem
                 , answer = ASystem (toFloat r.x) (toFloat y)
                 , hint =
-                    { prompt = "y = 2x + 1, 3x + y = 11"
-                    , answer = "x = 2, y = 5"
+                    { prompt =
+                        "Solve the system:\ny = " ++ showSigned r.a ++ "x + " ++ String.fromInt r.b
+                            ++ "\n" ++ String.fromInt r.c ++ "x + y = " ++ String.fromInt e
+                    , answer = "x = " ++ String.fromInt r.x ++ ", y = " ++ String.fromInt y
                     , steps =
-                        [ "Substitute y = 2x+1 into 3x+y=11"
-                        , "3x + (2x+1) = 11 → 5x = 10 → x = 2"
-                        , "y = 2(2)+1 = 5"
+                        [ "Substitute y = " ++ showSigned r.a ++ "x + " ++ String.fromInt r.b ++ " into " ++ String.fromInt r.c ++ "x + y = " ++ String.fromInt e
+                        , String.fromInt r.c ++ "x + (" ++ showSigned r.a ++ "x + " ++ String.fromInt r.b ++ ") = " ++ String.fromInt e ++ " → " ++ String.fromInt (r.c + r.a) ++ "x = " ++ String.fromInt (e - r.b) ++ " → x = " ++ String.fromInt r.x
+                        , "y = " ++ showSigned r.a ++ "(" ++ String.fromInt r.x ++ ") + " ++ String.fromInt r.b ++ " = " ++ String.fromInt y
                         ]
                     }
                 }
@@ -1164,11 +1213,14 @@ genSystemElimination =
                 , inputType = TSystem
                 , answer = ASystem (toFloat r.x) (toFloat r.y)
                 , hint =
-                    { prompt = "2x + 3y = 12, 2x − 3y = 0"
-                    , answer = "x = 3, y = 2"
+                    { prompt =
+                        "Solve the system:\n"
+                            ++ String.fromInt r.a ++ "x + " ++ String.fromInt r.b ++ "y = " ++ String.fromInt c
+                            ++ "\n" ++ String.fromInt r.a ++ "x − " ++ String.fromInt r.b ++ "y = " ++ String.fromInt c2
+                    , answer = "x = " ++ String.fromInt r.x ++ ", y = " ++ String.fromInt r.y
                     , steps =
-                        [ "Add the equations: 4x = 12 → x = 3"
-                        , "Substitute into first: 2(3)+3y=12 → y=2"
+                        [ "Add the equations: " ++ String.fromInt (2 * r.a) ++ "x = " ++ String.fromInt (c + c2) ++ " → x = " ++ String.fromInt r.x
+                        , "Substitute x = " ++ String.fromInt r.x ++ " into first: " ++ String.fromInt r.a ++ "(" ++ String.fromInt r.x ++ ") + " ++ String.fromInt r.b ++ "y = " ++ String.fromInt c ++ " → y = " ++ String.fromInt r.y
                         ]
                     }
                 }
@@ -1192,11 +1244,14 @@ genSystemWordProblem =
                 , inputType = TInteger
                 , answer = AInt larger
                 , hint =
-                    { prompt = "Two numbers sum to 13 and differ by 3. Larger number?"
-                    , answer = "8"
+                    { prompt =
+                        "Two numbers sum to " ++ String.fromInt sumAB
+                            ++ " and their difference is " ++ String.fromInt diffAB
+                            ++ ". Find the larger number."
+                    , answer = String.fromInt larger
                     , steps =
-                        [ "x + y = 13 and x − y = 3"
-                        , "Add: 2x = 16 → x = 8"
+                        [ "x + y = " ++ String.fromInt sumAB ++ " and x − y = " ++ String.fromInt diffAB
+                        , "Add: 2x = " ++ String.fromInt (sumAB + diffAB) ++ " → x = " ++ String.fromInt larger
                         ]
                     }
                 }
@@ -1228,11 +1283,13 @@ genSystemIdentifySolution =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Solve: x+y=5, 2x+y=8"
-                        , answer = "(3, 2)"
+                        { prompt =
+                            "Which ordered pair is the solution?\nx + y = " ++ String.fromInt s
+                                ++ "\n2x + y = " ++ String.fromInt t
+                        , answer = correct
                         , steps =
-                            [ "Subtract first from second: x = 3"
-                            , "Substitute: 3 + y = 5 → y = 2"
+                            [ "Subtract first from second: x = " ++ String.fromInt x
+                            , "Substitute: " ++ String.fromInt x ++ " + y = " ++ String.fromInt s ++ " → y = " ++ String.fromInt y
                             ]
                         }
                     }
@@ -1259,11 +1316,12 @@ genProductRule =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "x³ · x⁴ = x^?"
-                                , answer = "x⁷"
+                                { prompt =
+                                    "x" ++ superscript a ++ " · x" ++ superscript b ++ " = x^?"
+                                , answer = "x" ++ superscript correct
                                 , steps =
                                     [ "Product rule: add exponents"
-                                    , "3 + 4 = 7 → x⁷"
+                                    , String.fromInt a ++ " + " ++ String.fromInt b ++ " = " ++ String.fromInt correct ++ " → x" ++ superscript correct
                                     ]
                                 }
                             }
@@ -1285,15 +1343,16 @@ genQuotientRule =
                                 choices = shuffleChoices (String.fromInt correct) wrong
                             in
                             { prompt =
-                                "x" ++ superscript a ++ " ÷ x" ++ superscript b ++ " = x^?"
+                                "x" ++ superscript a ++ " / x" ++ superscript b ++ " = x^?"
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "x⁷ ÷ x³ = x^?"
-                                , answer = "x⁴"
+                                { prompt =
+                                    "x" ++ superscript a ++ " / x" ++ superscript b ++ " = x^?"
+                                , answer = "x" ++ superscript correct
                                 , steps =
                                     [ "Quotient rule: subtract exponents"
-                                    , "7 − 3 = 4 → x⁴"
+                                    , String.fromInt a ++ " − " ++ String.fromInt b ++ " = " ++ String.fromInt correct ++ " → x" ++ superscript correct
                                     ]
                                 }
                             }
@@ -1319,11 +1378,12 @@ genPowerRule =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "(x³)² = x^?"
-                                , answer = "x⁶"
+                                { prompt =
+                                    "(x" ++ superscript a ++ ")" ++ superscript b ++ " = x^?"
+                                , answer = "x" ++ superscript correct
                                 , steps =
                                     [ "Power rule: multiply exponents"
-                                    , "3 × 2 = 6 → x⁶"
+                                    , String.fromInt a ++ " × " ++ String.fromInt b ++ " = " ++ String.fromInt correct ++ " → x" ++ superscript correct
                                     ]
                                 }
                             }
@@ -1353,11 +1413,12 @@ genNegativeExponent =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "2^(−3) = ?"
-                        , answer = "1/8"
+                        { prompt =
+                            String.fromInt base ++ "^(−" ++ String.fromInt n ++ ") = ?"
+                        , answer = correct
                         , steps =
                             [ "Negative exponent: flip to denominator"
-                            , "2^(−3) = 1/2³ = 1/8"
+                            , String.fromInt base ++ "^(−" ++ String.fromInt n ++ ") = 1/" ++ String.fromInt base ++ superscript n ++ " = 1/" ++ String.fromInt denom
                             ]
                         }
                     }
@@ -1387,12 +1448,13 @@ genScientificNotation =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Write 3000 in scientific notation."
-                        , answer = "3 × 10³"
+                        { prompt =
+                            "Write " ++ valueStr ++ " in scientific notation."
+                        , answer = correct
                         , steps =
-                            [ "Move decimal to get one non-zero digit: 3.000"
-                            , "Moved 3 places left → 10³"
-                            , "Answer: 3 × 10³"
+                            [ "Move decimal to get one non-zero digit before the decimal point"
+                            , "Moved " ++ String.fromInt n ++ " places left → 10^" ++ String.fromInt n
+                            , "Answer: " ++ correct
                             ]
                         }
                     }
@@ -1423,11 +1485,14 @@ genExpGrowthDecay =
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
-                                                    { prompt = "Start: 2 organisms, doubles each hour. After 3 hours?"
-                                                    , answer = "16"
+                                                    { prompt =
+                                                        "A colony starts with " ++ String.fromInt p
+                                                            ++ " organisms and doubles each hour. How many after "
+                                                            ++ String.fromInt years ++ " hours?"
+                                                    , answer = String.fromInt result
                                                     , steps =
                                                         [ "A = P · 2^t"
-                                                        , "A = 2 · 2³ = 2 · 8 = 16"
+                                                        , "A = " ++ String.fromInt p ++ " · 2^" ++ String.fromInt years ++ " = " ++ String.fromInt p ++ " · " ++ String.fromInt (2 ^ years) ++ " = " ++ String.fromInt result
                                                         ]
                                                     }
                                                 }
@@ -1453,12 +1518,14 @@ genExpGrowthDecay =
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
-                                                    { prompt = "8 grams, halved each year. After 3 years?"
-                                                    , answer = "1"
+                                                    { prompt =
+                                                        "A substance of " ++ String.fromInt p
+                                                            ++ " grams is cut in half each year. How many grams remain after "
+                                                            ++ String.fromInt years ++ " years? (Assume exact halving)"
+                                                    , answer = String.fromInt result
                                                     , steps =
-                                                        [ "Year 1: 8 ÷ 2 = 4"
-                                                        , "Year 2: 4 ÷ 2 = 2"
-                                                        , "Year 3: 2 ÷ 2 = 1"
+                                                        [ "Each year the amount is divided by 2"
+                                                        , "After " ++ String.fromInt years ++ " years: " ++ String.fromInt p ++ " / 2^" ++ String.fromInt years ++ " = " ++ String.fromInt p ++ " / " ++ String.fromInt (factor ^ years) ++ " = " ++ String.fromInt result
                                                         ]
                                                     }
                                                 }
@@ -1492,11 +1559,11 @@ genSimplifyRadical =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Simplify: √12"
-                        , answer = "2√3"
+                        { prompt = "Simplify: √" ++ String.fromInt radicand
+                        , answer = correct
                         , steps =
-                            [ "Factor: 12 = 4 × 3 = 2² × 3"
-                            , "Pull out perfect square: √(4·3) = 2√3"
+                            [ "Factor: " ++ String.fromInt radicand ++ " = " ++ String.fromInt (n * n) ++ " × " ++ String.fromInt k ++ " = " ++ String.fromInt n ++ "² × " ++ String.fromInt k
+                            , "Pull out perfect square: √(" ++ String.fromInt (n * n) ++ "·" ++ String.fromInt k ++ ") = " ++ correct
                             ]
                         }
                     }
@@ -1531,12 +1598,14 @@ genAddSubPolynomial =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "(2x + 3) + (4x + 5) = ?"
-                        , answer = "6x + 8"
+                        { prompt =
+                            "(" ++ String.fromInt r.a ++ "x + " ++ String.fromInt r.b
+                                ++ ") + (" ++ String.fromInt r.c ++ "x + " ++ String.fromInt r.d ++ ") = ?"
+                        , answer = correct
                         , steps =
-                            [ "Combine x terms: 2x + 4x = 6x"
-                            , "Combine constants: 3 + 5 = 8"
-                            , "Answer: 6x + 8"
+                            [ "Combine x terms: " ++ String.fromInt r.a ++ "x + " ++ String.fromInt r.c ++ "x = " ++ String.fromInt xCoeff ++ "x"
+                            , "Combine constants: " ++ String.fromInt r.b ++ " + " ++ String.fromInt r.d ++ " = " ++ String.fromInt constTerm
+                            , "Answer: " ++ correct
                             ]
                         }
                     }
@@ -1567,12 +1636,13 @@ genMonomialTimesPolynomial =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "3(2x + 4) = ?"
-                        , answer = "6x + 12"
+                        { prompt =
+                            String.fromInt a ++ "(" ++ String.fromInt b ++ "x + " ++ String.fromInt c ++ ") = ?"
+                        , answer = correct
                         , steps =
-                            [ "Distribute: 3 · 2x = 6x"
-                            , "3 · 4 = 12"
-                            , "Answer: 6x + 12"
+                            [ "Distribute: " ++ String.fromInt a ++ " · " ++ String.fromInt b ++ "x = " ++ String.fromInt xCoeff ++ "x"
+                            , String.fromInt a ++ " · " ++ String.fromInt c ++ " = " ++ String.fromInt constTerm
+                            , "Answer: " ++ correct
                             ]
                         }
                     }
@@ -1603,13 +1673,14 @@ genFOIL =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "(x + 2)(x + 3) = ?"
-                        , answer = "x² + 5x + 6"
+                        { prompt =
+                            "(x + " ++ String.fromInt a ++ ")(x + " ++ String.fromInt b ++ ") = ?"
+                        , answer = correct
                         , steps =
                             [ "FOIL: First: x·x = x²"
-                            , "Outer + Inner: 3x + 2x = 5x"
-                            , "Last: 2·3 = 6"
-                            , "Answer: x² + 5x + 6"
+                            , "Outer + Inner: " ++ String.fromInt b ++ "x + " ++ String.fromInt a ++ "x = " ++ String.fromInt sumAB ++ "x"
+                            , "Last: " ++ String.fromInt a ++ "·" ++ String.fromInt b ++ " = " ++ String.fromInt prodAB
+                            , "Answer: " ++ correct
                             ]
                         }
                     }
@@ -1640,12 +1711,13 @@ genFactorGCF =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Factor: 6x + 9"
-                        , answer = "3(2x + 3)"
+                        { prompt =
+                            "Factor: " ++ String.fromInt term1 ++ "x + " ++ String.fromInt term2
+                        , answer = correct
                         , steps =
-                            [ "GCF of 6 and 9 is 3"
-                            , "6x ÷ 3 = 2x, 9 ÷ 3 = 3"
-                            , "Answer: 3(2x + 3)"
+                            [ "GCF of " ++ String.fromInt term1 ++ " and " ++ String.fromInt term2 ++ " is " ++ String.fromInt g
+                            , String.fromInt term1 ++ "x / " ++ String.fromInt g ++ " = " ++ String.fromInt b ++ "x, " ++ String.fromInt term2 ++ " / " ++ String.fromInt g ++ " = " ++ String.fromInt c
+                            , "Answer: " ++ correct
                             ]
                         }
                     }
@@ -1673,12 +1745,12 @@ genFactorDiffSquares =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Factor: x² − 9"
-                        , answer = "(x + 3)(x − 3)"
+                        { prompt = "Factor: x² − " ++ String.fromInt radicand
+                        , answer = correct
                         , steps =
                             [ "Difference of squares: a² − b² = (a+b)(a−b)"
-                            , "√9 = 3"
-                            , "x² − 9 = (x+3)(x−3)"
+                            , "√" ++ String.fromInt radicand ++ " = " ++ String.fromInt a
+                            , "x² − " ++ String.fromInt radicand ++ " = " ++ correct
                             ]
                         }
                     }
@@ -1707,12 +1779,12 @@ genFactorTrinomial =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Factor: x² + 5x + 6"
-                        , answer = "(x + 2)(x + 3)"
+                        { prompt = "Factor: x² + " ++ String.fromInt b ++ "x + " ++ String.fromInt c
+                        , answer = correct
                         , steps =
-                            [ "Find two numbers that multiply to 6 and add to 5"
-                            , "2 × 3 = 6 and 2 + 3 = 5"
-                            , "Answer: (x+2)(x+3)"
+                            [ "Find two numbers that multiply to " ++ String.fromInt c ++ " and add to " ++ String.fromInt b
+                            , String.fromInt r ++ " × " ++ String.fromInt s ++ " = " ++ String.fromInt c ++ " and " ++ String.fromInt r ++ " + " ++ String.fromInt s ++ " = " ++ String.fromInt b
+                            , "Answer: " ++ correct
                             ]
                         }
                     }
@@ -1751,10 +1823,14 @@ genAxisOfSymmetry =
                                 , inputType = TChoice choices
                                 , answer = AChoice 0
                                 , hint =
-                                    { prompt = "Axis of y = x² + 4x + 3?"
-                                    , answer = "x = −2"
+                                    { prompt =
+                                        "Axis of symmetry of y = "
+                                            ++ String.fromInt a ++ "x² + "
+                                            ++ showSigned b ++ "x + "
+                                            ++ String.fromInt c ++ "?"
+                                    , answer = "x = " ++ String.fromInt axis
                                     , steps =
-                                        [ "x = −b/(2a) = −4/(2·1) = −2"
+                                        [ "x = −b/(2a) = −(" ++ String.fromInt b ++ ")/(2·" ++ String.fromInt a ++ ") = " ++ String.fromInt num ++ "/" ++ String.fromInt denom ++ " = " ++ String.fromInt axis
                                         ]
                                     }
                                 }
@@ -1782,11 +1858,15 @@ genDiscriminant =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "Discriminant of x² + 2x − 3?"
-                                , answer = "16"
+                                { prompt =
+                                    "Find the discriminant of "
+                                        ++ String.fromInt a ++ "x² + "
+                                        ++ showSigned b ++ "x + "
+                                        ++ String.fromInt c
+                                , answer = String.fromInt disc
                                 , steps =
                                     [ "Discriminant = b² − 4ac"
-                                    , "= 2² − 4(1)(−3) = 4 + 12 = 16"
+                                    , "= " ++ String.fromInt b ++ "² − 4(" ++ String.fromInt a ++ ")(" ++ String.fromInt c ++ ") = " ++ String.fromInt (b * b) ++ " − " ++ String.fromInt (4 * a * c) ++ " = " ++ String.fromInt disc
                                     ]
                                 }
                             }
@@ -1809,12 +1889,13 @@ genSolveByFactoring =
                 , inputType = TRoots
                 , answer = ARoots (toFloat -r) (toFloat -s)
                 , hint =
-                    { prompt = "Solve: x² + 5x + 6 = 0"
-                    , answer = "x = −2 or x = −3"
+                    { prompt =
+                        "Solve: x² + " ++ String.fromInt b ++ "x + " ++ String.fromInt c ++ " = 0"
+                    , answer = "x = −" ++ String.fromInt r ++ " or x = −" ++ String.fromInt s
                     , steps =
-                        [ "Factor: (x + 2)(x + 3) = 0"
+                        [ "Factor: (x + " ++ String.fromInt r ++ ")(x + " ++ String.fromInt s ++ ") = 0"
                         , "Set each factor to zero"
-                        , "x = −2 or x = −3"
+                        , "x = −" ++ String.fromInt r ++ " or x = −" ++ String.fromInt s
                         ]
                     }
                 }
@@ -1832,11 +1913,11 @@ genSolveBySquareRoot =
                 , inputType = TRoots
                 , answer = ARoots (toFloat n) (toFloat -n)
                 , hint =
-                    { prompt = "Solve: x² = 25"
-                    , answer = "x = 5 or x = −5"
+                    { prompt = "Solve: x² = " ++ String.fromInt nn
+                    , answer = "x = " ++ String.fromInt n ++ " or x = −" ++ String.fromInt n
                     , steps =
                         [ "Take square root of both sides"
-                        , "x = ±√25 = ±5"
+                        , "x = ±√" ++ String.fromInt nn ++ " = ±" ++ String.fromInt n
                         ]
                     }
                 }
@@ -1860,12 +1941,14 @@ genQuadraticFormula =
                 , inputType = TRoots
                 , answer = ARoots (toFloat r) (toFloat s)
                 , hint =
-                    { prompt = "Solve x² − 5x + 6 = 0 using the quadratic formula."
-                    , answer = "x = 2 or x = 3"
+                    { prompt =
+                        "Use the quadratic formula. Solve: x² + "
+                            ++ showSigned b ++ "x + " ++ String.fromInt c ++ " = 0"
+                    , answer = "x = " ++ String.fromInt r ++ " or x = " ++ String.fromInt s
                     , steps =
-                        [ "x = [−b ± √(b²−4ac)] / (2a)"
-                        , "= [5 ± √(25−24)] / 2 = [5 ± 1] / 2"
-                        , "x = 3 or x = 2"
+                        [ "x = [−b ± √(b²−4ac)] / (2a), with a=1, b=" ++ String.fromInt b ++ ", c=" ++ String.fromInt c
+                        , "= [" ++ String.fromInt (-b) ++ " ± √(" ++ String.fromInt (b * b) ++ "−" ++ String.fromInt (4 * c) ++ ")] / 2 = [" ++ String.fromInt (-b) ++ " ± " ++ String.fromInt (r + s) ++ "] / 2"
+                        , "x = " ++ String.fromInt r ++ " or x = " ++ String.fromInt s
                         ]
                     }
                 }
@@ -1893,11 +1976,12 @@ genVertexForm =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "Vertex of y = (x − 3)² + 2?"
-                        , answer = "(3, 2)"
+                        { prompt =
+                            "Find the vertex of y = (x − " ++ String.fromInt h ++ ")² + " ++ String.fromInt k
+                        , answer = correct
                         , steps =
                             [ "Vertex form: y = (x − h)² + k"
-                            , "Vertex is at (h, k) = (3, 2)"
+                            , "Vertex is at (h, k) = (" ++ String.fromInt h ++ ", " ++ String.fromInt k ++ ")"
                             ]
                         }
                     }
@@ -1918,7 +2002,7 @@ genIdentifyFunctionType =
                         , inputType = TChoice [ "Linear", "Quadratic", "Exponential" ]
                         , answer = AChoice 0
                         , hint =
-                            { prompt = "What type is f(x) = 3x + 2?"
+                            { prompt = "Which type of function is f(x) = 3x + 2?"
                             , answer = "Linear"
                             , steps =
                                 [ "Highest power of x is 1"
@@ -1932,7 +2016,7 @@ genIdentifyFunctionType =
                         , inputType = TChoice [ "Linear", "Quadratic", "Exponential" ]
                         , answer = AChoice 1
                         , hint =
-                            { prompt = "What type is f(x) = x² − 4x + 1?"
+                            { prompt = "Which type of function is f(x) = x² − 4x + 1?"
                             , answer = "Quadratic"
                             , steps =
                                 [ "Highest power of x is 2"
@@ -1946,7 +2030,7 @@ genIdentifyFunctionType =
                         , inputType = TChoice [ "Linear", "Quadratic", "Exponential" ]
                         , answer = AChoice 2
                         , hint =
-                            { prompt = "What type is f(x) = 3 · 2^x?"
+                            { prompt = "Which type of function is f(x) = 3 · 2^x?"
                             , answer = "Exponential"
                             , steps =
                                 [ "The variable x is in the exponent"
@@ -1978,11 +2062,12 @@ genEvalPiecewise =
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
-                                                    { prompt = "f(x) = {2x if x≥0, −x if x<0}. Find f(3)."
-                                                    , answer = "6"
+                                                    { prompt =
+                                                        "f(x) = { 2x if x ≥ 0 | −x if x < 0 }. Find f(" ++ String.fromInt x ++ ")."
+                                                    , answer = String.fromInt (2 * x)
                                                     , steps =
-                                                        [ "x = 3 ≥ 0, so use f(x) = 2x"
-                                                        , "f(3) = 2(3) = 6"
+                                                        [ "x = " ++ String.fromInt x ++ " ≥ 0, so use f(x) = 2x"
+                                                        , "f(" ++ String.fromInt x ++ ") = 2(" ++ String.fromInt x ++ ") = " ++ String.fromInt (2 * x)
                                                         ]
                                                     }
                                                 }
@@ -2004,11 +2089,12 @@ genEvalPiecewise =
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
-                                                    { prompt = "f(x) = {2x if x≥0, −x if x<0}. Find f(−4)."
-                                                    , answer = "4"
+                                                    { prompt =
+                                                        "f(x) = { 2x if x ≥ 0 | −x if x < 0 }. Find f(" ++ String.fromInt nx ++ ")."
+                                                    , answer = String.fromInt (-nx)
                                                     , steps =
-                                                        [ "x = −4 < 0, so use f(x) = −x"
-                                                        , "f(−4) = −(−4) = 4"
+                                                        [ "x = " ++ String.fromInt nx ++ " < 0, so use f(x) = −x"
+                                                        , "f(" ++ String.fromInt nx ++ ") = −(" ++ String.fromInt nx ++ ") = " ++ String.fromInt (-nx)
                                                         ]
                                                     }
                                                 }
@@ -2029,11 +2115,12 @@ genEvalPiecewise =
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
-                                                    { prompt = "f(x) = {x+3 if x<2, x² if x≥2}. Find f(4)."
-                                                    , answer = "16"
+                                                    { prompt =
+                                                        "f(x) = { x + 3 if x < 2 | x² if x ≥ 2 }. Find f(" ++ String.fromInt x ++ ")."
+                                                    , answer = String.fromInt (x * x)
                                                     , steps =
-                                                        [ "x = 4 ≥ 2, so use f(x) = x²"
-                                                        , "f(4) = 4² = 16"
+                                                        [ "x = " ++ String.fromInt x ++ " ≥ 2, so use f(x) = x²"
+                                                        , "f(" ++ String.fromInt x ++ ") = " ++ String.fromInt x ++ "² = " ++ String.fromInt (x * x)
                                                         ]
                                                     }
                                                 }
@@ -2071,11 +2158,11 @@ genSimplifyRational =
                         , inputType = TChoice choices
                         , answer = AChoice 0
                         , hint =
-                            { prompt = "Simplify: 6x / (9x)"
-                            , answer = "2/3"
+                            { prompt = "Simplify: " ++ String.fromInt num ++ "x / (" ++ String.fromInt den ++ "x)"
+                            , answer = correct
                             , steps =
-                                [ "Cancel the common factor x"
-                                , "6/9 → GCF is 3 → 2/3"
+                                [ "Cancel the common factor x: " ++ String.fromInt num ++ "/" ++ String.fromInt den
+                                , String.fromInt num ++ "/" ++ String.fromInt den ++ " → GCF is " ++ String.fromInt g ++ " → " ++ correct
                                 ]
                             }
                         }
@@ -2110,12 +2197,14 @@ genMultiplyRational =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "(2/3) × (3/4) = ?"
-                        , answer = "1/2"
+                        { prompt =
+                            "(" ++ String.fromInt r.a ++ "/" ++ String.fromInt r.b
+                                ++ ") × (" ++ String.fromInt r.c ++ "/" ++ String.fromInt r.d ++ ") = ?"
+                        , answer = correct
                         , steps =
-                            [ "Multiply numerators: 2 × 3 = 6"
-                            , "Multiply denominators: 3 × 4 = 12"
-                            , "Simplify: 6/12 = 1/2"
+                            [ "Multiply numerators: " ++ String.fromInt r.a ++ " × " ++ String.fromInt r.c ++ " = " ++ String.fromInt numProd
+                            , "Multiply denominators: " ++ String.fromInt r.b ++ " × " ++ String.fromInt r.d ++ " = " ++ String.fromInt denProd
+                            , "Simplify: " ++ String.fromInt numProd ++ "/" ++ String.fromInt denProd ++ " = " ++ correct
                             ]
                         }
                     }
@@ -2150,11 +2239,13 @@ genAddSubRadical =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "2√3 + 5√3 = ?"
-                        , answer = "7√3"
+                        { prompt =
+                            String.fromInt a ++ "√" ++ String.fromInt k
+                                ++ " + " ++ String.fromInt b ++ "√" ++ String.fromInt k ++ " = ?"
+                        , answer = correct
                         , steps =
                             [ "Like radicals: add coefficients"
-                            , "2 + 5 = 7 → 7√3"
+                            , String.fromInt a ++ " + " ++ String.fromInt b ++ " = " ++ String.fromInt coeff ++ " → " ++ correct
                             ]
                         }
                     }
@@ -2183,11 +2274,12 @@ genMultiplyRadical =
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
-                        { prompt = "√3 × √5 = ?"
-                        , answer = "√15"
+                        { prompt =
+                            "√" ++ String.fromInt a ++ " × √" ++ String.fromInt b ++ " = ?"
+                        , answer = correct
                         , steps =
                             [ "√a × √b = √(a·b)"
-                            , "√3 × √5 = √15"
+                            , "√" ++ String.fromInt a ++ " × √" ++ String.fromInt b ++ " = √" ++ String.fromInt product
                             ]
                         }
                     }
@@ -2204,11 +2296,11 @@ genSolveRadicalEq =
                 , inputType = TInteger
                 , answer = AInt (n * n)
                 , hint =
-                    { prompt = "Solve: √x = 5"
-                    , answer = "x = 25"
+                    { prompt = "Solve: √x = " ++ String.fromInt n
+                    , answer = "x = " ++ String.fromInt (n * n)
                     , steps =
-                        [ "Square both sides: x = 5² = 25"
-                        , "Check: √25 = 5 ✓"
+                        [ "Square both sides: x = " ++ String.fromInt n ++ "² = " ++ String.fromInt (n * n)
+                        , "Check: √" ++ String.fromInt (n * n) ++ " = " ++ String.fromInt n ++ " ✓"
                         ]
                     }
                 }
@@ -2244,11 +2336,16 @@ genMeanSD =
                                 , inputType = TChoice choices
                                 , answer = AChoice 0
                                 , hint =
-                                    { prompt = "Mean of 2, 4, 6, 8?"
-                                    , answer = "5"
+                                    { prompt =
+                                        "Find the mean of: "
+                                            ++ String.fromInt r.a ++ ", "
+                                            ++ String.fromInt r.b ++ ", "
+                                            ++ String.fromInt r.c ++ ", "
+                                            ++ String.fromInt r.d
+                                    , answer = String.fromInt mean
                                     , steps =
-                                        [ "Add all values: 2+4+6+8 = 20"
-                                        , "Divide by count (4): 20/4 = 5"
+                                        [ "Add all values: " ++ String.fromInt r.a ++ " + " ++ String.fromInt r.b ++ " + " ++ String.fromInt r.c ++ " + " ++ String.fromInt r.d ++ " = " ++ String.fromInt total
+                                        , "Divide by count (4): " ++ String.fromInt total ++ "/4 = " ++ String.fromInt mean
                                         ]
                                     }
                                 }
@@ -2278,11 +2375,14 @@ genZScore =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "μ = 70, σ = 5. z-score for x = 80?"
-                                , answer = "2"
+                                { prompt =
+                                    "Mean μ = " ++ String.fromInt mu
+                                        ++ ", σ = " ++ String.fromInt sigma
+                                        ++ ". Find the z-score for x = " ++ String.fromInt x ++ "."
+                                , answer = String.fromInt z
                                 , steps =
                                     [ "z = (x − μ) / σ"
-                                    , "= (80 − 70) / 5 = 10/5 = 2"
+                                    , "= (" ++ String.fromInt x ++ " − " ++ String.fromInt mu ++ ") / " ++ String.fromInt sigma ++ " = " ++ String.fromInt (x - mu) ++ "/" ++ String.fromInt sigma ++ " = " ++ String.fromInt z
                                     ]
                                 }
                             }
@@ -2319,12 +2419,18 @@ genVariance =
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
-                                { prompt = "Variance of 11, 12, 9, 8 (mean=10)?"
-                                , answer = "2.5 ≈ 2"
+                                { prompt =
+                                    "Find the variance of: "
+                                        ++ String.fromInt v1 ++ ", "
+                                        ++ String.fromInt v2 ++ ", "
+                                        ++ String.fromInt v3 ++ ", "
+                                        ++ String.fromInt v4
+                                        ++ " (mean = " ++ String.fromInt m ++ ")"
+                                , answer = String.fromInt variance
                                 , steps =
-                                    [ "Deviations: 1, 2, −1, −2"
-                                    , "Squared: 1, 4, 1, 4"
-                                    , "Variance = (1+4+1+4)/4 = 10/4 = 2.5"
+                                    [ "Deviations from mean: " ++ String.fromInt d1 ++ ", " ++ String.fromInt d2 ++ ", −" ++ String.fromInt d1 ++ ", −" ++ String.fromInt d2
+                                    , "Squared: " ++ String.fromInt (d1 * d1) ++ ", " ++ String.fromInt (d2 * d2) ++ ", " ++ String.fromInt (d1 * d1) ++ ", " ++ String.fromInt (d2 * d2)
+                                    , "Variance = (" ++ String.fromInt (d1 * d1) ++ "+" ++ String.fromInt (d2 * d2) ++ "+" ++ String.fromInt (d1 * d1) ++ "+" ++ String.fromInt (d2 * d2) ++ ")/4 = " ++ String.fromInt (2 * (d1 * d1 + d2 * d2)) ++ "/4 = " ++ String.fromInt variance
                                     ]
                                 }
                             }
