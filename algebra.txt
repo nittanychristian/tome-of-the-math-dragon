@@ -1,0 +1,135 @@
+Unit 1: Algebra Basics
+● The real number system
+● Properties
+● Order of operations
+● Absolute value
+● Evaluating expressions
+● Matrices
+● Combining like terms
+● Simplifying expressions
+● Translating expressions
+● Translating equations
+● Translating inequalities
+● Solving two-step equations
+● Solving and graphing two-step inequalities
+Unit 2: Multi-Step Equations and Inequalities
+● Multi-step equations
+● Variables on both sides
+● Infinite and no solution equations
+● Algebraic proportions
+● Absolute value equations
+● Multi-variable (literal) equations
+● Word problems
+● Multi-step inequalities
+● Compound inequalities
+● Absolute value inequalities
+Unit 3: Relations and Functions; Direct and Inverse Variation
+● Relations, domain, range
+● Functions vs. Relations
+● Graphing functions
+● Function tables
+● Zeros of functions/analyzing graphs
+● Arithmetic Sequences
+
+Middle School Math
+Syllabus – Algebra 1
+
+_____________________________________________________________________________________
+Unit 4 : Linear Equations
+● Slope from a graph and slope formula
+● Slope-intercept form and standard form
+● Graphing linear equations using slope-intercept form
+● x- and y- Intercepts
+● Vertical and horizontal lines
+● The point-slope formula given point and slope
+● Point-slope formula given two points
+● Writing equations of lines
+● Parallel and perpendicular lines
+● Linear equation word problems
+● Scatter plots, lines of best fit, and linear regression
+Unit 5: Systems of Equations and Inequalities
+● Solving systems of equations by graphing
+● Solving systems of equations by substitution
+● Solving systems of equations by elimination
+● Comparing methods to solving systems
+● Word problems
+● Solving systems by matrices
+● Linear inequalities
+● Systems of linear inequalities
+● Systems of linear inequalities word problems
+Unit 6: Exponents and Exponential functions
+● Monomials: Add, subtract, multiply
+● Power rule and geometric sequences
+● Quotient rule
+● Negative exponents
+● Scientific notation
+● Graphing exponential functions
+● Exponential growth and decay applications
+● Geometric sequences
+● Simplifying Radicals: Square and cube roots
+● Monomial Square roots
+
+Middle School Math
+Syllabus – Algebra 1
+
+_____________________________________________________________________________________
+Unit 7: Polynomials and Factoring
+● Intro to polynomials: Classify, Add, Subtract
+● Multiplying a Monomial and a polynomial
+● Multiplying binomials and trinomials
+● Dividing polynomials by a monomial
+● Factoring polynomials: Greatest Common Factor
+● Factoring polynomials: Difference of Squares
+● Factoring polynomials: Trinomials
+● Factoring polynomials: Grouping
+● Dividing polynomials by a binomial
+Unit 8: Quadratic Equations
+● Introduction to Quadratic Equations: Standard Form, axis of symmetry,
+vertex, minimum, maximum
+● Graphing quadratic equations
+● Vertex form of a quadratic equation; transformations
+● Quadratic roots and the discriminant
+● Solving quadratics by factoring
+● Compare vertex form, standard form, and factored form
+● Solving quadratics by square roots
+● Solving quadratics by completing the square
+● Solving quadratics by the quadratic formula
+● Methods comparison; choosing the best method
+● Applications; area and consecutive integer problems
+● Applications; projectile motion
+● Linear vs. quadratic regression
+Unit 9: Linear, Quadratic and Exponential Functions
+● Identifying linear, quadratic, and exponential functions
+● Writing linear, quadratic, and exponential functions
+● Linear, quadratic, and exponential applications
+● Linear, quadratic, and exponential regression
+● Piecewise functions
+● Piecewise functions application
+● Nonlinear systems
+
+Middle School Math
+Syllabus – Algebra 1
+
+_____________________________________________________________________________________
+Unit 10: Rational Expressions and Equations
+● Simplifying rational expressions
+● Multiplying rational expressions
+● Dividing rational expressions
+● Adding and subtracting rational expressions
+● Applications
+Unit 11: Radical Expressions and Equations
+● Simplifying radicals square and cube roots
+● Simplifying radicals with variables
+● Adding and subtracting radicals
+● Multiplying radicals
+● Dividing radicals (includes rationalizing the denominator)
+● Dividing radicals with binomials (conjugates)
+● Solving radical equations
+Unit 12: Statistics
+● Basic statistics review (measures of center, box-and-whisker plots, stem-and
+leaf plots, histograms, stats on the calc)
+● Simplifying radicals square and cube roots
+● Measures of dispersion: mean absolute deviation
+● Standard deviation
+● Variance
+● Normal distribution and z-Scores

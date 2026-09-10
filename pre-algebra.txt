@@ -1,0 +1,123 @@
+Unit 1: The Real Numbers
+● Integers, integer operations, and absolute value
+● Simplifying fractions, mixed vs. improper forms, converting fractions/decimals/percents
+● Adding, subtracting, multiplying and dividing fractions
+● Exponents, zero exponent, negative exponents
+● Perfect squares, square roots, non-perfect squares
+● Perfect cubes and cube roots
+● Scientific notation
+● Comparing and ordering numbers
+● Order of operations
+● Evaluating expressions
+● The real number system
+● Properties of real numbers
+Unit 2: Algebraic Expressions
+● Translating expressions
+● Combining like terms
+● Distribute and combine like terms
+● Factoring linear expressions
+● Add, subtract, multiply and divide monomials
+● Powers of monomials
+● Operations with scientific notation
+● Adding and subtracting polynomials
+Unit 3: Equations and Inequalities
+● One-step equations
+● Rational equations
+● Two-step equations
+● Solving equations by square roots
+● Multi-step equations
+● Solving equations with fractions
+● Translating and solving equations
+● Applications
+● Intro to inequalities
+● Two-step inequalities
+● Multi-step inequalities
+● Applications of inequalities
+
+Middle School Math
+Syllabus - Pre-Algebra
+
+_____________________________________________________________________________________
+Unit 4: Ratios, Proportions, and Percents
+● Ratios
+● Rates and unit rates
+● Proportional vs. nonproportional relationships
+● Solving proportions
+● Proportion word problems
+● Scales drawings and models
+● Similar figures
+● Indirect measurement
+● Percent proportion
+● Percent equations; Discount, mark-up, sales tax, tips
+● Percent of change
+● Simple interest
+Unit 5: Functions and Linear Representations
+● Coordinate plane review; Relations vs. Functions; Domain and Range
+● Graphing linear equations by table
+● Rate of change/slope
+● Slope formula
+● Slope applications
+● Graphing linear equations by slope-intercept form
+● Standard form
+● Vertical and horizontal lines
+● Linear vs. nonlinear equations, slope-intercept form applications
+● Slope-intercept form applications
+● Proportional relationships
+● Direct variation
+Unit 6: Systems of Equations
+● Solving Systems of Equations by graphing
+● Solving Systems of Equations by substitution
+● Solving Systems of Equations by elimination
+● Solving Systems of Equations Applications
+
+Middle School Math
+Syllabus - Pre-Algebra
+
+_____________________________________________________________________________________
+Unit 7: Geometry
+● Introduction to angles (parts of an angle, types of angles, finding angle measures)
+● Basic angle relationships (vertical, adjacent, complementary, supplementary)
+● Angle relationships and algebra
+● Parallel lines cut by a transversal (corresponding, alternate interior, alternate exterior,
+consecutive interior)
+● Classifying triangles
+● Triangle sum theorem
+● Pythagorean theorem and converse
+● Pythagorean theorem word problems
+● Quadrilaterals
+● Polygons, sum of interior measures, congruent polygons
+● Reflections
+● Translations
+● Rotations
+● Dilations
+Unit 8: Measurement (Area and Volume)
+● Area and perimeter of plane figures
+● Area and circumference of circles
+● Area and perimeter of composite figures
+● Area of shaded regions
+● Classifying and slicing 3D figures
+● Volume of prisms and cylinders
+● Volume of pyramids and cones
+● Surface area of prisms and cylinders
+● Surface area of pyramids and cones
+● Volume and surface area of spheres
+● Effects of changing dimensions
+● Perimeter and area of similar figures
+● Volume and surface area of similar solids
+
+Middle School Math
+Syllabus - Pre-Algebra
+
+_____________________________________________________________________________________
+Unit 9: Probability and Statistics
+● Simple probability
+● Theoretical vs. experimental probability
+● Counting outcomes: Tree diagrams and counting principle
+● Compound probability
+● Independent and dependent events
+● Biased vs. Unbiased samples
+● Measures of center (mean, median, mode) and range
+● Mean absolute deviation
+● Box-and-whisker plots
+● Scatter plots and line of best fit
+● Two-way tables and relative frequency
