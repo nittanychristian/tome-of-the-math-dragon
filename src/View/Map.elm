@@ -130,6 +130,9 @@ unitList course highestUnlocked =
 
         isUnlocked uid =
             compareUnits uid highestUnlocked /= GT
+
+        isCompleted uid =
+            compareUnits uid highestUnlocked == LT
     in
     div
         [ style "display" "flex"
@@ -140,7 +143,7 @@ unitList course highestUnlocked =
         ]
         (List.map
             (\uid ->
-                unitButton uid (isUnlocked uid)
+                unitButton uid (isUnlocked uid) (isCompleted uid)
             )
             units
         )
@@ -156,8 +159,8 @@ chapterPrefix uid =
             "MEGA: "
 
 
-unitButton : UnitId -> Bool -> Html Msg
-unitButton uid unlocked =
+unitButton : UnitId -> Bool -> Bool -> Html Msg
+unitButton uid unlocked completed =
     let
         label =
             chapterPrefix uid ++ Curriculum.unitName uid
@@ -172,44 +175,67 @@ unitButton uid unlocked =
             else
                 ( T.streakEmpty, T.streakEmpty, T.bgBlack )
     in
-    button
-        ([ style "background" bgColor
-         , style "color" textColor
-         , style "font-family" T.fontFamily
-         , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")
-         , style "border" ("2px solid " ++ borderColor)
-         , style "padding" "10px 12px"
-         , style "text-align" "left"
-         , style "display" "flex"
-         , style "justify-content" "space-between"
-         , style "align-items" "center"
-         ]
-            ++ (if unlocked then
-                    [ onClick (ViewChapter uid), style "cursor" "pointer" ]
+    div
+        [ style "display" "flex"
+        , style "gap" "6px"
+        , style "align-items" "stretch"
+        ]
+        [ button
+            ([ style "background" bgColor
+             , style "color" textColor
+             , style "font-family" T.fontFamily
+             , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")
+             , style "border" ("2px solid " ++ borderColor)
+             , style "padding" "10px 12px"
+             , style "text-align" "left"
+             , style "display" "flex"
+             , style "justify-content" "space-between"
+             , style "align-items" "center"
+             , style "flex" "1"
+             ]
+                ++ (if unlocked then
+                        [ onClick (ViewChapter uid), style "cursor" "pointer" ]
 
-                else
-                    [ style "cursor" "not-allowed" ]
-               )
-        )
-        [ text label
-        , div
-            [ style "font-size" (String.fromInt (T.fontSizeSmall - 1) ++ "px")
-            , style "color"
-                (if unlocked then
-                    T.gold
+                    else
+                        [ style "cursor" "not-allowed" ]
+                   )
+            )
+            [ text label
+            , div
+                [ style "font-size" (String.fromInt (T.fontSizeSmall - 1) ++ "px")
+                , style "color"
+                    (if unlocked then
+                        T.gold
 
-                 else
-                    T.streakEmpty
-                )
+                     else
+                        T.streakEmpty
+                    )
+                ]
+                [ text
+                    (if unlocked then
+                        bossLabel
+
+                     else
+                        "LOCKED"
+                    )
+                ]
             ]
-            [ text
-                (if unlocked then
-                    bossLabel
+        , if completed then
+            button
+                [ onClick (StartBoss uid)
+                , style "background" T.bgDark
+                , style "color" T.gold
+                , style "font-family" T.fontFamily
+                , style "font-size" (String.fromInt (T.fontSizeSmall - 1) ++ "px")
+                , style "border" ("2px solid " ++ T.gold)
+                , style "padding" "6px 8px"
+                , style "cursor" "pointer"
+                , style "white-space" "nowrap"
+                ]
+                [ text "⚔ BOSS" ]
 
-                 else
-                    "LOCKED"
-                )
-            ]
+          else
+            text ""
         ]
 
 

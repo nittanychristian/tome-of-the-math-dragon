@@ -21733,6 +21733,9 @@ var $author$project$Main$update = F2(
 				} else {
 					return A3($author$project$Main$startQuest, uid, 0, model);
 				}
+			case 'StartBoss':
+				var uid = msg.a;
+				return A2($author$project$Main$startBoss, uid, model);
 			case 'ViewChapter':
 				var uid = msg.a;
 				return _Utils_Tuple2(
@@ -27286,6 +27289,9 @@ var $author$project$View$Map$header = F3(
 						]))
 				]));
 	});
+var $author$project$Types$StartBoss = function (a) {
+	return {$: 'StartBoss', a: a};
+};
 var $author$project$Types$ViewChapter = function (a) {
 	return {$: 'ViewChapter', a: a};
 };
@@ -27298,8 +27304,8 @@ var $author$project$View$Map$chapterPrefix = function (uid) {
 		return 'MEGA: ';
 	}
 };
-var $author$project$View$Map$unitButton = F2(
-	function (uid, unlocked) {
+var $author$project$View$Map$unitButton = F3(
+	function (uid, unlocked, completed) {
 		var label = _Utils_ap(
 			$author$project$View$Map$chapterPrefix(uid),
 			$author$project$Game$Curriculum$unitName(uid));
@@ -27309,54 +27315,88 @@ var $author$project$View$Map$unitButton = F2(
 		var borderColor = _v0.b;
 		var bgColor = _v0.c;
 		return A2(
-			$elm$html$Html$button,
-			_Utils_ap(
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'background', bgColor),
-						A2($elm$html$Html$Attributes$style, 'color', textColor),
-						A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
-						A2(
-						$elm$html$Html$Attributes$style,
-						'font-size',
-						$elm$core$String$fromInt($author$project$View$Theme$fontSizeSmall) + 'px'),
-						A2($elm$html$Html$Attributes$style, 'border', '2px solid ' + borderColor),
-						A2($elm$html$Html$Attributes$style, 'padding', '10px 12px'),
-						A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
-						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-						A2($elm$html$Html$Attributes$style, 'justify-content', 'space-between'),
-						A2($elm$html$Html$Attributes$style, 'align-items', 'center')
-					]),
-				unlocked ? _List_fromArray(
-					[
-						$elm$html$Html$Events$onClick(
-						$author$project$Types$ViewChapter(uid)),
-						A2($elm$html$Html$Attributes$style, 'cursor', 'pointer')
-					]) : _List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'cursor', 'not-allowed')
-					])),
+			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$text(label),
+					A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+					A2($elm$html$Html$Attributes$style, 'gap', '6px'),
+					A2($elm$html$Html$Attributes$style, 'align-items', 'stretch')
+				]),
+			_List_fromArray(
+				[
 					A2(
-					$elm$html$Html$div,
+					$elm$html$Html$button,
+					_Utils_ap(
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'background', bgColor),
+								A2($elm$html$Html$Attributes$style, 'color', textColor),
+								A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
+								A2(
+								$elm$html$Html$Attributes$style,
+								'font-size',
+								$elm$core$String$fromInt($author$project$View$Theme$fontSizeSmall) + 'px'),
+								A2($elm$html$Html$Attributes$style, 'border', '2px solid ' + borderColor),
+								A2($elm$html$Html$Attributes$style, 'padding', '10px 12px'),
+								A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
+								A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+								A2($elm$html$Html$Attributes$style, 'justify-content', 'space-between'),
+								A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+								A2($elm$html$Html$Attributes$style, 'flex', '1')
+							]),
+						unlocked ? _List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Types$ViewChapter(uid)),
+								A2($elm$html$Html$Attributes$style, 'cursor', 'pointer')
+							]) : _List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'cursor', 'not-allowed')
+							])),
 					_List_fromArray(
 						[
+							$elm$html$Html$text(label),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$Attributes$style,
+									'font-size',
+									$elm$core$String$fromInt($author$project$View$Theme$fontSizeSmall - 1) + 'px'),
+									A2(
+									$elm$html$Html$Attributes$style,
+									'color',
+									unlocked ? $author$project$View$Theme$gold : $author$project$View$Theme$streakEmpty)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									unlocked ? bossLabel : 'LOCKED')
+								]))
+						])),
+					completed ? A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onClick(
+							$author$project$Types$StartBoss(uid)),
+							A2($elm$html$Html$Attributes$style, 'background', $author$project$View$Theme$bgDark),
+							A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$gold),
+							A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
 							A2(
 							$elm$html$Html$Attributes$style,
 							'font-size',
 							$elm$core$String$fromInt($author$project$View$Theme$fontSizeSmall - 1) + 'px'),
-							A2(
-							$elm$html$Html$Attributes$style,
-							'color',
-							unlocked ? $author$project$View$Theme$gold : $author$project$View$Theme$streakEmpty)
+							A2($elm$html$Html$Attributes$style, 'border', '2px solid ' + $author$project$View$Theme$gold),
+							A2($elm$html$Html$Attributes$style, 'padding', '6px 8px'),
+							A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+							A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text(
-							unlocked ? bossLabel : 'LOCKED')
-						]))
+							$elm$html$Html$text('⚔ BOSS')
+						])) : $elm$html$Html$text('')
 				]));
 	});
 var $author$project$Game$Curriculum$unitsForCourse = function (c) {
@@ -27386,6 +27426,11 @@ var $author$project$View$Map$unitList = F2(
 				A2($author$project$View$Map$compareUnits, uid, highestUnlocked),
 				$elm$core$Basics$GT);
 		};
+		var isCompleted = function (uid) {
+			return _Utils_eq(
+				A2($author$project$View$Map$compareUnits, uid, highestUnlocked),
+				$elm$core$Basics$LT);
+		};
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -27399,10 +27444,11 @@ var $author$project$View$Map$unitList = F2(
 			A2(
 				$elm$core$List$map,
 				function (uid) {
-					return A2(
+					return A3(
 						$author$project$View$Map$unitButton,
 						uid,
-						isUnlocked(uid));
+						isUnlocked(uid),
+						isCompleted(uid));
 				},
 				units));
 	});

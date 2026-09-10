@@ -12,6 +12,7 @@ type Msg
     | SubmitPasscode
     | GoToTitle
     | StartUnit UnitId
+    | StartBoss UnitId
     | ViewChapter UnitId
     | PracticeQuest UnitId Int
     | GotProblem Problem

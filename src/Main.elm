@@ -203,6 +203,9 @@ update msg model =
                 _ ->
                     startQuest uid 0 model
 
+        StartBoss uid ->
+            startBoss uid model
+
         ViewChapter uid ->
             ( { model | screen = ChapterScreen uid }, Cmd.none )
 
