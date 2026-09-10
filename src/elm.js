@@ -5351,6 +5351,50 @@ var $author$project$Main$init = function (flags) {
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Types$AnimTick = {$: 'AnimTick'};
 var $author$project$Config$animIntervalMs = 600.0;
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $author$project$Types$BackToMap = {$: 'BackToMap'};
+var $author$project$Types$BeginQuest = {$: 'BeginQuest'};
+var $author$project$Types$NextQuest = {$: 'NextQuest'};
+var $author$project$Types$RetryUnit = {$: 'RetryUnit'};
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Main$enterDecoder = function (model) {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		function (key) {
+			if (key !== 'Enter') {
+				return $elm$json$Json$Decode$fail('not enter');
+			} else {
+				var _v0 = model.screen;
+				switch (_v0.$) {
+					case 'BattleScreen':
+						var state = _v0.a;
+						var _v1 = state.phase;
+						switch (_v1.$) {
+							case 'QuestComplete':
+								return $elm$json$Json$Decode$succeed($author$project$Types$NextQuest);
+							case 'QuestIntro':
+								return $elm$json$Json$Decode$succeed($author$project$Types$BeginQuest);
+							case 'BattleWon':
+								return $elm$json$Json$Decode$succeed($author$project$Types$BackToMap);
+							case 'BattleLost':
+								return $elm$json$Json$Decode$succeed($author$project$Types$RetryUnit);
+							default:
+								return $elm$json$Json$Decode$fail('input phase');
+						}
+					case 'VictoryScreen':
+						return $elm$json$Json$Decode$succeed($author$project$Types$BackToMap);
+					case 'GameOverScreen':
+						return $elm$json$Json$Decode$succeed($author$project$Types$RetryUnit);
+					default:
+						return $elm$json$Json$Decode$fail('no enter action');
+				}
+			}
+		},
+		A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
+};
 var $elm$time$Time$Every = F2(
 	function (a, b) {
 		return {$: 'Every', a: a, b: b};
@@ -5766,20 +5810,229 @@ var $elm$time$Time$every = F2(
 		return $elm$time$Time$subscription(
 			A2($elm$time$Time$Every, interval, tagger));
 	});
-var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$subscriptions = function (model) {
-	var _v0 = model.screen;
-	if (_v0.$ === 'BattleScreen') {
-		return A2(
-			$elm$time$Time$every,
-			$author$project$Config$animIntervalMs,
-			function (_v1) {
-				return $author$project$Types$AnimTick;
-			});
+var $elm$browser$Browser$Events$Document = {$: 'Document'};
+var $elm$browser$Browser$Events$MySub = F3(
+	function (a, b, c) {
+		return {$: 'MySub', a: a, b: b, c: c};
+	});
+var $elm$browser$Browser$Events$State = F2(
+	function (subs, pids) {
+		return {pids: pids, subs: subs};
+	});
+var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
+	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
+var $elm$browser$Browser$Events$nodeToKey = function (node) {
+	if (node.$ === 'Document') {
+		return 'd_';
 	} else {
-		return $elm$core$Platform$Sub$none;
+		return 'w_';
 	}
+};
+var $elm$browser$Browser$Events$addKey = function (sub) {
+	var node = sub.a;
+	var name = sub.b;
+	return _Utils_Tuple2(
+		_Utils_ap(
+			$elm$browser$Browser$Events$nodeToKey(node),
+			name),
+		sub);
+};
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
+var $elm$browser$Browser$Events$Event = F2(
+	function (key, event) {
+		return {event: event, key: key};
+	});
+var $elm$browser$Browser$Events$spawn = F3(
+	function (router, key, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var actualNode = function () {
+			if (node.$ === 'Document') {
+				return _Browser_doc;
+			} else {
+				return _Browser_window;
+			}
+		}();
+		return A2(
+			$elm$core$Task$map,
+			function (value) {
+				return _Utils_Tuple2(key, value);
+			},
+			A3(
+				_Browser_on,
+				actualNode,
+				name,
+				function (event) {
+					return A2(
+						$elm$core$Platform$sendToSelf,
+						router,
+						A2($elm$browser$Browser$Events$Event, key, event));
+				}));
+	});
+var $elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
+	});
+var $elm$browser$Browser$Events$onEffects = F3(
+	function (router, subs, state) {
+		var stepRight = F3(
+			function (key, sub, _v6) {
+				var deads = _v6.a;
+				var lives = _v6.b;
+				var news = _v6.c;
+				return _Utils_Tuple3(
+					deads,
+					lives,
+					A2(
+						$elm$core$List$cons,
+						A3($elm$browser$Browser$Events$spawn, router, key, sub),
+						news));
+			});
+		var stepLeft = F3(
+			function (_v4, pid, _v5) {
+				var deads = _v5.a;
+				var lives = _v5.b;
+				var news = _v5.c;
+				return _Utils_Tuple3(
+					A2($elm$core$List$cons, pid, deads),
+					lives,
+					news);
+			});
+		var stepBoth = F4(
+			function (key, pid, _v2, _v3) {
+				var deads = _v3.a;
+				var lives = _v3.b;
+				var news = _v3.c;
+				return _Utils_Tuple3(
+					deads,
+					A3($elm$core$Dict$insert, key, pid, lives),
+					news);
+			});
+		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
+		var _v0 = A6(
+			$elm$core$Dict$merge,
+			stepLeft,
+			stepBoth,
+			stepRight,
+			state.pids,
+			$elm$core$Dict$fromList(newSubs),
+			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
+		var deadPids = _v0.a;
+		var livePids = _v0.b;
+		var makeNewPids = _v0.c;
+		return A2(
+			$elm$core$Task$andThen,
+			function (pids) {
+				return $elm$core$Task$succeed(
+					A2(
+						$elm$browser$Browser$Events$State,
+						newSubs,
+						A2(
+							$elm$core$Dict$union,
+							livePids,
+							$elm$core$Dict$fromList(pids))));
+			},
+			A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$sequence(makeNewPids);
+				},
+				$elm$core$Task$sequence(
+					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$browser$Browser$Events$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var event = _v0.event;
+		var key = _v0.key;
+		var toMessage = function (_v2) {
+			var subKey = _v2.a;
+			var _v3 = _v2.b;
+			var node = _v3.a;
+			var name = _v3.b;
+			var decoder = _v3.c;
+			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
+		};
+		var messages = A2($elm$core$List$filterMap, toMessage, state.subs);
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$map,
+					$elm$core$Platform$sendToApp(router),
+					messages)));
+	});
+var $elm$browser$Browser$Events$subMap = F2(
+	function (func, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var decoder = _v0.c;
+		return A3(
+			$elm$browser$Browser$Events$MySub,
+			node,
+			name,
+			A2($elm$json$Json$Decode$map, func, decoder));
+	});
+_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
+var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
+var $elm$browser$Browser$Events$on = F3(
+	function (node, name, decoder) {
+		return $elm$browser$Browser$Events$subscription(
+			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
+	});
+var $elm$browser$Browser$Events$onKeyDown = A2($elm$browser$Browser$Events$on, $elm$browser$Browser$Events$Document, 'keydown');
+var $author$project$Main$subscriptions = function (model) {
+	return $elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				function () {
+				var _v0 = model.screen;
+				if (_v0.$ === 'BattleScreen') {
+					return A2(
+						$elm$time$Time$every,
+						$author$project$Config$animIntervalMs,
+						function (_v1) {
+							return $author$project$Types$AnimTick;
+						});
+				} else {
+					return $elm$core$Platform$Sub$none;
+				}
+			}(),
+				$elm$browser$Browser$Events$onKeyDown(
+				$author$project$Main$enterDecoder(model))
+			]));
 };
 var $author$project$Types$BattleScreen = function (a) {
 	return {$: 'BattleScreen', a: a};
@@ -5921,18 +6174,6 @@ var $author$project$Game$Passcode$nextUnitKey = function (uid) {
 				return $elm$core$Maybe$Nothing;
 		}
 	}
-};
-var $elm$core$Dict$fromList = function (assocs) {
-	return A3(
-		$elm$core$List$foldl,
-		F2(
-			function (_v0, dict) {
-				var key = _v0.a;
-				var value = _v0.b;
-				return A3($elm$core$Dict$insert, key, value, dict);
-			}),
-		$elm$core$Dict$empty,
-		assocs);
 };
 var $author$project$Game$Passcode$table = $elm$core$Dict$fromList(
 	_List_fromArray(
@@ -6266,6 +6507,12 @@ var $author$project$Game$Battle$defaultInput = function (it) {
 				{r1: '', r2: ''});
 	}
 };
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Main$focusFirstInput = _Platform_outgoingPort(
+	'focusFirstInput',
+	function ($) {
+		return $elm$json$Json$Encode$null;
+	});
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$random$Random$Generator = function (a) {
 	return {$: 'Generator', a: a};
@@ -6525,7 +6772,6 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Game$Problem$Common$dedupe = F2(
 	function (correct, candidates) {
 		return A2(
@@ -6604,10 +6850,13 @@ var $author$project$Game$Problem$Algebra1$genAbsoluteValue = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '7',
-						prompt: '|−7| = ?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: '|' + ($elm$core$String$fromInt(n) + '| = ?'),
 						steps: _List_fromArray(
-							['Absolute value is the distance from zero', 'Always non-negative', '|−7| = 7'])
+							[
+								'Absolute value is the distance from zero — always non-negative',
+								'|' + ($elm$core$String$fromInt(n) + ('| = ' + $elm$core$String$fromInt(correct)))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: '|' + ($elm$core$String$fromInt(n) + '| = ?')
@@ -6654,10 +6903,13 @@ var $author$project$Game$Problem$Algebra1$genCombineLike = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '8x',
-						prompt: '3x + 5x = ?x',
+						answer: $elm$core$String$fromInt(correct) + 'x',
+						prompt: $elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x = ?x')),
 						steps: _List_fromArray(
-							['Add the coefficients: 3 + 5 = 8', 'Keep the variable: 8x'])
+							[
+								'Add the coefficients: ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(correct))))),
+								'Keep the variable: ' + ($elm$core$String$fromInt(correct) + 'x')
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: $elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x = ?x'))
@@ -6683,10 +6935,14 @@ var $author$project$Game$Problem$Algebra1$genEvalExpr = A2(
 		return {
 			answer: $author$project$Types$AInt((a * x) + b),
 			hint: {
-				answer: '11',
-				prompt: 'Evaluate 3x + 5 when x = 2',
+				answer: $elm$core$String$fromInt((a * x) + b),
+				prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' when x = ' + $elm$core$String$fromInt(x))))),
 				steps: _List_fromArray(
-					['Substitute: 3(2) + 5', 'Multiply: 6 + 5', 'Add: 11'])
+					[
+						'Substitute x = ' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(x) + (') + ' + $elm$core$String$fromInt(b))))))),
+						'Multiply: ' + ($elm$core$String$fromInt(a * x) + (' + ' + $elm$core$String$fromInt(b))),
+						'Add: ' + $elm$core$String$fromInt((a * x) + b)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' when x = ' + $elm$core$String$fromInt(x)))))
@@ -6740,10 +6996,14 @@ var $author$project$Game$Problem$Algebra1$genOrderOfOps = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '13',
-						prompt: '2 + 3 × 4 − 1 = ?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: $elm$core$String$fromInt(r.a) + (' + ' + ($elm$core$String$fromInt(r.b) + (' × ' + ($elm$core$String$fromInt(r.c) + (' − ' + ($elm$core$String$fromInt(r.d) + ' = ?')))))),
 						steps: _List_fromArray(
-							['Multiply first (PEMDAS): 3 × 4 = 12', 'Then left to right: 2 + 12 = 14', 'Finally: 14 − 1 = 13'])
+							[
+								'Multiply first (PEMDAS): ' + ($elm$core$String$fromInt(r.b) + (' × ' + ($elm$core$String$fromInt(r.c) + (' = ' + $elm$core$String$fromInt(r.b * r.c))))),
+								'Then add: ' + ($elm$core$String$fromInt(r.a) + (' + ' + ($elm$core$String$fromInt(r.b * r.c) + (' = ' + $elm$core$String$fromInt(r.a + (r.b * r.c)))))),
+								'Finally subtract: ' + ($elm$core$String$fromInt(r.a + (r.b * r.c)) + (' − ' + ($elm$core$String$fromInt(r.d) + (' = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: $elm$core$String$fromInt(r.a) + (' + ' + ($elm$core$String$fromInt(r.b) + (' × ' + ($elm$core$String$fromInt(r.c) + (' − ' + ($elm$core$String$fromInt(r.d) + ' = ?'))))))
@@ -6774,10 +7034,13 @@ var $author$project$Game$Problem$Algebra1$genTranslateExpr = A2(
 						return {
 							answer: $author$project$Types$AInt(x + k),
 							hint: {
-								answer: '8',
-								prompt: '\"5 more than a number\" when the number is 3',
+								answer: $elm$core$String$fromInt(x + k),
+								prompt: '\"' + ($elm$core$String$fromInt(k) + (' more than a number\" — evaluate when the number is ' + $elm$core$String$fromInt(x))),
 								steps: _List_fromArray(
-									['Translate: x + 5', 'Substitute x = 3: 3 + 5 = 8'])
+									[
+										'Translate: x + ' + $elm$core$String$fromInt(k),
+										'Substitute x = ' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(x) + (' + ' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(x + k)))))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: '\"' + ($elm$core$String$fromInt(k) + (' more than a number\" — evaluate when the number is ' + $elm$core$String$fromInt(x)))
@@ -6797,10 +7060,13 @@ var $author$project$Game$Problem$Algebra1$genTranslateExpr = A2(
 						return {
 							answer: $author$project$Types$AInt(k * x),
 							hint: {
-								answer: '12',
-								prompt: '\"4 times a number\" when the number is 3',
+								answer: $elm$core$String$fromInt(k * x),
+								prompt: '\"' + ($elm$core$String$fromInt(k) + (' times a number\" — evaluate when the number is ' + $elm$core$String$fromInt(x))),
 								steps: _List_fromArray(
-									['Translate: 4x', 'Substitute x = 3: 4(3) = 12'])
+									[
+										'Translate: ' + ($elm$core$String$fromInt(k) + 'x'),
+										'Substitute x = ' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(k) + ('(' + ($elm$core$String$fromInt(x) + (') = ' + $elm$core$String$fromInt(k * x)))))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: '\"' + ($elm$core$String$fromInt(k) + (' times a number\" — evaluate when the number is ' + $elm$core$String$fromInt(x)))
@@ -6820,10 +7086,13 @@ var $author$project$Game$Problem$Algebra1$genTranslateExpr = A2(
 						return {
 							answer: $author$project$Types$AInt(x),
 							hint: {
-								answer: '4',
-								prompt: '\"A number decreased by 3\" when the number is 7',
+								answer: $elm$core$String$fromInt(x),
+								prompt: '\"A number decreased by ' + ($elm$core$String$fromInt(k) + ('\" — evaluate when the number is ' + $elm$core$String$fromInt(x + k))),
 								steps: _List_fromArray(
-									['Translate: x − 3', 'Substitute x = 7: 7 − 3 = 4'])
+									[
+										'Translate: n − ' + $elm$core$String$fromInt(k),
+										'Substitute n = ' + ($elm$core$String$fromInt(x + k) + (': ' + ($elm$core$String$fromInt(x + k) + (' − ' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(x)))))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: '\"A number decreased by ' + ($elm$core$String$fromInt(k) + ('\" — evaluate when the number is ' + $elm$core$String$fromInt(x + k)))
@@ -6856,10 +7125,13 @@ var $author$project$Game$Problem$Algebra1$genTwoStepEquation = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: 'x = 4',
-				prompt: '2x + 3 = 11',
+				answer: 'x = ' + $elm$core$String$fromInt(x),
+				prompt: $elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c)))),
 				steps: _List_fromArray(
-					['Subtract 3 from both sides: 2x = 8', 'Divide both sides by 2: x = 4'])
+					[
+						'Subtract ' + ($elm$core$String$fromInt(b) + (' from both sides: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(c - b))))),
+						'Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x = ' + $elm$core$String$fromInt(x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c))))
@@ -6944,10 +7216,14 @@ var $author$project$Game$Problem$Algebra1$genMultiplyRational = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '1/2',
-					prompt: '(2/3) × (3/4) = ?',
+					answer: correct,
+					prompt: '(' + ($elm$core$String$fromInt(r.a) + ('/' + ($elm$core$String$fromInt(r.b) + (') × (' + ($elm$core$String$fromInt(r.c) + ('/' + ($elm$core$String$fromInt(r.d) + ') = ?'))))))),
 					steps: _List_fromArray(
-						['Multiply numerators: 2 × 3 = 6', 'Multiply denominators: 3 × 4 = 12', 'Simplify: 6/12 = 1/2'])
+						[
+							'Multiply numerators: ' + ($elm$core$String$fromInt(r.a) + (' × ' + ($elm$core$String$fromInt(r.c) + (' = ' + $elm$core$String$fromInt(numProd))))),
+							'Multiply denominators: ' + ($elm$core$String$fromInt(r.b) + (' × ' + ($elm$core$String$fromInt(r.d) + (' = ' + $elm$core$String$fromInt(denProd))))),
+							'Simplify: ' + ($elm$core$String$fromInt(numProd) + ('/' + ($elm$core$String$fromInt(denProd) + (' = ' + correct))))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: '(' + ($elm$core$String$fromInt(r.a) + ('/' + ($elm$core$String$fromInt(r.b) + (') × (' + ($elm$core$String$fromInt(r.c) + ('/' + ($elm$core$String$fromInt(r.d) + ') = ?')))))))
@@ -6990,10 +7266,13 @@ function $author$project$Game$Problem$Algebra1$cyclic$genSimplifyRational() {
 					{
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: '2/3',
-							prompt: 'Simplify: 6x / (9x)',
+							answer: correct,
+							prompt: 'Simplify: ' + ($elm$core$String$fromInt(num) + ('x / (' + ($elm$core$String$fromInt(den) + 'x)'))),
 							steps: _List_fromArray(
-								['Cancel the common factor x', '6/9 → GCF is 3 → 2/3'])
+								[
+									'Cancel the common factor x: ' + ($elm$core$String$fromInt(num) + ('/' + $elm$core$String$fromInt(den))),
+									$elm$core$String$fromInt(num) + ('/' + ($elm$core$String$fromInt(den) + (' → GCF is ' + ($elm$core$String$fromInt(g) + (' → ' + correct)))))
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: 'Simplify: ' + ($elm$core$String$fromInt(num) + ('x / (' + ($elm$core$String$fromInt(den) + 'x)')))
@@ -7046,10 +7325,13 @@ var $author$project$Game$Problem$Algebra1$genAddSubRadical = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '7√3',
-					prompt: '2√3 + 5√3 = ?',
+					answer: correct,
+					prompt: $elm$core$String$fromInt(a) + ('√' + ($elm$core$String$fromInt(k) + (' + ' + ($elm$core$String$fromInt(b) + ('√' + ($elm$core$String$fromInt(k) + ' = ?')))))),
 					steps: _List_fromArray(
-						['Like radicals: add coefficients', '2 + 5 = 7 → 7√3'])
+						[
+							'Like radicals: add coefficients',
+							$elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(coeff) + (' → ' + correct)))))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: $elm$core$String$fromInt(a) + ('√' + ($elm$core$String$fromInt(k) + (' + ' + ($elm$core$String$fromInt(b) + ('√' + ($elm$core$String$fromInt(k) + ' = ?'))))))
@@ -7082,10 +7364,13 @@ var $author$project$Game$Problem$Algebra1$genMultiplyRadical = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '√15',
-					prompt: '√3 × √5 = ?',
+					answer: correct,
+					prompt: '√' + ($elm$core$String$fromInt(a) + (' × √' + ($elm$core$String$fromInt(b) + ' = ?'))),
 					steps: _List_fromArray(
-						['√a × √b = √(a·b)', '√3 × √5 = √15'])
+						[
+							'√a × √b = √(a·b)',
+							'√' + ($elm$core$String$fromInt(a) + (' × √' + ($elm$core$String$fromInt(b) + (' = √' + $elm$core$String$fromInt(product)))))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: '√' + ($elm$core$String$fromInt(a) + (' × √' + ($elm$core$String$fromInt(b) + ' = ?')))
@@ -7114,10 +7399,13 @@ var $author$project$Game$Problem$Algebra1$genSimplifyRadical = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '2√3',
-					prompt: 'Simplify: √12',
+					answer: correct,
+					prompt: 'Simplify: √' + $elm$core$String$fromInt(radicand),
 					steps: _List_fromArray(
-						['Factor: 12 = 4 × 3 = 2² × 3', 'Pull out perfect square: √(4·3) = 2√3'])
+						[
+							'Factor: ' + ($elm$core$String$fromInt(radicand) + (' = ' + ($elm$core$String$fromInt(n * n) + (' × ' + ($elm$core$String$fromInt(k) + (' = ' + ($elm$core$String$fromInt(n) + ('² × ' + $elm$core$String$fromInt(k))))))))),
+							'Pull out perfect square: √(' + ($elm$core$String$fromInt(n * n) + ('·' + ($elm$core$String$fromInt(k) + (') = ' + correct))))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Simplify: √' + $elm$core$String$fromInt(radicand)
@@ -7134,10 +7422,13 @@ var $author$project$Game$Problem$Algebra1$genSolveRadicalEq = A2(
 		return {
 			answer: $author$project$Types$AInt(n * n),
 			hint: {
-				answer: 'x = 25',
-				prompt: 'Solve: √x = 5',
+				answer: 'x = ' + $elm$core$String$fromInt(n * n),
+				prompt: 'Solve: √x = ' + $elm$core$String$fromInt(n),
 				steps: _List_fromArray(
-					['Square both sides: x = 5² = 25', 'Check: √25 = 5 ✓'])
+					[
+						'Square both sides: x = ' + ($elm$core$String$fromInt(n) + ('² = ' + $elm$core$String$fromInt(n * n))),
+						'Check: √' + ($elm$core$String$fromInt(n * n) + (' = ' + ($elm$core$String$fromInt(n) + ' ✓')))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: √x = ' + $elm$core$String$fromInt(n)
@@ -7178,10 +7469,13 @@ function $author$project$Game$Problem$Algebra1$cyclic$genMeanSD() {
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '5',
-								prompt: 'Mean of 2, 4, 6, 8?',
+								answer: $elm$core$String$fromInt(mean),
+								prompt: 'Find the mean of: ' + ($elm$core$String$fromInt(r.a) + (', ' + ($elm$core$String$fromInt(r.b) + (', ' + ($elm$core$String$fromInt(r.c) + (', ' + $elm$core$String$fromInt(r.d))))))),
 								steps: _List_fromArray(
-									['Add all values: 2+4+6+8 = 20', 'Divide by count (4): 20/4 = 5'])
+									[
+										'Add all values: ' + ($elm$core$String$fromInt(r.a) + (' + ' + ($elm$core$String$fromInt(r.b) + (' + ' + ($elm$core$String$fromInt(r.c) + (' + ' + ($elm$core$String$fromInt(r.d) + (' = ' + $elm$core$String$fromInt(total))))))))),
+										'Divide by count (4): ' + ($elm$core$String$fromInt(total) + ('/4 = ' + $elm$core$String$fromInt(mean)))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Find the mean of: ' + ($elm$core$String$fromInt(r.a) + (', ' + ($elm$core$String$fromInt(r.b) + (', ' + ($elm$core$String$fromInt(r.c) + (', ' + $elm$core$String$fromInt(r.d)))))))
@@ -7229,10 +7523,14 @@ var $author$project$Game$Problem$Algebra1$genVariance = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2.5 ≈ 2',
-						prompt: 'Variance of 11, 12, 9, 8 (mean=10)?',
+						answer: $elm$core$String$fromInt(variance),
+						prompt: 'Find the variance of: ' + ($elm$core$String$fromInt(v1) + (', ' + ($elm$core$String$fromInt(v2) + (', ' + ($elm$core$String$fromInt(v3) + (', ' + ($elm$core$String$fromInt(v4) + (' (mean = ' + ($elm$core$String$fromInt(m) + ')'))))))))),
 						steps: _List_fromArray(
-							['Deviations: 1, 2, −1, −2', 'Squared: 1, 4, 1, 4', 'Variance = (1+4+1+4)/4 = 10/4 = 2.5'])
+							[
+								'Deviations from mean: ' + ($elm$core$String$fromInt(d1) + (', ' + ($elm$core$String$fromInt(d2) + (', −' + ($elm$core$String$fromInt(d1) + (', −' + $elm$core$String$fromInt(d2))))))),
+								'Squared: ' + ($elm$core$String$fromInt(d1 * d1) + (', ' + ($elm$core$String$fromInt(d2 * d2) + (', ' + ($elm$core$String$fromInt(d1 * d1) + (', ' + $elm$core$String$fromInt(d2 * d2))))))),
+								'Variance = (' + ($elm$core$String$fromInt(d1 * d1) + ('+' + ($elm$core$String$fromInt(d2 * d2) + ('+' + ($elm$core$String$fromInt(d1 * d1) + ('+' + ($elm$core$String$fromInt(d2 * d2) + (')/4 = ' + ($elm$core$String$fromInt(2 * ((d1 * d1) + (d2 * d2))) + ('/4 = ' + $elm$core$String$fromInt(variance)))))))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Find the variance of: ' + ($elm$core$String$fromInt(v1) + (', ' + ($elm$core$String$fromInt(v2) + (', ' + ($elm$core$String$fromInt(v3) + (', ' + ($elm$core$String$fromInt(v4) + (' (mean = ' + ($elm$core$String$fromInt(m) + ')')))))))))
@@ -7263,10 +7561,13 @@ var $author$project$Game$Problem$Algebra1$genZScore = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2',
-						prompt: 'μ = 70, σ = 5. z-score for x = 80?',
+						answer: $elm$core$String$fromInt(z),
+						prompt: 'Mean μ = ' + ($elm$core$String$fromInt(mu) + (', σ = ' + ($elm$core$String$fromInt(sigma) + ('. Find the z-score for x = ' + ($elm$core$String$fromInt(x) + '.'))))),
 						steps: _List_fromArray(
-							['z = (x − μ) / σ', '= (80 − 70) / 5 = 10/5 = 2'])
+							[
+								'z = (x − μ) / σ',
+								'= (' + ($elm$core$String$fromInt(x) + (' − ' + ($elm$core$String$fromInt(mu) + (') / ' + ($elm$core$String$fromInt(sigma) + (' = ' + ($elm$core$String$fromInt(x - mu) + ('/' + ($elm$core$String$fromInt(sigma) + (' = ' + $elm$core$String$fromInt(z)))))))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Mean μ = ' + ($elm$core$String$fromInt(mu) + (', σ = ' + ($elm$core$String$fromInt(sigma) + ('. Find the z-score for x = ' + ($elm$core$String$fromInt(x) + '.')))))
@@ -7301,6 +7602,7 @@ var $author$project$Types$ARoots = F2(
 		return {$: 'ARoots', a: a, b: b};
 	});
 var $author$project$Types$TRoots = {$: 'TRoots'};
+var $elm$core$String$fromFloat = _String_fromNumber;
 var $author$project$Game$Problem$Algebra1$genAbsValueEq = A2(
 	$elm$random$Random$map,
 	function (_v0) {
@@ -7312,10 +7614,14 @@ var $author$project$Game$Problem$Algebra1$genAbsValueEq = A2(
 		return {
 			answer: A2($author$project$Types$ARoots, r1, r2),
 			hint: {
-				answer: 'x = 2 or x = −5',
-				prompt: '|2x + 3| = 7',
+				answer: 'x = ' + ($elm$core$String$fromFloat(r1) + (' or x = ' + $elm$core$String$fromFloat(r2))),
+				prompt: '|' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('| = ' + $elm$core$String$fromInt(c))))),
 				steps: _List_fromArray(
-					['Set up two cases: 2x+3 = 7 and 2x+3 = −7', 'Case 1: 2x = 4, x = 2', 'Case 2: 2x = −10, x = −5'])
+					[
+						'Set up two cases: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + (' and ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = −' + $elm$core$String$fromInt(c))))))))))),
+						'Case 1: ' + ($elm$core$String$fromInt(a) + ('x = ' + ($elm$core$String$fromInt(c - b) + (', x = ' + $elm$core$String$fromFloat(r1))))),
+						'Case 2: ' + ($elm$core$String$fromInt(a) + ('x = ' + ($elm$core$String$fromInt((-c) - b) + (', x = ' + $elm$core$String$fromFloat(r2)))))
+					])
 			},
 			inputType: $author$project$Types$TRoots,
 			prompt: '|' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('| = ' + $elm$core$String$fromInt(c)))))
@@ -7348,10 +7654,13 @@ function $author$project$Game$Problem$Algebra1$cyclic$genAlgebraicProportion() {
 					return {
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: 'x = 8',
-							prompt: '3/4 = 6/x',
+							answer: 'x = ' + $elm$core$String$fromInt(x),
+							prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/x')))),
 							steps: _List_fromArray(
-								['Cross-multiply: 3x = 24', 'Divide: x = 8'])
+								[
+									'Cross-multiply: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(b * c))),
+									'Divide by ' + ($elm$core$String$fromInt(a) + (': x = ' + $elm$core$String$fromInt(x)))
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/x'))))
@@ -7385,10 +7694,13 @@ var $author$project$Game$Problem$Algebra1$genLiteralEq = A2(
 		return {
 			answer: $author$project$Types$AInt(w),
 			hint: {
-				answer: 'w = 4',
-				prompt: 'P = 2l + 2w. Find w when P = 20 and l = 6.',
+				answer: 'w = ' + $elm$core$String$fromInt(w),
+				prompt: 'Perimeter P = 2l + 2w. Find w when P = ' + ($elm$core$String$fromInt(p) + (' and l = ' + $elm$core$String$fromInt(l))),
 				steps: _List_fromArray(
-					['Substitute: 20 = 2(6) + 2w', '20 = 12 + 2w → 2w = 8 → w = 4'])
+					[
+						'Substitute: ' + ($elm$core$String$fromInt(p) + (' = 2(' + ($elm$core$String$fromInt(l) + ') + 2w'))),
+						$elm$core$String$fromInt(p) + (' = ' + ($elm$core$String$fromInt(2 * l) + (' + 2w → 2w = ' + ($elm$core$String$fromInt(p - (2 * l)) + (' → w = ' + $elm$core$String$fromInt(w))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Perimeter P = 2l + 2w. Find w when P = ' + ($elm$core$String$fromInt(p) + (' and l = ' + $elm$core$String$fromInt(l)))
@@ -7409,10 +7721,13 @@ var $author$project$Game$Problem$Algebra1$genMultiStepEq = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: 'x = 3',
-				prompt: '3(x + 2) = 15',
+				answer: 'x = ' + $elm$core$String$fromInt(x),
+				prompt: $elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') = ' + $elm$core$String$fromInt(c)))),
 				steps: _List_fromArray(
-					['Divide both sides by 3: x + 2 = 5', 'Subtract 2: x = 3'])
+					[
+						'Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt((c / a) | 0))))),
+						'Subtract ' + ($elm$core$String$fromInt(b) + (': x = ' + $elm$core$String$fromInt(x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') = ' + $elm$core$String$fromInt(c))))
@@ -7436,10 +7751,14 @@ var $author$project$Game$Problem$Algebra1$genVarsBothSides = A2(
 		return {
 			answer: $author$project$Types$AInt(r.x),
 			hint: {
-				answer: 'x = 3',
-				prompt: '5x + 2 = 3x + 8',
+				answer: 'x = ' + $elm$core$String$fromInt(r.x),
+				prompt: aStr + (' + ' + ($elm$core$String$fromInt(r.b) + (' = ' + (cStr + (' + ' + $elm$core$String$fromInt(d)))))),
 				steps: _List_fromArray(
-					['Subtract 3x from both sides: 2x + 2 = 8', 'Subtract 2: 2x = 6', 'Divide by 2: x = 3'])
+					[
+						'Subtract ' + (cStr + (' from both sides: ' + ($elm$core$String$fromInt(r.a - r.c) + ('x + ' + ($elm$core$String$fromInt(r.b) + (' = ' + $elm$core$String$fromInt(d))))))),
+						'Subtract ' + ($elm$core$String$fromInt(r.b) + (': ' + ($elm$core$String$fromInt(r.a - r.c) + ('x = ' + $elm$core$String$fromInt(d - r.b))))),
+						'Divide by ' + ($elm$core$String$fromInt(r.a - r.c) + (': x = ' + $elm$core$String$fromInt(r.x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: aStr + (' + ' + ($elm$core$String$fromInt(r.b) + (' = ' + (cStr + (' + ' + $elm$core$String$fromInt(d))))))
@@ -7492,10 +7811,13 @@ var $author$project$Game$Problem$Algebra1$genArithmeticSeq = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '19',
-						prompt: 'Find the next term: 3, 7, 11, 15, ?',
+						answer: $elm$core$String$fromInt(a5),
+						prompt: 'Find the next term: ' + ($elm$core$String$fromInt(a1) + (', ' + ($elm$core$String$fromInt(a2) + (', ' + ($elm$core$String$fromInt(a3) + (', ' + ($elm$core$String$fromInt(a4) + ', ?'))))))),
 						steps: _List_fromArray(
-							['Common difference: 7 − 3 = 4', 'Next term: 15 + 4 = 19'])
+							[
+								'Common difference: ' + ($elm$core$String$fromInt(a2) + (' − ' + ($elm$core$String$fromInt(a1) + (' = ' + $elm$core$String$fromInt(d))))),
+								'Next term: ' + ($elm$core$String$fromInt(a4) + (' + ' + ($elm$core$String$fromInt(d) + (' = ' + $elm$core$String$fromInt(a5)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Find the next term: ' + ($elm$core$String$fromInt(a1) + (', ' + ($elm$core$String$fromInt(a2) + (', ' + ($elm$core$String$fromInt(a3) + (', ' + ($elm$core$String$fromInt(a4) + ', ?')))))))
@@ -7521,10 +7843,14 @@ var $author$project$Game$Problem$Algebra1$genDomainRange = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: 'The domain is {1, 3, 5}',
-						prompt: 'Domain of {(1,2),(3,4),(5,6)}?',
+						answer: $elm$core$String$fromInt(r.a),
+						prompt: 'The relation is {(' + ($elm$core$String$fromInt(r.a) + (', 2), (' + ($elm$core$String$fromInt(r.b) + (', 5), (' + ($elm$core$String$fromInt(r.c) + (', 3), (' + ($elm$core$String$fromInt(r.d) + ', 8)}. What is the smallest element of the domain?'))))))),
 						steps: _List_fromArray(
-							['The domain is the set of all x-values (first coordinates)', 'List first elements: 1, 3, 5'])
+							[
+								'The domain is the set of all x-values (first coordinates)',
+								'x-values: ' + ($elm$core$String$fromInt(r.a) + (', ' + ($elm$core$String$fromInt(r.b) + (', ' + ($elm$core$String$fromInt(r.c) + (', ' + $elm$core$String$fromInt(r.d))))))),
+								'Smallest: ' + $elm$core$String$fromInt(r.a)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'The relation is {(' + ($elm$core$String$fromInt(r.a) + (', 2), (' + ($elm$core$String$fromInt(r.b) + (', 5), (' + ($elm$core$String$fromInt(r.c) + (', 3), (' + ($elm$core$String$fromInt(r.d) + ', 8)}. What is the smallest element of the domain?')))))))
@@ -7551,10 +7877,13 @@ var $author$project$Game$Problem$Algebra1$genEvalFunction = A2(
 		return {
 			answer: $author$project$Types$AInt((a * x) + b),
 			hint: {
-				answer: '7',
-				prompt: 'f(x) = 2x + 1. Find f(3).',
+				answer: $elm$core$String$fromInt((a * x) + b),
+				prompt: 'f(x) = ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('. Find f(' + ($elm$core$String$fromInt(x) + ').'))))),
 				steps: _List_fromArray(
-					['Substitute x = 3: f(3) = 2(3) + 1', '= 6 + 1 = 7'])
+					[
+						'Substitute x = ' + ($elm$core$String$fromInt(x) + (': f(' + ($elm$core$String$fromInt(x) + (') = ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(x) + (') + ' + $elm$core$String$fromInt(b))))))))),
+						'= ' + ($elm$core$String$fromInt(a * x) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt((a * x) + b)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'f(x) = ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('. Find f(' + ($elm$core$String$fromInt(x) + ').')))))
@@ -7578,9 +7907,9 @@ var $author$project$Game$Problem$Algebra1$genIsFunction = A2(
 					answer: $author$project$Types$AChoice(0),
 					hint: {
 						answer: 'Yes',
-						prompt: 'Is {(1,2),(2,3)} a function?',
+						prompt: 'Is this a function? {(1,2), (2,3), (3,4), (4,5)}',
 						steps: _List_fromArray(
-							['Each x-value maps to exactly one y-value', 'No repeated x-values → it is a function'])
+							['Each x-value maps to exactly one y-value', 'x-values 1, 2, 3, 4 are all different → it is a function'])
 					},
 					inputType: $author$project$Types$TChoice(
 						_List_fromArray(
@@ -7592,7 +7921,7 @@ var $author$project$Game$Problem$Algebra1$genIsFunction = A2(
 					answer: $author$project$Types$AChoice(1),
 					hint: {
 						answer: 'No',
-						prompt: 'Is {(1,2),(1,3)} a function?',
+						prompt: 'Is this a function? {(1,2), (1,3), (2,4)}',
 						steps: _List_fromArray(
 							['The x-value 1 maps to both 2 and 3', 'One input has two outputs → not a function'])
 					},
@@ -7606,9 +7935,9 @@ var $author$project$Game$Problem$Algebra1$genIsFunction = A2(
 					answer: $author$project$Types$AChoice(0),
 					hint: {
 						answer: 'Yes',
-						prompt: 'Is {(2,5),(3,5),(4,5)} a function?',
+						prompt: 'Is this a function? {(2,5), (3,5), (4,5)}',
 						steps: _List_fromArray(
-							['Each x maps to exactly one y (even if y is the same)', 'No repeated x-values → it is a function'])
+							['Each x maps to exactly one y (even if y repeats)', 'x-values 2, 3, 4 are all different → it is a function'])
 					},
 					inputType: $author$project$Types$TChoice(
 						_List_fromArray(
@@ -7620,9 +7949,9 @@ var $author$project$Game$Problem$Algebra1$genIsFunction = A2(
 					answer: $author$project$Types$AChoice(1),
 					hint: {
 						answer: 'No',
-						prompt: 'Is {(0,1),(0,−1)} a function?',
+						prompt: 'Is this a function? {(0,1), (0,−1), (1,0)}',
 						steps: _List_fromArray(
-							['x = 0 maps to 1 and also to −1', 'One input with two outputs → not a function'])
+							['x = 0 maps to both 1 and −1', 'One input with two outputs → not a function'])
 					},
 					inputType: $author$project$Types$TChoice(
 						_List_fromArray(
@@ -7665,10 +7994,13 @@ var $author$project$Game$Problem$Algebra1$genParallelSlope = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '4',
-						prompt: 'Slope of a line parallel to y = 4x + 1?',
+						answer: $elm$core$String$fromInt(m),
+						prompt: 'A line parallel to y = ' + ($author$project$Game$Problem$Algebra1$showSigned(m) + ('x + ' + ($elm$core$String$fromInt(b) + ' has what slope?'))),
 						steps: _List_fromArray(
-							['Parallel lines have the same slope', 'Slope of y = 4x + 1 is 4'])
+							[
+								'Parallel lines have the same slope',
+								'Slope of y = ' + ($author$project$Game$Problem$Algebra1$showSigned(m) + ('x + ' + ($elm$core$String$fromInt(b) + (' is ' + $elm$core$String$fromInt(m)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'A line parallel to y = ' + ($author$project$Game$Problem$Algebra1$showSigned(m) + ('x + ' + ($elm$core$String$fromInt(b) + ' has what slope?')))
@@ -7701,10 +8033,13 @@ var $author$project$Game$Problem$Algebra1$genPerpSlope = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '−1/2',
-					prompt: 'Slope perpendicular to y = 2x + 1?',
+					answer: perpStr,
+					prompt: 'A line perpendicular to y = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + ' has what slope?'))),
 					steps: _List_fromArray(
-						['Perpendicular slope = negative reciprocal', 'Flip and negate 2: −1/2'])
+						[
+							'Perpendicular slope = negative reciprocal of ' + $elm$core$String$fromInt(m),
+							'Negate and flip: ' + perpStr
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'A line perpendicular to y = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + ' has what slope?')))
@@ -7734,10 +8069,13 @@ function $author$project$Game$Problem$Algebra1$cyclic$genSlopeFromPoints() {
 					return {
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: '2',
-							prompt: 'Slope through (1, 2) and (3, 6)?',
+							answer: slopeStr,
+							prompt: 'Find the slope through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ').'))))))),
 							steps: _List_fromArray(
-								['m = (y₂ − y₁) / (x₂ − x₁)', '= (6 − 2) / (3 − 1) = 4/2 = 2'])
+								[
+									'm = (y₂ − y₁) / (x₂ − x₁)',
+									'= (' + ($elm$core$String$fromInt(y2) + (' − ' + ($elm$core$String$fromInt(r.y1) + (') / (' + ($elm$core$String$fromInt(x2) + (' − ' + ($elm$core$String$fromInt(r.x1) + (') = ' + ($elm$core$String$fromInt(r.dy) + ('/' + ($elm$core$String$fromInt(r.dx) + (' = ' + slopeStr))))))))))))
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: 'Find the slope through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ').')))))))
@@ -7778,10 +8116,13 @@ var $author$project$Game$Problem$Algebra1$genSlopeIntercept = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '5',
-						prompt: 'y-intercept of y = 3x + 5?',
+						answer: $elm$core$String$fromInt(b),
+						prompt: 'What is the y-intercept of y = ' + ($author$project$Game$Problem$Algebra1$showSigned(m) + ('x + ' + ($elm$core$String$fromInt(b) + '?'))),
 						steps: _List_fromArray(
-							['The y-intercept is the value of b in y = mx + b', 'When x = 0: y = b', 'Answer: 5'])
+							[
+								'The y-intercept is the value of b in y = mx + b',
+								'When x = 0: y = ' + $elm$core$String$fromInt(b)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'What is the y-intercept of y = ' + ($author$project$Game$Problem$Algebra1$showSigned(m) + ('x + ' + ($elm$core$String$fromInt(b) + '?')))
@@ -7805,10 +8146,13 @@ var $author$project$Game$Problem$Algebra1$genXIntercept = A2(
 		return {
 			answer: $author$project$Types$AInt(xInt),
 			hint: {
-				answer: '5',
-				prompt: '2x + 3y = 10. Find the x-intercept.',
+				answer: $elm$core$String$fromInt(xInt),
+				prompt: $elm$core$String$fromInt(aAdj) + ('x + ' + ($elm$core$String$fromInt(b) + ('y = ' + ($elm$core$String$fromInt(c) + '. Find the x-intercept.')))),
 				steps: _List_fromArray(
-					['Set y = 0: 2x = 10', 'Divide: x = 5'])
+					[
+						'Set y = 0: ' + ($elm$core$String$fromInt(aAdj) + ('x = ' + $elm$core$String$fromInt(c))),
+						'Divide: x = ' + $elm$core$String$fromInt(xInt)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(aAdj) + ('x + ' + ($elm$core$String$fromInt(b) + ('y = ' + ($elm$core$String$fromInt(c) + '. Find the x-intercept.'))))
@@ -7834,10 +8178,13 @@ var $author$project$Game$Problem$Algebra1$genYIntercept = A2(
 		return {
 			answer: $author$project$Types$AInt(yInt),
 			hint: {
-				answer: '4',
-				prompt: '2x + 3y = 12. Find the y-intercept.',
+				answer: $elm$core$String$fromInt(yInt),
+				prompt: $elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(bAdj) + ('y = ' + ($elm$core$String$fromInt(c) + '. Find the y-intercept.')))),
 				steps: _List_fromArray(
-					['Set x = 0: 3y = 12', 'Divide: y = 4'])
+					[
+						'Set x = 0: ' + ($elm$core$String$fromInt(bAdj) + ('y = ' + $elm$core$String$fromInt(c))),
+						'Divide: y = ' + $elm$core$String$fromInt(yInt)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(bAdj) + ('y = ' + ($elm$core$String$fromInt(c) + '. Find the y-intercept.'))))
@@ -7884,10 +8231,13 @@ var $author$project$Game$Problem$Algebra1$genSystemElimination = A2(
 		return {
 			answer: A2($author$project$Types$ASystem, r.x, r.y),
 			hint: {
-				answer: 'x = 3, y = 2',
-				prompt: '2x + 3y = 12, 2x − 3y = 0',
+				answer: 'x = ' + ($elm$core$String$fromInt(r.x) + (', y = ' + $elm$core$String$fromInt(r.y))),
+				prompt: 'Solve the system:\n' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + ('y = ' + ($elm$core$String$fromInt(c) + ('\n' + ($elm$core$String$fromInt(r.a) + ('x − ' + ($elm$core$String$fromInt(r.b) + ('y = ' + $elm$core$String$fromInt(c2))))))))))),
 				steps: _List_fromArray(
-					['Add the equations: 4x = 12 → x = 3', 'Substitute into first: 2(3)+3y=12 → y=2'])
+					[
+						'Add the equations: ' + ($elm$core$String$fromInt(2 * r.a) + ('x = ' + ($elm$core$String$fromInt(c + c2) + (' → x = ' + $elm$core$String$fromInt(r.x))))),
+						'Substitute x = ' + ($elm$core$String$fromInt(r.x) + (' into first: ' + ($elm$core$String$fromInt(r.a) + ('(' + ($elm$core$String$fromInt(r.x) + (') + ' + ($elm$core$String$fromInt(r.b) + ('y = ' + ($elm$core$String$fromInt(c) + (' → y = ' + $elm$core$String$fromInt(r.y)))))))))))
+					])
 			},
 			inputType: $author$project$Types$TSystem,
 			prompt: 'Solve the system:\n' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + ('y = ' + ($elm$core$String$fromInt(c) + ('\n' + ($elm$core$String$fromInt(r.a) + ('x − ' + ($elm$core$String$fromInt(r.b) + ('y = ' + $elm$core$String$fromInt(c2)))))))))))
@@ -7911,10 +8261,14 @@ var $author$project$Game$Problem$Algebra1$genSystemSubstitution = A2(
 		return {
 			answer: A2($author$project$Types$ASystem, r.x, y),
 			hint: {
-				answer: 'x = 2, y = 5',
-				prompt: 'y = 2x + 1, 3x + y = 11',
+				answer: 'x = ' + ($elm$core$String$fromInt(r.x) + (', y = ' + $elm$core$String$fromInt(y))),
+				prompt: 'Solve the system:\ny = ' + ($author$project$Game$Problem$Algebra1$showSigned(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + ('\n' + ($elm$core$String$fromInt(r.c) + ('x + y = ' + $elm$core$String$fromInt(e))))))),
 				steps: _List_fromArray(
-					['Substitute y = 2x+1 into 3x+y=11', '3x + (2x+1) = 11 → 5x = 10 → x = 2', 'y = 2(2)+1 = 5'])
+					[
+						'Substitute y = ' + ($author$project$Game$Problem$Algebra1$showSigned(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (' into ' + ($elm$core$String$fromInt(r.c) + ('x + y = ' + $elm$core$String$fromInt(e))))))),
+						$elm$core$String$fromInt(r.c) + ('x + (' + ($author$project$Game$Problem$Algebra1$showSigned(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (') = ' + ($elm$core$String$fromInt(e) + (' → ' + ($elm$core$String$fromInt(r.c + r.a) + ('x = ' + ($elm$core$String$fromInt(e - r.b) + (' → x = ' + $elm$core$String$fromInt(r.x)))))))))))),
+						'y = ' + ($author$project$Game$Problem$Algebra1$showSigned(r.a) + ('(' + ($elm$core$String$fromInt(r.x) + (') + ' + ($elm$core$String$fromInt(r.b) + (' = ' + $elm$core$String$fromInt(y)))))))
+					])
 			},
 			inputType: $author$project$Types$TSystem,
 			prompt: 'Solve the system:\ny = ' + ($author$project$Game$Problem$Algebra1$showSigned(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + ('\n' + ($elm$core$String$fromInt(r.c) + ('x + y = ' + $elm$core$String$fromInt(e)))))))
@@ -7940,10 +8294,13 @@ var $author$project$Game$Problem$Algebra1$genSystemWordProblem = A2(
 		return {
 			answer: $author$project$Types$AInt(larger),
 			hint: {
-				answer: '8',
-				prompt: 'Two numbers sum to 13 and differ by 3. Larger number?',
+				answer: $elm$core$String$fromInt(larger),
+				prompt: 'Two numbers sum to ' + ($elm$core$String$fromInt(sumAB) + (' and their difference is ' + ($elm$core$String$fromInt(diffAB) + '. Find the larger number.'))),
 				steps: _List_fromArray(
-					['x + y = 13 and x − y = 3', 'Add: 2x = 16 → x = 8'])
+					[
+						'x + y = ' + ($elm$core$String$fromInt(sumAB) + (' and x − y = ' + $elm$core$String$fromInt(diffAB))),
+						'Add: 2x = ' + ($elm$core$String$fromInt(sumAB + diffAB) + (' → x = ' + $elm$core$String$fromInt(larger)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Two numbers sum to ' + ($elm$core$String$fromInt(sumAB) + (' and their difference is ' + ($elm$core$String$fromInt(diffAB) + '. Find the larger number.')))
@@ -7968,6 +8325,24 @@ var $author$project$Game$Problem$Algebra1$unit5 = A2(
 	},
 	A2($elm$random$Random$int, 0, 2));
 var $elm$core$Basics$pow = _Basics_pow;
+var $author$project$Game$Problem$Algebra1$superscript = function (n) {
+	switch (n) {
+		case 2:
+			return '²';
+		case 3:
+			return '³';
+		case 4:
+			return '⁴';
+		case 5:
+			return '⁵';
+		case 6:
+			return '⁶';
+		case 7:
+			return '⁷';
+		default:
+			return '^' + $elm$core$String$fromInt(n);
+	}
+};
 var $author$project$Game$Problem$Algebra1$genNegativeExponent = A2(
 	$elm$random$Random$andThen,
 	function (_v0) {
@@ -7987,10 +8362,13 @@ var $author$project$Game$Problem$Algebra1$genNegativeExponent = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '1/8',
-					prompt: '2^(−3) = ?',
+					answer: correct,
+					prompt: $elm$core$String$fromInt(base) + ('^(−' + ($elm$core$String$fromInt(n) + ') = ?')),
 					steps: _List_fromArray(
-						['Negative exponent: flip to denominator', '2^(−3) = 1/2³ = 1/8'])
+						[
+							'Negative exponent: flip to denominator',
+							$elm$core$String$fromInt(base) + ('^(−' + ($elm$core$String$fromInt(n) + (') = 1/' + ($elm$core$String$fromInt(base) + ($author$project$Game$Problem$Algebra1$superscript(n) + (' = 1/' + $elm$core$String$fromInt(denom)))))))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: $elm$core$String$fromInt(base) + ('^(−' + ($elm$core$String$fromInt(n) + ') = ?'))
@@ -8001,24 +8379,6 @@ var $author$project$Game$Problem$Algebra1$genNegativeExponent = A2(
 		$elm$core$Tuple$pair,
 		A2($author$project$Game$Problem$Common$randInt, 2, 4),
 		A2($author$project$Game$Problem$Common$randInt, 1, 3)));
-var $author$project$Game$Problem$Algebra1$superscript = function (n) {
-	switch (n) {
-		case 2:
-			return '²';
-		case 3:
-			return '³';
-		case 4:
-			return '⁴';
-		case 5:
-			return '⁵';
-		case 6:
-			return '⁶';
-		case 7:
-			return '⁷';
-		default:
-			return '^' + $elm$core$String$fromInt(n);
-	}
-};
 var $author$project$Game$Problem$Algebra1$genPowerRule = A2(
 	$elm$random$Random$andThen,
 	function (_v0) {
@@ -8035,10 +8395,13 @@ var $author$project$Game$Problem$Algebra1$genPowerRule = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: 'x⁶',
-						prompt: '(x³)² = x^?',
+						answer: 'x' + $author$project$Game$Problem$Algebra1$superscript(correct),
+						prompt: '(x' + ($author$project$Game$Problem$Algebra1$superscript(a) + (')' + ($author$project$Game$Problem$Algebra1$superscript(b) + ' = x^?'))),
 						steps: _List_fromArray(
-							['Power rule: multiply exponents', '3 × 2 = 6 → x⁶'])
+							[
+								'Power rule: multiply exponents',
+								$elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(correct) + (' → x' + $author$project$Game$Problem$Algebra1$superscript(correct))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: '(x' + ($author$project$Game$Problem$Algebra1$superscript(a) + (')' + ($author$project$Game$Problem$Algebra1$superscript(b) + ' = x^?')))
@@ -8067,10 +8430,13 @@ var $author$project$Game$Problem$Algebra1$genProductRule = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: 'x⁷',
-						prompt: 'x³ · x⁴ = x^?',
+						answer: 'x' + $author$project$Game$Problem$Algebra1$superscript(correct),
+						prompt: 'x' + ($author$project$Game$Problem$Algebra1$superscript(a) + (' · x' + ($author$project$Game$Problem$Algebra1$superscript(b) + ' = x^?'))),
 						steps: _List_fromArray(
-							['Product rule: add exponents', '3 + 4 = 7 → x⁷'])
+							[
+								'Product rule: add exponents',
+								$elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(correct) + (' → x' + $author$project$Game$Problem$Algebra1$superscript(correct))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'x' + ($author$project$Game$Problem$Algebra1$superscript(a) + (' · x' + ($author$project$Game$Problem$Algebra1$superscript(b) + ' = x^?')))
@@ -8099,13 +8465,16 @@ var $author$project$Game$Problem$Algebra1$genQuotientRule = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: 'x⁴',
-						prompt: 'x⁷ ÷ x³ = x^?',
+						answer: 'x' + $author$project$Game$Problem$Algebra1$superscript(correct),
+						prompt: 'x' + ($author$project$Game$Problem$Algebra1$superscript(a) + (' / x' + ($author$project$Game$Problem$Algebra1$superscript(b) + ' = x^?'))),
 						steps: _List_fromArray(
-							['Quotient rule: subtract exponents', '7 − 3 = 4 → x⁴'])
+							[
+								'Quotient rule: subtract exponents',
+								$elm$core$String$fromInt(a) + (' − ' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(correct) + (' → x' + $author$project$Game$Problem$Algebra1$superscript(correct))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
-					prompt: 'x' + ($author$project$Game$Problem$Algebra1$superscript(a) + (' ÷ x' + ($author$project$Game$Problem$Algebra1$superscript(b) + ' = x^?')))
+					prompt: 'x' + ($author$project$Game$Problem$Algebra1$superscript(a) + (' / x' + ($author$project$Game$Problem$Algebra1$superscript(b) + ' = x^?')))
 				};
 			},
 			$author$project$Game$Problem$Common$wrongChoicesInt(a - b));
@@ -8115,7 +8484,6 @@ var $author$project$Game$Problem$Algebra1$genQuotientRule = A2(
 		$elm$core$Tuple$pair,
 		A2($author$project$Game$Problem$Common$randInt, 5, 10),
 		A2($author$project$Game$Problem$Common$randInt, 2, 4)));
-var $elm$core$String$fromFloat = _String_fromNumber;
 var $author$project$Game$Problem$Algebra1$genScientificNotation = A2(
 	$elm$random$Random$andThen,
 	function (_v0) {
@@ -8135,10 +8503,14 @@ var $author$project$Game$Problem$Algebra1$genScientificNotation = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '3 × 10³',
-					prompt: 'Write 3000 in scientific notation.',
+					answer: correct,
+					prompt: 'Write ' + (valueStr + ' in scientific notation.'),
 					steps: _List_fromArray(
-						['Move decimal to get one non-zero digit: 3.000', 'Moved 3 places left → 10³', 'Answer: 3 × 10³'])
+						[
+							'Move decimal to get one non-zero digit before the decimal point',
+							'Moved ' + ($elm$core$String$fromInt(n) + (' places left → 10^' + $elm$core$String$fromInt(n))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Write ' + (valueStr + ' in scientific notation.')
@@ -8185,10 +8557,14 @@ var $author$project$Game$Problem$Algebra1$genAddSubPolynomial = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '6x + 8',
-					prompt: '(2x + 3) + (4x + 5) = ?',
+					answer: correct,
+					prompt: '(' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (') + (' + ($elm$core$String$fromInt(r.c) + ('x + ' + ($elm$core$String$fromInt(r.d) + ') = ?'))))))),
 					steps: _List_fromArray(
-						['Combine x terms: 2x + 4x = 6x', 'Combine constants: 3 + 5 = 8', 'Answer: 6x + 8'])
+						[
+							'Combine x terms: ' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.c) + ('x = ' + ($elm$core$String$fromInt(xCoeff) + 'x'))))),
+							'Combine constants: ' + ($elm$core$String$fromInt(r.b) + (' + ' + ($elm$core$String$fromInt(r.d) + (' = ' + $elm$core$String$fromInt(constTerm))))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: '(' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (') + (' + ($elm$core$String$fromInt(r.c) + ('x + ' + ($elm$core$String$fromInt(r.d) + ') = ?')))))))
@@ -8223,10 +8599,15 @@ var $author$project$Game$Problem$Algebra1$genFOIL = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: 'x² + 5x + 6',
-					prompt: '(x + 2)(x + 3) = ?',
+					answer: correct,
+					prompt: '(x + ' + ($elm$core$String$fromInt(a) + (')(x + ' + ($elm$core$String$fromInt(b) + ') = ?'))),
 					steps: _List_fromArray(
-						['FOIL: First: x·x = x²', 'Outer + Inner: 3x + 2x = 5x', 'Last: 2·3 = 6', 'Answer: x² + 5x + 6'])
+						[
+							'FOIL: First: x·x = x²',
+							'Outer + Inner: ' + ($elm$core$String$fromInt(b) + ('x + ' + ($elm$core$String$fromInt(a) + ('x = ' + ($elm$core$String$fromInt(sumAB) + 'x'))))),
+							'Last: ' + ($elm$core$String$fromInt(a) + ('·' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(prodAB))))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: '(x + ' + ($elm$core$String$fromInt(a) + (')(x + ' + ($elm$core$String$fromInt(b) + ') = ?')))
@@ -8257,10 +8638,14 @@ var $author$project$Game$Problem$Algebra1$genFactorGCF = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '3(2x + 3)',
-					prompt: 'Factor: 6x + 9',
+					answer: correct,
+					prompt: 'Factor: ' + ($elm$core$String$fromInt(term1) + ('x + ' + $elm$core$String$fromInt(term2))),
 					steps: _List_fromArray(
-						['GCF of 6 and 9 is 3', '6x ÷ 3 = 2x, 9 ÷ 3 = 3', 'Answer: 3(2x + 3)'])
+						[
+							'GCF of ' + ($elm$core$String$fromInt(term1) + (' and ' + ($elm$core$String$fromInt(term2) + (' is ' + $elm$core$String$fromInt(g))))),
+							$elm$core$String$fromInt(term1) + ('x / ' + ($elm$core$String$fromInt(g) + (' = ' + ($elm$core$String$fromInt(b) + ('x, ' + ($elm$core$String$fromInt(term2) + (' / ' + ($elm$core$String$fromInt(g) + (' = ' + $elm$core$String$fromInt(c)))))))))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Factor: ' + ($elm$core$String$fromInt(term1) + ('x + ' + $elm$core$String$fromInt(term2)))
@@ -8294,10 +8679,14 @@ var $author$project$Game$Problem$Algebra1$genFactorTrinomial = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '(x + 2)(x + 3)',
-					prompt: 'Factor: x² + 5x + 6',
+					answer: correct,
+					prompt: 'Factor: x² + ' + ($elm$core$String$fromInt(b) + ('x + ' + $elm$core$String$fromInt(c))),
 					steps: _List_fromArray(
-						['Find two numbers that multiply to 6 and add to 5', '2 × 3 = 6 and 2 + 3 = 5', 'Answer: (x+2)(x+3)'])
+						[
+							'Find two numbers that multiply to ' + ($elm$core$String$fromInt(c) + (' and add to ' + $elm$core$String$fromInt(b))),
+							$elm$core$String$fromInt(r) + (' × ' + ($elm$core$String$fromInt(s) + (' = ' + ($elm$core$String$fromInt(c) + (' and ' + ($elm$core$String$fromInt(r) + (' + ' + ($elm$core$String$fromInt(s) + (' = ' + $elm$core$String$fromInt(b)))))))))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Factor: x² + ' + ($elm$core$String$fromInt(b) + ('x + ' + $elm$core$String$fromInt(c)))
@@ -8328,10 +8717,14 @@ var $author$project$Game$Problem$Algebra1$genMonomialTimesPolynomial = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '6x + 12',
-					prompt: '3(2x + 4) = ?',
+					answer: correct,
+					prompt: $elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + ('x + ' + ($elm$core$String$fromInt(c) + ') = ?')))),
 					steps: _List_fromArray(
-						['Distribute: 3 · 2x = 6x', '3 · 4 = 12', 'Answer: 6x + 12'])
+						[
+							'Distribute: ' + ($elm$core$String$fromInt(a) + (' · ' + ($elm$core$String$fromInt(b) + ('x = ' + ($elm$core$String$fromInt(xCoeff) + 'x'))))),
+							$elm$core$String$fromInt(a) + (' · ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(constTerm)))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: $elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + ('x + ' + ($elm$core$String$fromInt(c) + ') = ?'))))
@@ -8386,10 +8779,12 @@ function $author$project$Game$Problem$Algebra1$cyclic$genAxisOfSymmetry() {
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: 'x = −2',
-								prompt: 'Axis of y = x² + 4x + 3?',
+								answer: 'x = ' + $elm$core$String$fromInt(axis),
+								prompt: 'Axis of symmetry of y = ' + ($elm$core$String$fromInt(a) + ('x² + ' + ($author$project$Game$Problem$Algebra1$showSigned(b) + ('x + ' + ($elm$core$String$fromInt(c) + '?'))))),
 								steps: _List_fromArray(
-									['x = −b/(2a) = −4/(2·1) = −2'])
+									[
+										'x = −b/(2a) = −(' + ($elm$core$String$fromInt(b) + (')/(2·' + ($elm$core$String$fromInt(a) + (') = ' + ($elm$core$String$fromInt(num) + ('/' + ($elm$core$String$fromInt(denom) + (' = ' + $elm$core$String$fromInt(axis)))))))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Axis of symmetry of y = ' + ($elm$core$String$fromInt(a) + ('x² + ' + ($author$project$Game$Problem$Algebra1$showSigned(b) + ('x + ' + ($elm$core$String$fromInt(c) + '?')))))
@@ -8432,10 +8827,13 @@ var $author$project$Game$Problem$Algebra1$genDiscriminant = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '16',
-						prompt: 'Discriminant of x² + 2x − 3?',
+						answer: $elm$core$String$fromInt(disc),
+						prompt: 'Find the discriminant of ' + ($elm$core$String$fromInt(a) + ('x² + ' + ($author$project$Game$Problem$Algebra1$showSigned(b) + ('x + ' + $elm$core$String$fromInt(c))))),
 						steps: _List_fromArray(
-							['Discriminant = b² − 4ac', '= 2² − 4(1)(−3) = 4 + 12 = 16'])
+							[
+								'Discriminant = b² − 4ac',
+								'= ' + ($elm$core$String$fromInt(b) + ('² − 4(' + ($elm$core$String$fromInt(a) + (')(' + ($elm$core$String$fromInt(c) + (') = ' + ($elm$core$String$fromInt(b * b) + (' − ' + ($elm$core$String$fromInt((4 * a) * c) + (' = ' + $elm$core$String$fromInt(disc)))))))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Find the discriminant of ' + ($elm$core$String$fromInt(a) + ('x² + ' + ($author$project$Game$Problem$Algebra1$showSigned(b) + ('x + ' + $elm$core$String$fromInt(c)))))
@@ -8462,10 +8860,14 @@ var $author$project$Game$Problem$Algebra1$genQuadraticFormula = A2(
 		return {
 			answer: A2($author$project$Types$ARoots, r, s),
 			hint: {
-				answer: 'x = 2 or x = 3',
-				prompt: 'Solve x² − 5x + 6 = 0 using the quadratic formula.',
+				answer: 'x = ' + ($elm$core$String$fromInt(r) + (' or x = ' + $elm$core$String$fromInt(s))),
+				prompt: 'Use the quadratic formula. Solve: x² + ' + ($author$project$Game$Problem$Algebra1$showSigned(b) + ('x + ' + ($elm$core$String$fromInt(c) + ' = 0'))),
 				steps: _List_fromArray(
-					['x = [−b ± √(b²−4ac)] / (2a)', '= [5 ± √(25−24)] / 2 = [5 ± 1] / 2', 'x = 3 or x = 2'])
+					[
+						'x = [−b ± √(b²−4ac)] / (2a), with a=1, b=' + ($elm$core$String$fromInt(b) + (', c=' + $elm$core$String$fromInt(c))),
+						'= [' + ($elm$core$String$fromInt(-b) + (' ± √(' + ($elm$core$String$fromInt(b * b) + ('−' + ($elm$core$String$fromInt(4 * c) + (')] / 2 = [' + ($elm$core$String$fromInt(-b) + (' ± ' + ($elm$core$String$fromInt(r + s) + '] / 2'))))))))),
+						'x = ' + ($elm$core$String$fromInt(r) + (' or x = ' + $elm$core$String$fromInt(s)))
+					])
 			},
 			inputType: $author$project$Types$TRoots,
 			prompt: 'Use the quadratic formula. Solve: x² + ' + ($author$project$Game$Problem$Algebra1$showSigned(b) + ('x + ' + ($elm$core$String$fromInt(c) + ' = 0')))
@@ -8486,10 +8888,14 @@ var $author$project$Game$Problem$Algebra1$genSolveByFactoring = A2(
 		return {
 			answer: A2($author$project$Types$ARoots, -r, -s),
 			hint: {
-				answer: 'x = −2 or x = −3',
-				prompt: 'Solve: x² + 5x + 6 = 0',
+				answer: 'x = −' + ($elm$core$String$fromInt(r) + (' or x = −' + $elm$core$String$fromInt(s))),
+				prompt: 'Solve: x² + ' + ($elm$core$String$fromInt(b) + ('x + ' + ($elm$core$String$fromInt(c) + ' = 0'))),
 				steps: _List_fromArray(
-					['Factor: (x + 2)(x + 3) = 0', 'Set each factor to zero', 'x = −2 or x = −3'])
+					[
+						'Factor: (x + ' + ($elm$core$String$fromInt(r) + (')(x + ' + ($elm$core$String$fromInt(s) + ') = 0'))),
+						'Set each factor to zero',
+						'x = −' + ($elm$core$String$fromInt(r) + (' or x = −' + $elm$core$String$fromInt(s)))
+					])
 			},
 			inputType: $author$project$Types$TRoots,
 			prompt: 'Solve: x² + ' + ($elm$core$String$fromInt(b) + ('x + ' + ($elm$core$String$fromInt(c) + ' = 0')))
@@ -8507,10 +8913,13 @@ var $author$project$Game$Problem$Algebra1$genSolveBySquareRoot = A2(
 		return {
 			answer: A2($author$project$Types$ARoots, n, -n),
 			hint: {
-				answer: 'x = 5 or x = −5',
-				prompt: 'Solve: x² = 25',
+				answer: 'x = ' + ($elm$core$String$fromInt(n) + (' or x = −' + $elm$core$String$fromInt(n))),
+				prompt: 'Solve: x² = ' + $elm$core$String$fromInt(nn),
 				steps: _List_fromArray(
-					['Take square root of both sides', 'x = ±√25 = ±5'])
+					[
+						'Take square root of both sides',
+						'x = ±√' + ($elm$core$String$fromInt(nn) + (' = ±' + $elm$core$String$fromInt(n)))
+					])
 			},
 			inputType: $author$project$Types$TRoots,
 			prompt: 'Solve: x² = ' + $elm$core$String$fromInt(nn)
@@ -8552,10 +8961,13 @@ var $author$project$Game$Problem$Algebra1$genEvalPiecewise = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '6',
-										prompt: 'f(x) = {2x if x≥0, −x if x<0}. Find f(3).',
+										answer: $elm$core$String$fromInt(2 * x),
+										prompt: 'f(x) = { 2x if x ≥ 0 | −x if x < 0 }. Find f(' + ($elm$core$String$fromInt(x) + ').'),
 										steps: _List_fromArray(
-											['x = 3 ≥ 0, so use f(x) = 2x', 'f(3) = 2(3) = 6'])
+											[
+												'x = ' + ($elm$core$String$fromInt(x) + ' ≥ 0, so use f(x) = 2x'),
+												'f(' + ($elm$core$String$fromInt(x) + (') = 2(' + ($elm$core$String$fromInt(x) + (') = ' + $elm$core$String$fromInt(2 * x)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'f(x) = { 2x if x ≥ 0 | −x if x < 0 }. Find f(' + ($elm$core$String$fromInt(x) + ').')
@@ -8579,10 +8991,13 @@ var $author$project$Game$Problem$Algebra1$genEvalPiecewise = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '4',
-										prompt: 'f(x) = {2x if x≥0, −x if x<0}. Find f(−4).',
+										answer: $elm$core$String$fromInt(-nx),
+										prompt: 'f(x) = { 2x if x ≥ 0 | −x if x < 0 }. Find f(' + ($elm$core$String$fromInt(nx) + ').'),
 										steps: _List_fromArray(
-											['x = −4 < 0, so use f(x) = −x', 'f(−4) = −(−4) = 4'])
+											[
+												'x = ' + ($elm$core$String$fromInt(nx) + ' < 0, so use f(x) = −x'),
+												'f(' + ($elm$core$String$fromInt(nx) + (') = −(' + ($elm$core$String$fromInt(nx) + (') = ' + $elm$core$String$fromInt(-nx)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'f(x) = { 2x if x ≥ 0 | −x if x < 0 }. Find f(' + ($elm$core$String$fromInt(nx) + ').')
@@ -8605,10 +9020,13 @@ var $author$project$Game$Problem$Algebra1$genEvalPiecewise = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '16',
-										prompt: 'f(x) = {x+3 if x<2, x² if x≥2}. Find f(4).',
+										answer: $elm$core$String$fromInt(x * x),
+										prompt: 'f(x) = { x + 3 if x < 2 | x² if x ≥ 2 }. Find f(' + ($elm$core$String$fromInt(x) + ').'),
 										steps: _List_fromArray(
-											['x = 4 ≥ 2, so use f(x) = x²', 'f(4) = 4² = 16'])
+											[
+												'x = ' + ($elm$core$String$fromInt(x) + ' ≥ 2, so use f(x) = x²'),
+												'f(' + ($elm$core$String$fromInt(x) + (') = ' + ($elm$core$String$fromInt(x) + ('² = ' + $elm$core$String$fromInt(x * x)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'f(x) = { x + 3 if x < 2 | x² if x ≥ 2 }. Find f(' + ($elm$core$String$fromInt(x) + ').')
@@ -8629,7 +9047,7 @@ var $author$project$Game$Problem$Algebra1$genIdentifyFunctionType = A2(
 					answer: $author$project$Types$AChoice(0),
 					hint: {
 						answer: 'Linear',
-						prompt: 'What type is f(x) = 3x + 2?',
+						prompt: 'Which type of function is f(x) = 3x + 2?',
 						steps: _List_fromArray(
 							['Highest power of x is 1', 'Linear functions have the form f(x) = mx + b'])
 					},
@@ -8643,7 +9061,7 @@ var $author$project$Game$Problem$Algebra1$genIdentifyFunctionType = A2(
 					answer: $author$project$Types$AChoice(1),
 					hint: {
 						answer: 'Quadratic',
-						prompt: 'What type is f(x) = x² − 4x + 1?',
+						prompt: 'Which type of function is f(x) = x² − 4x + 1?',
 						steps: _List_fromArray(
 							['Highest power of x is 2', 'Quadratic functions have an x² term'])
 					},
@@ -8657,7 +9075,7 @@ var $author$project$Game$Problem$Algebra1$genIdentifyFunctionType = A2(
 					answer: $author$project$Types$AChoice(2),
 					hint: {
 						answer: 'Exponential',
-						prompt: 'What type is f(x) = 3 · 2^x?',
+						prompt: 'Which type of function is f(x) = 3 · 2^x?',
 						steps: _List_fromArray(
 							['The variable x is in the exponent', 'Exponential functions have the form a · b^x'])
 					},
@@ -8709,6 +9127,27 @@ var $author$project$Game$Problem$Algebra1$generatorFor = function (unitNum) {
 			return $author$project$Game$Problem$Algebra1$unit1;
 	}
 };
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
 var $author$project$Game$Problem$Course1$superscript = function (n) {
 	switch (n) {
 		case 2:
@@ -8728,10 +9167,19 @@ var $author$project$Game$Problem$Course1$genExponent = A2(
 		return {
 			answer: $author$project$Types$AInt(correct),
 			hint: {
-				answer: '9',
-				prompt: '3² = ?',
+				answer: $elm$core$String$fromInt(correct),
+				prompt: $elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course1$superscript(exp) + ' = ?'),
 				steps: _List_fromArray(
-					['An exponent means multiply the base by itself that many times', '3² = 3 × 3 = 9'])
+					[
+						$elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course1$superscript(exp) + (' means multiply ' + ($elm$core$String$fromInt(base) + (' by itself ' + ($elm$core$String$fromInt(exp) + ' times'))))),
+						A2(
+						$elm$core$String$join,
+						' × ',
+						A2(
+							$elm$core$List$repeat,
+							exp,
+							$elm$core$String$fromInt(base))) + (' = ' + $elm$core$String$fromInt(correct))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course1$superscript(exp) + ' = ?')
@@ -8742,6 +9190,14 @@ var $author$project$Game$Problem$Course1$genExponent = A2(
 		$elm$core$Tuple$pair,
 		A2($author$project$Game$Problem$Common$randInt, 2, 9),
 		A2($author$project$Game$Problem$Common$randInt, 2, 3)));
+var $author$project$Game$Problem$Course1$factorsOf = function (n) {
+	return A2(
+		$elm$core$List$filter,
+		function (d) {
+			return !A2($elm$core$Basics$modBy, d, n);
+		},
+		A2($elm$core$List$range, 1, n));
+};
 var $author$project$Game$Problem$Course1$genGcf = A2(
 	$elm$random$Random$andThen,
 	function (_v0) {
@@ -8756,10 +9212,26 @@ var $author$project$Game$Problem$Course1$genGcf = A2(
 				return {
 					answer: $author$project$Types$AInt(correct),
 					hint: {
-						answer: '6',
-						prompt: 'GCF of 12 and 18?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'GCF of ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + '?'))),
 						steps: _List_fromArray(
-							['Factors of 12: 1, 2, 3, 4, 6, 12', 'Factors of 18: 1, 2, 3, 6, 9, 18', 'Common factors: 1, 2, 3, 6', 'Greatest: 6'])
+							[
+								'Factors of ' + ($elm$core$String$fromInt(a) + (': ' + A2(
+								$elm$core$String$join,
+								', ',
+								A2(
+									$elm$core$List$map,
+									$elm$core$String$fromInt,
+									$author$project$Game$Problem$Course1$factorsOf(a))))),
+								'Factors of ' + ($elm$core$String$fromInt(b) + (': ' + A2(
+								$elm$core$String$join,
+								', ',
+								A2(
+									$elm$core$List$map,
+									$elm$core$String$fromInt,
+									$author$project$Game$Problem$Course1$factorsOf(b))))),
+								'Greatest common factor: ' + $elm$core$String$fromInt(correct)
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'GCF of ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + '?')))
@@ -8775,6 +9247,18 @@ var $author$project$Game$Problem$Course1$genGcf = A2(
 var $author$project$Game$Problem$Common$lcm = F2(
 	function (a, b) {
 		return ($elm$core$Basics$abs(a * b) / A2($author$project$Game$Problem$Common$gcd, a, b)) | 0;
+	});
+var $author$project$Game$Problem$Course1$multiplesUpTo = F2(
+	function (n, limit) {
+		return A2(
+			$elm$core$List$map,
+			function (k) {
+				return k * n;
+			},
+			A2(
+				$elm$core$List$range,
+				1,
+				(limit / A2($elm$core$Basics$max, 1, n)) | 0));
 	});
 var $author$project$Game$Problem$Common$randChoice = F2(
 	function (list, _default) {
@@ -8811,10 +9295,27 @@ var $author$project$Game$Problem$Course1$genGcfLcmApp = A2(
 					return {
 						answer: $author$project$Types$AInt(answer),
 						hint: {
-							answer: '24',
-							prompt: 'Hot dogs: packs of 8, buns: packs of 6. Least equal amount?',
+							answer: $elm$core$String$fromInt(answer),
+							prompt: 'Hot dogs: packs of ' + ($elm$core$String$fromInt(packA) + (', buns: packs of ' + ($elm$core$String$fromInt(packB) + '. Least equal amount?'))),
 							steps: _List_fromArray(
-								['Find LCM of 8 and 6', 'Multiples of 8: 8, 16, 24...', 'Multiples of 6: 6, 12, 18, 24...', 'LCM = 24'])
+								[
+									'Find LCM of ' + ($elm$core$String$fromInt(packA) + (' and ' + $elm$core$String$fromInt(packB))),
+									'Multiples of ' + ($elm$core$String$fromInt(packA) + (': ' + (A2(
+									$elm$core$String$join,
+									', ',
+									A2(
+										$elm$core$List$map,
+										$elm$core$String$fromInt,
+										A2($author$project$Game$Problem$Course1$multiplesUpTo, packA, answer * 2))) + '...'))),
+									'Multiples of ' + ($elm$core$String$fromInt(packB) + (': ' + (A2(
+									$elm$core$String$join,
+									', ',
+									A2(
+										$elm$core$List$map,
+										$elm$core$String$fromInt,
+										A2($author$project$Game$Problem$Course1$multiplesUpTo, packB, answer * 2))) + '...'))),
+									'LCM = ' + $elm$core$String$fromInt(answer)
+								])
 						},
 						inputType: $author$project$Types$TInteger,
 						prompt: 'Hot dogs come in packs of ' + ($elm$core$String$fromInt(packA) + (', buns in packs of ' + ($elm$core$String$fromInt(packB) + '. What is the least number of each you need to buy to have equal amounts?')))
@@ -8845,10 +9346,27 @@ var $author$project$Game$Problem$Course1$genGcfLcmApp = A2(
 					return {
 						answer: $author$project$Types$AInt(answer),
 						hint: {
-							answer: '6',
-							prompt: '12 pencils and 18 erasers. Greatest equal groups?',
+							answer: $elm$core$String$fromInt(answer),
+							prompt: $elm$core$String$fromInt(a) + (' pencils and ' + ($elm$core$String$fromInt(b) + ' erasers. Greatest equal groups?')),
 							steps: _List_fromArray(
-								['Find GCF of 12 and 18', 'Factors of 12: 1,2,3,4,6,12', 'Factors of 18: 1,2,3,6,9,18', 'GCF = 6'])
+								[
+									'Find GCF of ' + ($elm$core$String$fromInt(a) + (' and ' + $elm$core$String$fromInt(b))),
+									'Factors of ' + ($elm$core$String$fromInt(a) + (': ' + A2(
+									$elm$core$String$join,
+									', ',
+									A2(
+										$elm$core$List$map,
+										$elm$core$String$fromInt,
+										$author$project$Game$Problem$Course1$factorsOf(a))))),
+									'Factors of ' + ($elm$core$String$fromInt(b) + (': ' + A2(
+									$elm$core$String$join,
+									', ',
+									A2(
+										$elm$core$List$map,
+										$elm$core$String$fromInt,
+										$author$project$Game$Problem$Course1$factorsOf(b))))),
+									'GCF = ' + $elm$core$String$fromInt(answer)
+								])
 						},
 						inputType: $author$project$Types$TInteger,
 						prompt: 'A teacher has ' + ($elm$core$String$fromInt(a) + (' pencils and ' + ($elm$core$String$fromInt(b) + ' erasers. What is the greatest number of equal groups she can make with no leftovers?')))
@@ -8871,10 +9389,26 @@ var $author$project$Game$Problem$Course1$genLcm = A2(
 		return {
 			answer: $author$project$Types$AInt(correct),
 			hint: {
-				answer: '12',
-				prompt: 'LCM of 4 and 6?',
+				answer: $elm$core$String$fromInt(correct),
+				prompt: 'LCM of ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + '?'))),
 				steps: _List_fromArray(
-					['Multiples of 4: 4, 8, 12, 16...', 'Multiples of 6: 6, 12, 18...', 'First common multiple: 12'])
+					[
+						'Multiples of ' + ($elm$core$String$fromInt(a) + (': ' + (A2(
+						$elm$core$String$join,
+						', ',
+						A2(
+							$elm$core$List$map,
+							$elm$core$String$fromInt,
+							A2($author$project$Game$Problem$Course1$multiplesUpTo, a, correct * 2))) + '...'))),
+						'Multiples of ' + ($elm$core$String$fromInt(b) + (': ' + (A2(
+						$elm$core$String$join,
+						', ',
+						A2(
+							$elm$core$List$map,
+							$elm$core$String$fromInt,
+							A2($author$project$Game$Problem$Course1$multiplesUpTo, b, correct * 2))) + '...'))),
+						'Least common multiple: ' + $elm$core$String$fromInt(correct)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'LCM of ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + '?')))
@@ -8909,10 +9443,14 @@ var $author$project$Game$Problem$Course1$genOrderOfOps = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '14',
-						prompt: '2 + 3 × 4 = ?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?')))),
 						steps: _List_fromArray(
-							['Multiplication comes before addition (PEMDAS)', 'First: 3 × 4 = 12', 'Then: 2 + 12 = 14'])
+							[
+								'Multiplication before addition (PEMDAS)',
+								'First: ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(b * c))))),
+								'Then: ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b * c) + (' = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?'))))
@@ -8943,10 +9481,13 @@ var $author$project$Game$Problem$Course1$genPerfectCube = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '64',
-						prompt: 'What is 4³?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'What is ' + ($elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course1$superscript(3) + '? (perfect cube)')),
 						steps: _List_fromArray(
-							['A perfect cube is a number times itself three times', '4³ = 4 × 4 × 4 = 64'])
+							[
+								'A perfect cube is a number times itself three times',
+								$elm$core$String$fromInt(base) + ('³ = ' + ($elm$core$String$fromInt(base) + (' × ' + ($elm$core$String$fromInt(base) + (' × ' + ($elm$core$String$fromInt(base) + (' = ' + $elm$core$String$fromInt(correct))))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'What is ' + ($elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course1$superscript(3) + '? (perfect cube)'))
@@ -8969,10 +9510,13 @@ var $author$project$Game$Problem$Course1$genPerfectSquare = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '49',
-						prompt: 'What is 7²?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'What is ' + ($elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course1$superscript(2) + '? (perfect square)')),
 						steps: _List_fromArray(
-							['A perfect square is a number times itself', '7² = 7 × 7 = 49'])
+							[
+								'A perfect square is a number times itself',
+								$elm$core$String$fromInt(base) + ('² = ' + ($elm$core$String$fromInt(base) + (' × ' + ($elm$core$String$fromInt(base) + (' = ' + $elm$core$String$fromInt(correct))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'What is ' + ($elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course1$superscript(2) + '? (perfect square)'))
@@ -8995,10 +9539,13 @@ var $author$project$Game$Problem$Course1$genWholeNumApp = A2(
 						return {
 							answer: $author$project$Types$AInt(perBag),
 							hint: {
-								answer: '4',
-								prompt: '24 apples in 6 bags. How many per bag?',
+								answer: $elm$core$String$fromInt(perBag),
+								prompt: $elm$core$String$fromInt(total) + (' apples split into ' + ($elm$core$String$fromInt(bags) + ' equal bags. How many per bag?')),
 								steps: _List_fromArray(
-									['Divide total by number of bags', '24 ÷ 6 = 4'])
+									[
+										'Divide total by number of bags',
+										$elm$core$String$fromInt(total) + (' / ' + ($elm$core$String$fromInt(bags) + (' = ' + $elm$core$String$fromInt(perBag))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'A store has ' + ($elm$core$String$fromInt(total) + (' apples split into ' + ($elm$core$String$fromInt(bags) + ' equal bags. How many apples per bag?')))
@@ -9019,10 +9566,13 @@ var $author$project$Game$Problem$Course1$genWholeNumApp = A2(
 						return {
 							answer: $author$project$Types$AInt(total),
 							hint: {
-								answer: '24',
-								prompt: '4 rows, 6 plants each. Total?',
+								answer: $elm$core$String$fromInt(total),
+								prompt: $elm$core$String$fromInt(rows) + (' rows, ' + ($elm$core$String$fromInt(cols) + ' plants each. Total?')),
 								steps: _List_fromArray(
-									['Multiply rows by plants per row', '4 × 6 = 24'])
+									[
+										'Multiply rows by plants per row',
+										$elm$core$String$fromInt(rows) + (' × ' + ($elm$core$String$fromInt(cols) + (' = ' + $elm$core$String$fromInt(total))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'A garden has ' + ($elm$core$String$fromInt(rows) + (' rows of plants with ' + ($elm$core$String$fromInt(cols) + ' plants each. How many plants total?')))
@@ -9042,10 +9592,13 @@ var $author$project$Game$Problem$Course1$genWholeNumApp = A2(
 						return {
 							answer: $author$project$Types$AInt(a + b),
 							hint: {
-								answer: '82',
-								prompt: 'Earns 35 on Monday and 47 on Tuesday. Total?',
+								answer: $elm$core$String$fromInt(a + b),
+								prompt: 'Earns ' + ($elm$core$String$fromInt(a) + (' on Monday and ' + ($elm$core$String$fromInt(b) + ' on Tuesday. Total?'))),
 								steps: _List_fromArray(
-									['Add the two amounts', '35 + 47 = 82'])
+									[
+										'Add the two amounts',
+										$elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a + b))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'A knight earns ' + ($elm$core$String$fromInt(a) + (' gold coins on Monday and ' + ($elm$core$String$fromInt(b) + ' gold coins on Tuesday. How many total?')))
@@ -9093,13 +9646,27 @@ var $author$project$Game$Problem$Course1$genCoordinatePlane = A2(
 						var x = _v1.a;
 						var y = _v1.b;
 						var q = ((x > 0) && (y > 0)) ? 0 : (((x < 0) && (y > 0)) ? 1 : (((x < 0) && (y < 0)) ? 2 : 3));
+						var quadrantName = A2(
+							$elm$core$Maybe$withDefault,
+							'?',
+							$elm$core$List$head(
+								A2(
+									$elm$core$List$drop,
+									q,
+									_List_fromArray(
+										['Quadrant I', 'Quadrant II', 'Quadrant III', 'Quadrant IV']))));
 						return {
 							answer: $author$project$Types$AChoice(q),
 							hint: {
-								answer: 'Quadrant II',
-								prompt: 'Which quadrant is (-3, 5)?',
+								answer: quadrantName,
+								prompt: 'The point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ') lies in which quadrant?'))),
 								steps: _List_fromArray(
-									['x negative → left side; y positive → top', 'Top-left = Quadrant II', 'Quadrants: I(+,+)  II(-,+)  III(-,-)  IV(+,-)'])
+									[
+										'x = ' + ($elm$core$String$fromInt(x) + ((x > 0) ? ' → right (+)' : ' → left (−)')),
+										'y = ' + ($elm$core$String$fromInt(y) + ((y > 0) ? ' → up (+)' : ' → down (−)')),
+										'Quadrants: I(+,+)  II(−,+)  III(−,−)  IV(+,−)',
+										'Answer: ' + quadrantName
+									])
 							},
 							inputType: $author$project$Types$TChoice(
 								_List_fromArray(
@@ -9121,10 +9688,14 @@ var $author$project$Game$Problem$Course1$genCoordinatePlane = A2(
 						return {
 							answer: $author$project$Types$AInt(x),
 							hint: {
-								answer: '-4',
-								prompt: 'x-coordinate of (-4, 7)?',
+								answer: $elm$core$String$fromInt(x),
+								prompt: 'What is the x-coordinate of the point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ')?'))),
 								steps: _List_fromArray(
-									['A point is written as (x, y)', 'The first number is the x-coordinate', 'Answer: -4'])
+									[
+										'A point is written as (x, y)',
+										'The first number is the x-coordinate',
+										'Answer: ' + $elm$core$String$fromInt(x)
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'What is the x-coordinate of the point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ')?')))
@@ -9144,10 +9715,14 @@ var $author$project$Game$Problem$Course1$genCoordinatePlane = A2(
 						return {
 							answer: $author$project$Types$AInt(y),
 							hint: {
-								answer: '-6',
-								prompt: 'y-coordinate of (3, -6)?',
+								answer: $elm$core$String$fromInt(y),
+								prompt: 'What is the y-coordinate of the point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ')?'))),
 								steps: _List_fromArray(
-									['A point is written as (x, y)', 'The second number is the y-coordinate', 'Answer: -6'])
+									[
+										'A point is written as (x, y)',
+										'The second number is the y-coordinate',
+										'Answer: ' + $elm$core$String$fromInt(y)
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'What is the y-coordinate of the point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ')?')))
@@ -9161,6 +9736,10 @@ var $author$project$Game$Problem$Course1$genCoordinatePlane = A2(
 		}
 	},
 	A2($elm$random$Random$int, 0, 2));
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
 var $author$project$Game$Problem$Course1$showSigned = function (n) {
 	return (n < 0) ? ('(' + ($elm$core$String$fromInt(n) + ')')) : $elm$core$String$fromInt(n);
 };
@@ -9169,13 +9748,36 @@ var $author$project$Game$Problem$Course1$genIntAdd = A2(
 	function (_v0) {
 		var a = _v0.a;
 		var b = _v0.b;
+		var sameSign = _Utils_eq(a >= 0, b >= 0);
+		var result = a + b;
 		return {
-			answer: $author$project$Types$AInt(a + b),
+			answer: $author$project$Types$AInt(result),
 			hint: {
-				answer: '3',
-				prompt: '(-5) + 8 = ?',
-				steps: _List_fromArray(
-					['Different signs: subtract, keep the sign of the bigger number', '8 - 5 = 3, and 8 is positive', 'Answer: 3'])
+				answer: $elm$core$String$fromInt(result),
+				prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?')),
+				steps: sameSign ? _List_fromArray(
+					[
+						'Same sign: add the values and keep the sign',
+						$elm$core$String$fromInt(
+						$elm$core$Basics$abs(a)) + (' + ' + ($elm$core$String$fromInt(
+						$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(
+						$elm$core$Basics$abs(result))))),
+						'Answer: ' + $elm$core$String$fromInt(result)
+					]) : _List_fromArray(
+					[
+						'Different signs: subtract smaller from larger, keep sign of larger',
+						'Larger: ' + ($elm$core$String$fromInt(
+						A2(
+							$elm$core$Basics$max,
+							$elm$core$Basics$abs(a),
+							$elm$core$Basics$abs(b))) + (' − ' + ($elm$core$String$fromInt(
+						A2(
+							$elm$core$Basics$min,
+							$elm$core$Basics$abs(a),
+							$elm$core$Basics$abs(b))) + (' = ' + $elm$core$String$fromInt(
+						$elm$core$Basics$abs(result)))))),
+						'Answer: ' + $elm$core$String$fromInt(result)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?'))
@@ -9199,10 +9801,14 @@ var $author$project$Game$Problem$Course1$genIntApp = A2(
 						return {
 							answer: $author$project$Types$AInt(start + change),
 							hint: {
-								answer: '3°F',
-								prompt: 'Starts at -5°F, changes by +8°F. New temp?',
+								answer: $elm$core$String$fromInt(start + change) + '°F',
+								prompt: 'Temperature starts at ' + ($author$project$Game$Problem$Course1$showSigned(start) + ('°F and changes by ' + ($author$project$Game$Problem$Course1$showSigned(change) + '°F. New temperature?'))),
 								steps: _List_fromArray(
-									['Add the change to the starting value', '(-5) + 8 = 3', 'Answer: 3°F'])
+									[
+										'Add the change to the starting value',
+										$author$project$Game$Problem$Course1$showSigned(start) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(change) + (' = ' + $elm$core$String$fromInt(start + change)))),
+										'Answer: ' + ($elm$core$String$fromInt(start + change) + '°F')
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Temperature starts at ' + ($author$project$Game$Problem$Course1$showSigned(start) + ('°F and changes by ' + ($author$project$Game$Problem$Course1$showSigned(change) + '°F. New temperature?')))
@@ -9222,10 +9828,14 @@ var $author$project$Game$Problem$Course1$genIntApp = A2(
 						return {
 							answer: $author$project$Types$AInt(depth + rise),
 							hint: {
-								answer: '-20 m',
-								prompt: 'Diver at -50 m rises 30 m. New depth?',
+								answer: $elm$core$String$fromInt(depth + rise) + ' m',
+								prompt: 'A diver is at ' + ($elm$core$String$fromInt(depth) + (' m. She rises ' + ($elm$core$String$fromInt(rise) + ' m. New depth?'))),
 								steps: _List_fromArray(
-									['Rising means adding a positive number', '(-50) + 30 = -20', 'Answer: -20 m'])
+									[
+										'Rising means adding a positive number',
+										'(' + ($elm$core$String$fromInt(depth) + (') + ' + ($elm$core$String$fromInt(rise) + (' = ' + $elm$core$String$fromInt(depth + rise))))),
+										'Answer: ' + ($elm$core$String$fromInt(depth + rise) + ' m')
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'A diver is at ' + ($elm$core$String$fromInt(depth) + (' m. She rises ' + ($elm$core$String$fromInt(rise) + ' m. New depth?')))
@@ -9247,10 +9857,14 @@ var $author$project$Game$Problem$Course1$genIntApp = A2(
 						return {
 							answer: $author$project$Types$AInt(balance + transaction),
 							hint: {
-								answer: '$5',
-								prompt: 'Balance: $(-10). Deposit $15. New balance?',
+								answer: '$' + $elm$core$String$fromInt(balance + transaction),
+								prompt: 'Account: $' + ($author$project$Game$Problem$Course1$showSigned(balance) + ('. Player ' + (verb + (' $' + ($elm$core$String$fromInt(amount) + '. New balance?'))))),
 								steps: _List_fromArray(
-									['Add the transaction to the balance', '(-10) + 15 = 5', 'Answer: $5'])
+									[
+										'Add the transaction to the balance',
+										$author$project$Game$Problem$Course1$showSigned(balance) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(transaction) + (' = ' + $elm$core$String$fromInt(balance + transaction)))),
+										'Answer: $' + $elm$core$String$fromInt(balance + transaction)
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Account: $' + ($author$project$Game$Problem$Course1$showSigned(balance) + ('. Player ' + (verb + (' $' + ($elm$core$String$fromInt(amount) + '. New balance?')))))
@@ -9280,13 +9894,20 @@ var $author$project$Game$Problem$Course1$genIntDiv = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '-4',
-						prompt: '(-20) ÷ 5 = ?',
+						answer: $elm$core$String$fromInt(q),
+						prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' / ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?')),
 						steps: _List_fromArray(
-							['Divide absolute values: 20 ÷ 5 = 4', 'Different signs → negative', 'Answer: -4'])
+							[
+								'Divide absolute values: ' + ($elm$core$String$fromInt(
+								$elm$core$Basics$abs(a)) + (' / ' + ($elm$core$String$fromInt(
+								$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(
+								$elm$core$Basics$abs(q)))))),
+								_Utils_eq(a >= 0, b >= 0) ? 'Same sign → positive' : 'Different signs → negative',
+								'Answer: ' + $elm$core$String$fromInt(q)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
-					prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' ÷ ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?'))
+					prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' / ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?'))
 				};
 			},
 			$author$project$Game$Problem$Common$wrongChoicesInt(q));
@@ -9309,13 +9930,22 @@ var $author$project$Game$Problem$Course1$genIntMul = A2(
 					$author$project$Game$Problem$Course1$shuffleChoices,
 					$elm$core$String$fromInt(correct),
 					wrong);
+				var sameSign = _Utils_eq(a >= 0, b >= 0);
+				var result = correct;
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '-12',
-						prompt: '(-3) × 4 = ?',
+						answer: $elm$core$String$fromInt(result),
+						prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?')),
 						steps: _List_fromArray(
-							['Multiply the absolute values: 3 × 4 = 12', 'Different signs → negative result', 'Answer: -12'])
+							[
+								'Multiply absolute values: ' + ($elm$core$String$fromInt(
+								$elm$core$Basics$abs(a)) + (' × ' + ($elm$core$String$fromInt(
+								$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(
+								$elm$core$Basics$abs(result)))))),
+								sameSign ? 'Same sign → positive' : 'Different signs → negative',
+								'Answer: ' + $elm$core$String$fromInt(result)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?'))
@@ -9342,10 +9972,14 @@ var $author$project$Game$Problem$Course1$genIntOrderOfOps = A2(
 						return {
 							answer: $author$project$Types$AInt(a + (b * c)),
 							hint: {
-								answer: '-5',
-								prompt: '3 + (-2) × 4 = ?',
+								answer: $elm$core$String$fromInt(a + (b * c)),
+								prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(b) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(c) + ' = ?')))),
 								steps: _List_fromArray(
-									['Multiplication first: (-2) × 4 = -8', 'Then addition: 3 + (-8) = -5', 'Answer: -5'])
+									[
+										'Multiplication first: ' + ($author$project$Game$Problem$Course1$showSigned(b) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(c) + (' = ' + $elm$core$String$fromInt(b * c))))),
+										'Then addition: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(b * c) + (' = ' + $elm$core$String$fromInt(a + (b * c)))))),
+										'Answer: ' + $elm$core$String$fromInt(a + (b * c))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(b) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(c) + ' = ?'))))
@@ -9370,10 +10004,14 @@ var $author$project$Game$Problem$Course1$genIntOrderOfOps = A2(
 						return {
 							answer: $author$project$Types$AInt(a - (b * c)),
 							hint: {
-								answer: '11',
-								prompt: '5 - (-3) × 2 = ?',
+								answer: $elm$core$String$fromInt(a - (b * c)),
+								prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' - ' + ($author$project$Game$Problem$Course1$showSigned(b) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(c) + ' = ?')))),
 								steps: _List_fromArray(
-									['Multiplication first: (-3) × 2 = -6', 'Then subtraction: 5 - (-6) = 5 + 6 = 11', 'Answer: 11'])
+									[
+										'Multiplication first: ' + ($author$project$Game$Problem$Course1$showSigned(b) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(c) + (' = ' + $elm$core$String$fromInt(b * c))))),
+										'Then subtraction: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' - ' + ($author$project$Game$Problem$Course1$showSigned(b * c) + (' = ' + $elm$core$String$fromInt(a - (b * c)))))),
+										'Answer: ' + $elm$core$String$fromInt(a - (b * c))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' - ' + ($author$project$Game$Problem$Course1$showSigned(b) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(c) + ' = ?'))))
@@ -9395,10 +10033,14 @@ var $author$project$Game$Problem$Course1$genIntOrderOfOps = A2(
 						return {
 							answer: $author$project$Types$AInt((r.a * r.b) + (r.c * r.d)),
 							hint: {
-								answer: '-10',
-								prompt: '(-2) × 3 + 4 × (-1) = ?',
+								answer: $elm$core$String$fromInt((r.a * r.b) + (r.c * r.d)),
+								prompt: $author$project$Game$Problem$Course1$showSigned(r.a) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(r.b) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(r.c) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(r.d) + ' = ?')))))),
 								steps: _List_fromArray(
-									['Multiply both pairs first', '(-2) × 3 = -6  and  4 × (-1) = -4', 'Add results: (-6) + (-4) = -10'])
+									[
+										'Multiply both pairs first',
+										$author$project$Game$Problem$Course1$showSigned(r.a) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(r.b) + (' = ' + ($elm$core$String$fromInt(r.a * r.b) + ('  and  ' + ($author$project$Game$Problem$Course1$showSigned(r.c) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(r.d) + (' = ' + $elm$core$String$fromInt(r.c * r.d)))))))))),
+										'Add results: ' + ($author$project$Game$Problem$Course1$showSigned(r.a * r.b) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(r.c * r.d) + (' = ' + $elm$core$String$fromInt((r.a * r.b) + (r.c * r.d))))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: $author$project$Game$Problem$Course1$showSigned(r.a) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(r.b) + (' + ' + ($author$project$Game$Problem$Course1$showSigned(r.c) + (' × ' + ($author$project$Game$Problem$Course1$showSigned(r.d) + ' = ?'))))))
@@ -9425,10 +10067,17 @@ var $author$project$Game$Problem$Course1$genIntSub = A2(
 		return {
 			answer: $author$project$Types$AInt(a - b),
 			hint: {
-				answer: '7',
-				prompt: '3 - (-4) = ?',
-				steps: _List_fromArray(
-					['Subtracting a negative = adding a positive', '3 - (-4) = 3 + 4 = 7'])
+				answer: $elm$core$String$fromInt(a - b),
+				prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' - ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?')),
+				steps: (b < 0) ? _List_fromArray(
+					[
+						'Subtracting a negative = adding a positive',
+						$author$project$Game$Problem$Course1$showSigned(a) + (' - (' + ($elm$core$String$fromInt(b) + (') = ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' + ' + ($elm$core$String$fromInt(
+						$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(a - b))))))))
+					]) : _List_fromArray(
+					[
+						'Subtract: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' - ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a - b)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $author$project$Game$Problem$Course1$showSigned(a) + (' - ' + ($author$project$Game$Problem$Course1$showSigned(b) + ' = ?'))
@@ -9476,10 +10125,14 @@ var $author$project$Game$Problem$Course1$genDecAdd = A2(
 		return {
 			answer: A2($author$project$Types$AFloat, correct, 0.01),
 			hint: {
-				answer: '4.6',
-				prompt: '1.2 + 3.4 = ?',
+				answer: $elm$core$String$fromFloat(correct),
+				prompt: $elm$core$String$fromFloat(fa) + (' + ' + ($elm$core$String$fromFloat(fb) + ' = ?')),
 				steps: _List_fromArray(
-					['Line up the decimal points', 'Add as normal: 12 + 34 = 46', 'Place the decimal: 4.6'])
+					[
+						'Line up the decimal points',
+						'Add as normal: ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a + b))))),
+						'Place the decimal: ' + $elm$core$String$fromFloat(correct)
+					])
 			},
 			inputType: $author$project$Types$TDecimal,
 			prompt: $elm$core$String$fromFloat(fa) + (' + ' + ($elm$core$String$fromFloat(fb) + ' = ?'))
@@ -9501,10 +10154,14 @@ var $author$project$Game$Problem$Course1$genDecMul = A2(
 		return {
 			answer: A2($author$project$Types$AFloat, correct, 0.01),
 			hint: {
-				answer: '0.12',
-				prompt: '0.3 × 0.4 = ?',
+				answer: $elm$core$String$fromFloat(correct),
+				prompt: $elm$core$String$fromFloat(fa) + (' × ' + ($elm$core$String$fromFloat(fb) + ' = ?')),
 				steps: _List_fromArray(
-					['Multiply as whole numbers: 3 × 4 = 12', 'Count decimal places: 1 + 1 = 2', 'Place decimal 2 from right: 0.12'])
+					[
+						'Multiply as whole numbers: ' + ($elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a * b))))),
+						'Count decimal places: 1 + 1 = 2',
+						'Place decimal 2 from right: ' + $elm$core$String$fromFloat(correct)
+					])
 			},
 			inputType: $author$project$Types$TDecimal,
 			prompt: $elm$core$String$fromFloat(fa) + (' × ' + ($elm$core$String$fromFloat(fb) + ' = ?'))
@@ -9538,10 +10195,14 @@ var $author$project$Game$Problem$Course1$genFracAdd = A2(
 				return {
 					answer: A2($author$project$Types$AFraction, rn, rd),
 					hint: {
-						answer: '5/7',
-						prompt: '2/7 + 3/7 = ?',
+						answer: A2($author$project$Game$Problem$Course1$showFrac, rn, rd),
+						prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d) + (' + ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d) + ' = ?')),
 						steps: _List_fromArray(
-							['Same denominator: add numerators', '2 + 3 = 5, denominator stays 7', 'Answer: 5/7'])
+							[
+								'Same denominator: add numerators',
+								$elm$core$String$fromInt(n1) + (' + ' + ($elm$core$String$fromInt(n2) + (' = ' + ($elm$core$String$fromInt(n1 + n2) + (', denominator stays ' + $elm$core$String$fromInt(d)))))),
+								'Answer: ' + A2($author$project$Game$Problem$Course1$showFrac, rn, rd)
+							])
 					},
 					inputType: $author$project$Types$TFraction,
 					prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d) + (' + ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d) + ' = ?'))
@@ -9574,10 +10235,14 @@ var $author$project$Game$Problem$Course1$genFracAddUnlike = A2(
 						return {
 							answer: A2($author$project$Types$AFraction, rn, rd),
 							hint: {
-								answer: '5/6',
-								prompt: '1/2 + 1/3 = ?',
+								answer: A2($author$project$Game$Problem$Course1$showFrac, rn, rd),
+								prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' + ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + ' = ?')),
 								steps: _List_fromArray(
-									['LCD of 2 and 3 is 6', '1/2 = 3/6  and  1/3 = 2/6', '3/6 + 2/6 = 5/6'])
+									[
+										'LCD of ' + ($elm$core$String$fromInt(d1) + (' and ' + ($elm$core$String$fromInt(d2) + (' is ' + $elm$core$String$fromInt(commonD))))),
+										A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' = ' + (A2($author$project$Game$Problem$Course1$showFrac, n1 * ((commonD / d1) | 0), commonD) + ('  and  ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + (' = ' + A2($author$project$Game$Problem$Course1$showFrac, n2 * ((commonD / d2) | 0), commonD)))))),
+										A2($author$project$Game$Problem$Course1$showFrac, n1 * ((commonD / d1) | 0), commonD) + (' + ' + (A2($author$project$Game$Problem$Course1$showFrac, n2 * ((commonD / d2) | 0), commonD) + (' = ' + A2($author$project$Game$Problem$Course1$showFrac, rn, rd))))
+									])
 							},
 							inputType: $author$project$Types$TFraction,
 							prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' + ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + ' = ?'))
@@ -9615,10 +10280,14 @@ var $author$project$Game$Problem$Course1$genFracMul = A2(
 		return {
 			answer: A2($author$project$Types$AFraction, rn, rd),
 			hint: {
-				answer: '1/2',
-				prompt: '2/3 × 3/4 = ?',
+				answer: A2($author$project$Game$Problem$Course1$showFrac, rn, rd),
+				prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' × ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + ' = ?')),
 				steps: _List_fromArray(
-					['Multiply numerators: 2 × 3 = 6', 'Multiply denominators: 3 × 4 = 12', 'Simplify 6/12: GCF is 6, so 1/2'])
+					[
+						'Multiply numerators: ' + ($elm$core$String$fromInt(n1) + (' × ' + ($elm$core$String$fromInt(n2) + (' = ' + $elm$core$String$fromInt(n1 * n2))))),
+						'Multiply denominators: ' + ($elm$core$String$fromInt(d1) + (' × ' + ($elm$core$String$fromInt(d2) + (' = ' + $elm$core$String$fromInt(d1 * d2))))),
+						'Simplify ' + (A2($author$project$Game$Problem$Course1$showFrac, n1 * n2, d1 * d2) + (': ' + A2($author$project$Game$Problem$Course1$showFrac, rn, rd)))
+					])
 			},
 			inputType: $author$project$Types$TFraction,
 			prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' × ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + ' = ?'))
@@ -9652,10 +10321,14 @@ var $author$project$Game$Problem$Course1$genFracSub = A2(
 				return {
 					answer: A2($author$project$Types$AFraction, rn, rd),
 					hint: {
-						answer: '3/7',
-						prompt: '5/7 - 2/7 = ?',
+						answer: A2($author$project$Game$Problem$Course1$showFrac, rn, rd),
+						prompt: A2($author$project$Game$Problem$Course1$showFrac, safe_n1, d) + (' - ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d) + ' = ?')),
 						steps: _List_fromArray(
-							['Same denominator: subtract numerators', '5 - 2 = 3, denominator stays 7', 'Answer: 3/7'])
+							[
+								'Same denominator: subtract numerators',
+								$elm$core$String$fromInt(safe_n1) + (' - ' + ($elm$core$String$fromInt(n2) + (' = ' + ($elm$core$String$fromInt(safe_n1 - n2) + (', denominator stays ' + $elm$core$String$fromInt(d)))))),
+								'Answer: ' + A2($author$project$Game$Problem$Course1$showFrac, rn, rd)
+							])
 					},
 					inputType: $author$project$Types$TFraction,
 					prompt: A2($author$project$Game$Problem$Course1$showFrac, safe_n1, d) + (' - ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d) + ' = ?'))
@@ -9686,10 +10359,17 @@ var $author$project$Game$Problem$Course1$genNegRational = A2(
 					return {
 						answer: A2($author$project$Types$AFloat, correct, 0.01),
 						hint: {
-							answer: '-3.8',
-							prompt: '(-1.5) + (-2.3) = ?',
+							answer: $elm$core$String$fromFloat(correct),
+							prompt: $author$project$Game$Problem$Course1$showSignedFloat(fa) + (' + ' + ($author$project$Game$Problem$Course1$showSignedFloat(fb) + ' = ?')),
 							steps: _List_fromArray(
-								['Both are negative, so add their absolute values', '1.5 + 2.3 = 3.8', 'Keep negative sign: -3.8'])
+								[
+									'Both are negative, so add their absolute values',
+									$elm$core$String$fromFloat(
+									$elm$core$Basics$abs(fa)) + (' + ' + ($elm$core$String$fromFloat(
+									$elm$core$Basics$abs(fb)) + (' = ' + $elm$core$String$fromFloat(
+									$elm$core$Basics$abs(correct))))),
+									'Keep negative sign: ' + $elm$core$String$fromFloat(correct)
+								])
 						},
 						inputType: $author$project$Types$TDecimal,
 						prompt: $author$project$Game$Problem$Course1$showSignedFloat(fa) + (' + ' + ($author$project$Game$Problem$Course1$showSignedFloat(fb) + ' = ?'))
@@ -9712,10 +10392,14 @@ var $author$project$Game$Problem$Course1$genNegRational = A2(
 					return {
 						answer: A2($author$project$Types$AFloat, correct, 0.01),
 						hint: {
-							answer: '1.2',
-							prompt: '2.5 + (-1.3) = ?',
+							answer: $elm$core$String$fromFloat(correct),
+							prompt: $author$project$Game$Problem$Course1$showSignedFloat(fa) + (' + ' + ($author$project$Game$Problem$Course1$showSignedFloat(fb) + ' = ?')),
 							steps: _List_fromArray(
-								['Adding a negative is like subtracting', '2.5 - 1.3 = 1.2'])
+								[
+									'Adding a negative is like subtracting',
+									$elm$core$String$fromFloat(fa) + (' - ' + ($elm$core$String$fromFloat(
+									$elm$core$Basics$abs(fb)) + (' = ' + $elm$core$String$fromFloat(correct))))
+								])
 						},
 						inputType: $author$project$Types$TDecimal,
 						prompt: $author$project$Game$Problem$Course1$showSignedFloat(fa) + (' + ' + ($author$project$Game$Problem$Course1$showSignedFloat(fb) + ' = ?'))
@@ -9747,10 +10431,14 @@ var $author$project$Game$Problem$Course1$genSimplifyFrac = A2(
 		return {
 			answer: A2($author$project$Types$AFraction, ansN, ansD),
 			hint: {
-				answer: '3/4',
-				prompt: 'Simplify: 6/8',
+				answer: A2($author$project$Game$Problem$Course1$showFrac, ansN, ansD),
+				prompt: 'Simplify: ' + A2($author$project$Game$Problem$Course1$showFrac, bigN, bigD),
 				steps: _List_fromArray(
-					['Find GCF of 6 and 8: GCF = 2', 'Divide both by 2: 6÷2=3, 8÷2=4', 'Answer: 3/4'])
+					[
+						'Find GCF of ' + ($elm$core$String$fromInt(bigN) + (' and ' + ($elm$core$String$fromInt(bigD) + (': GCF = ' + $elm$core$String$fromInt(k))))),
+						'Divide both by ' + ($elm$core$String$fromInt(k) + (': ' + ($elm$core$String$fromInt(bigN) + ('/' + ($elm$core$String$fromInt(k) + ('=' + ($elm$core$String$fromInt(ansN) + (', ' + ($elm$core$String$fromInt(bigD) + ('/' + ($elm$core$String$fromInt(k) + ('=' + $elm$core$String$fromInt(ansD))))))))))))),
+						'Answer: ' + A2($author$project$Game$Problem$Course1$showFrac, ansN, ansD)
+					])
 			},
 			inputType: $author$project$Types$TFraction,
 			prompt: 'Simplify: ' + A2($author$project$Game$Problem$Course1$showFrac, bigN, bigD)
@@ -9805,10 +10493,13 @@ var $author$project$Game$Problem$Course1$genCombineLike = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '18',
-						prompt: 'If x=3, what is 2x + 4x?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'If x=' + ($elm$core$String$fromInt(x) + (', what is ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x?'))))),
 						steps: _List_fromArray(
-							['Combine like terms first: 2x + 4x = 6x', 'Then substitute: 6(3) = 18'])
+							[
+								'Combine like terms first: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('x = ' + ($elm$core$String$fromInt(a + b) + 'x'))))),
+								'Then substitute: ' + ($elm$core$String$fromInt(a + b) + ('(' + ($elm$core$String$fromInt(x) + (') = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'If x=' + ($elm$core$String$fromInt(x) + (', what is ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x?')))))
@@ -9834,10 +10525,14 @@ var $author$project$Game$Problem$Course1$genEvalLinear = A2(
 		return {
 			answer: $author$project$Types$AInt((a * x) + b),
 			hint: {
-				answer: '14',
-				prompt: 'Evaluate 3x + 2 when x = 4',
+				answer: $elm$core$String$fromInt((a * x) + b),
+				prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' when x = ' + $elm$core$String$fromInt(x))))),
 				steps: _List_fromArray(
-					['Replace x with 4: 3(4) + 2', 'Multiply: 12 + 2', 'Add: 14'])
+					[
+						'Substitute x = ' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(x) + (') + ' + $elm$core$String$fromInt(b))))))),
+						'Multiply: ' + ($elm$core$String$fromInt(a * x) + (' + ' + $elm$core$String$fromInt(b))),
+						'Add: ' + $elm$core$String$fromInt((a * x) + b)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' when x = ' + $elm$core$String$fromInt(x)))))
@@ -9862,10 +10557,14 @@ var $author$project$Game$Problem$Course1$genEvalTwoVar = A2(
 		return {
 			answer: $author$project$Types$AInt((a * x) + (b * y)),
 			hint: {
-				answer: '8',
-				prompt: 'Evaluate 2x + 3y when x=1, y=2',
+				answer: $elm$core$String$fromInt((a * x) + (b * y)),
+				prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('y when x=' + ($elm$core$String$fromInt(x) + (', y=' + $elm$core$String$fromInt(y))))))),
 				steps: _List_fromArray(
-					['Replace variables: 2(1) + 3(2)', 'Multiply each term: 2 + 6', 'Add: 8'])
+					[
+						'Substitute: ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(x) + (') + ' + ($elm$core$String$fromInt(b) + ('(' + ($elm$core$String$fromInt(y) + ')'))))))),
+						'Multiply: ' + ($elm$core$String$fromInt(a * x) + (' + ' + $elm$core$String$fromInt(b * y))),
+						'Add: ' + $elm$core$String$fromInt((a * x) + (b * y))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('y' + (' when x=' + ($elm$core$String$fromInt(x) + (', y=' + $elm$core$String$fromInt(y))))))))
@@ -9901,10 +10600,14 @@ var $author$project$Game$Problem$Course1$genFactorExpr = A2(
 		return {
 			answer: $author$project$Types$AChoice(0),
 			hint: {
-				answer: '3(2x + 3)',
-				prompt: 'Factor: 6x + 9',
+				answer: correct,
+				prompt: 'Factor: ' + ($elm$core$String$fromInt(termA) + ('x + ' + $elm$core$String$fromInt(termB))),
 				steps: _List_fromArray(
-					['Find GCF of 6 and 9: GCF = 3', 'Divide each term by 3: 6x÷3=2x, 9÷3=3', 'Answer: 3(2x + 3)'])
+					[
+						'Find GCF of ' + ($elm$core$String$fromInt(termA) + (' and ' + ($elm$core$String$fromInt(termB) + (': GCF = ' + $elm$core$String$fromInt(f))))),
+						'Divide each term by ' + ($elm$core$String$fromInt(f) + (': ' + ($elm$core$String$fromInt(termA) + ('x/' + ($elm$core$String$fromInt(f) + ('=' + ($elm$core$String$fromInt(a) + ('x, ' + ($elm$core$String$fromInt(termB) + ('/' + ($elm$core$String$fromInt(f) + ('=' + $elm$core$String$fromInt(b))))))))))))),
+						'Answer: ' + correct
+					])
 			},
 			inputType: $author$project$Types$TChoice(choices),
 			prompt: 'Factor: ' + ($elm$core$String$fromInt(termA) + ('x + ' + $elm$core$String$fromInt(termB)))
@@ -9944,10 +10647,14 @@ var $author$project$Game$Problem$Course1$genSimplifyExpr = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '6x + 6',
-					prompt: 'Simplify: 2(x + 3) + 4x',
+					answer: correct,
+					prompt: 'Simplify: ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') + ' + ($elm$core$String$fromInt(c) + 'x'))))),
 					steps: _List_fromArray(
-						['Distribute: 2(x+3) = 2x + 6', 'Combine like terms: 2x + 4x = 6x', 'Answer: 6x + 6'])
+						[
+							'Distribute: ' + ($elm$core$String$fromInt(a) + ('(x+' + ($elm$core$String$fromInt(b) + (') = ' + ($elm$core$String$fromInt(a) + ('x + ' + $elm$core$String$fromInt(constant))))))),
+							'Combine like terms: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(c) + ('x = ' + ($elm$core$String$fromInt(coeff) + 'x'))))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Simplify: ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') + ' + ($elm$core$String$fromInt(c) + 'x')))))
@@ -9991,7 +10698,7 @@ var $author$project$Game$Problem$Course1$genTranslateExpr = A2(
 					},
 					inputType: $author$project$Types$TChoice(
 						_List_fromArray(
-							['4y', '4 + y', 'y - 4', 'y ÷ 4'])),
+							['4y', '4 + y', 'y - 4', 'y / 4'])),
 					prompt: 'Translate: \'the product of 4 and y\''
 				};
 			default:
@@ -10001,7 +10708,7 @@ var $author$project$Game$Problem$Course1$genTranslateExpr = A2(
 						answer: 'x/3',
 						prompt: 'Translate: \'a number divided by 3\'',
 						steps: _List_fromArray(
-							['\'Divided by\' means division', 'x ÷ 3 = x/3'])
+							['\'Divided by\' means division', 'x / 3 = x/3'])
 					},
 					inputType: $author$project$Types$TChoice(
 						_List_fromArray(
@@ -10051,10 +10758,15 @@ var $author$project$Game$Problem$Course1$genInequality = A2(
 				return {
 					answer: A2($author$project$Types$AInequality, dir, x),
 					hint: {
-						answer: 'x > 4',
-						prompt: 'Solve: 3x > 12',
+						answer: 'x ' + (dirStr + (' ' + $elm$core$String$fromInt(x))),
+						prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x ' + (dirStr + (' ' + $elm$core$String$fromInt(b))))),
 						steps: _List_fromArray(
-							['Divide both sides by 3', '3x ÷ 3 > 12 ÷ 3', 'x > 4', 'Note: dividing by a positive keeps the inequality direction'])
+							[
+								'Divide both sides by ' + $elm$core$String$fromInt(a),
+								$elm$core$String$fromInt(a) + ('x / ' + ($elm$core$String$fromInt(a) + (' ' + (dirStr + (' ' + ($elm$core$String$fromInt(b) + (' / ' + $elm$core$String$fromInt(a)))))))),
+								'x ' + (dirStr + (' ' + $elm$core$String$fromInt(x))),
+								'Note: dividing by a positive keeps the inequality direction'
+							])
 					},
 					inputType: $author$project$Types$TInequality,
 					prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x ' + (dirStr + (' ' + $elm$core$String$fromInt(b)))))
@@ -10076,10 +10788,14 @@ var $author$project$Game$Problem$Course1$genSolveAdd = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '7',
-				prompt: 'Solve: x + 3 = 10',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(b))),
 				steps: _List_fromArray(
-					['To isolate x, subtract 3 from both sides', 'x + 3 - 3 = 10 - 3', 'x = 7'])
+					[
+						'Subtract ' + ($elm$core$String$fromInt(a) + ' from both sides'),
+						'x + ' + ($elm$core$String$fromInt(a) + (' − ' + ($elm$core$String$fromInt(a) + (' = ' + ($elm$core$String$fromInt(b) + (' − ' + $elm$core$String$fromInt(a))))))),
+						'x = ' + $elm$core$String$fromInt(x)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(b)))
@@ -10104,10 +10820,14 @@ var $author$project$Game$Problem$Course1$genSolveInequality = A2(
 				return {
 					answer: A2($author$project$Types$AInequality, dir, x),
 					hint: {
-						answer: 'x > 4',
-						prompt: 'Solve: x + 3 > 7',
+						answer: 'x ' + (dirStr + (' ' + $elm$core$String$fromInt(x))),
+						prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' ' + (dirStr + (' ' + $elm$core$String$fromInt(b))))),
 						steps: _List_fromArray(
-							['Subtract 3 from both sides', 'x > 7 - 3', 'x > 4'])
+							[
+								'Subtract ' + ($elm$core$String$fromInt(a) + ' from both sides'),
+								'x ' + (dirStr + (' ' + ($elm$core$String$fromInt(b) + (' - ' + $elm$core$String$fromInt(a))))),
+								'x ' + (dirStr + (' ' + $elm$core$String$fromInt(x)))
+							])
 					},
 					inputType: $author$project$Types$TInequality,
 					prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' ' + (dirStr + (' ' + $elm$core$String$fromInt(b)))))
@@ -10129,10 +10849,14 @@ var $author$project$Game$Problem$Course1$genSolveMul = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '5',
-				prompt: 'Solve: 4x = 20',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(b))),
 				steps: _List_fromArray(
-					['To isolate x, divide both sides by 4', '4x ÷ 4 = 20 ÷ 4', 'x = 5'])
+					[
+						'Divide both sides by ' + $elm$core$String$fromInt(a),
+						$elm$core$String$fromInt(a) + ('x / ' + ($elm$core$String$fromInt(a) + (' = ' + ($elm$core$String$fromInt(b) + (' / ' + $elm$core$String$fromInt(a)))))),
+						'x = ' + $elm$core$String$fromInt(x)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(b)))
@@ -10153,10 +10877,13 @@ var $author$project$Game$Problem$Course1$genTwoStep = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '3',
-				prompt: 'Solve: 3x + 2 = 11',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c))))),
 				steps: _List_fromArray(
-					['Step 1: Subtract 2 from both sides: 3x = 9', 'Step 2: Divide both sides by 3: x = 3'])
+					[
+						'Step 1: Subtract ' + ($elm$core$String$fromInt(b) + (' from both sides: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(c - b))))),
+						'Step 2: Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x = ' + $elm$core$String$fromInt(x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c)))))
@@ -10180,10 +10907,14 @@ var $author$project$Game$Problem$Course1$genWriteEquation = A2(
 		return {
 			answer: $author$project$Types$AInt(start),
 			hint: {
-				answer: '27',
-				prompt: 'After earning 15, has 42. Find starting amount.',
+				answer: $elm$core$String$fromInt(start),
+				prompt: 'After earning ' + ($elm$core$String$fromInt(earned) + (', has ' + ($elm$core$String$fromInt(total) + '. Find starting amount.'))),
 				steps: _List_fromArray(
-					['Write equation: x + 15 = 42', 'Subtract 15 from both sides', 'x = 27'])
+					[
+						'Write equation: x + ' + ($elm$core$String$fromInt(earned) + (' = ' + $elm$core$String$fromInt(total))),
+						'Subtract ' + ($elm$core$String$fromInt(earned) + ' from both sides'),
+						'x = ' + $elm$core$String$fromInt(start)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'A hero has x gold coins. After earning ' + ($elm$core$String$fromInt(earned) + (' more, she has ' + ($elm$core$String$fromInt(total) + ' gold. Find x.')))
@@ -10230,10 +10961,13 @@ var $author$project$Game$Problem$Course1$genConvertFDP = A2(
 		return {
 			answer: $author$project$Types$AChoice(0),
 			hint: {
-				answer: '75%',
-				prompt: 'Convert 3/4 to a percent.',
+				answer: pct,
+				prompt: 'Convert ' + (A2($author$project$Game$Problem$Course1$showFrac, n, d) + ' to a percent.'),
 				steps: _List_fromArray(
-					['Divide numerator by denominator: 3 ÷ 4 = 0.75', 'Multiply by 100: 0.75 × 100 = 75%'])
+					[
+						'Divide numerator by denominator: ' + ($elm$core$String$fromInt(n) + (' / ' + ($elm$core$String$fromInt(d) + (' = ' + $elm$core$String$fromFloat(n / d))))),
+						'Multiply by 100: ' + ($elm$core$String$fromFloat(n / d) + (' × 100 = ' + pct))
+					])
 			},
 			inputType: $author$project$Types$TChoice(choices),
 			prompt: 'Convert ' + (A2($author$project$Game$Problem$Course1$showFrac, n, d) + ' to a percent.')
@@ -10271,10 +11005,13 @@ var $author$project$Game$Problem$Course1$genEquivRatio = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '12',
-								prompt: '2:3 = 8:?',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: $elm$core$String$fromInt(a) + (':' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(bigA) + ':?')))),
 								steps: _List_fromArray(
-									['Scale factor: 8 ÷ 2 = 4', 'Multiply second term: 3 × 4 = 12'])
+									[
+										'Scale factor: ' + ($elm$core$String$fromInt(bigA) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(k))))),
+										'Multiply second term: ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(correct)))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Find the missing value: ' + ($elm$core$String$fromInt(a) + (':' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(bigA) + ':?')))))
@@ -10300,10 +11037,13 @@ var $author$project$Game$Problem$Course1$genMissingProportion = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '9',
-				prompt: '2/6 = 3/?',
+				answer: $elm$core$String$fromInt(x),
+				prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/?')))),
 				steps: _List_fromArray(
-					['Find the scale factor: 6 ÷ 2 = 3', 'Apply to numerator 3: 3 × 3 = 9'])
+					[
+						'Find the scale factor: ' + ($elm$core$String$fromInt(b) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(k))))),
+						'Apply to numerator ' + ($elm$core$String$fromInt(c) + (': ' + ($elm$core$String$fromInt(c) + (' × ' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(x)))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/?'))))
@@ -10323,10 +11063,13 @@ var $author$project$Game$Problem$Course1$genPercent = A2(
 		return {
 			answer: $author$project$Types$AInt(correct),
 			hint: {
-				answer: '20',
-				prompt: 'What is 25% of 80?',
+				answer: $elm$core$String$fromInt(correct),
+				prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?'))),
 				steps: _List_fromArray(
-					['Convert percent to decimal: 25% = 0.25', 'Multiply: 0.25 × 80 = 20'])
+					[
+						'Convert: ' + ($elm$core$String$fromInt(pct) + ('% = ' + $elm$core$String$fromFloat(pct / 100))),
+						'Multiply: ' + ($elm$core$String$fromFloat(pct / 100) + (' × ' + ($elm$core$String$fromInt(whole) + (' = ' + $elm$core$String$fromInt(correct)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?')))
@@ -10354,10 +11097,13 @@ var $author$project$Game$Problem$Course1$genPercentOfNum = A2(
 		return {
 			answer: $author$project$Types$AInt(correct),
 			hint: {
-				answer: '24',
-				prompt: 'What is 30% of 80?',
+				answer: $elm$core$String$fromInt(correct),
+				prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?'))),
 				steps: _List_fromArray(
-					['Convert: 30% = 0.30', 'Multiply: 0.30 × 80 = 24'])
+					[
+						'Convert: ' + ($elm$core$String$fromInt(pct) + ('% = ' + $elm$core$String$fromFloat(pct / 100))),
+						'Multiply: ' + ($elm$core$String$fromFloat(pct / 100) + (' × ' + ($elm$core$String$fromInt(whole) + (' = ' + $elm$core$String$fromInt(correct)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?')))
@@ -10392,10 +11138,13 @@ var $author$project$Game$Problem$Course1$genUnitRate = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '$2',
-						prompt: '3 apples cost $6. Cost per apple?',
+						answer: '$' + $elm$core$String$fromInt(rate),
+						prompt: $elm$core$String$fromInt(units) + (' items cost $' + ($elm$core$String$fromInt(total) + '. Cost per item?')),
 						steps: _List_fromArray(
-							['Unit rate = total ÷ quantity', '$6 ÷ 3 = $2 per apple'])
+							[
+								'Unit rate = total / quantity',
+								'$' + ($elm$core$String$fromInt(total) + (' / ' + ($elm$core$String$fromInt(units) + (' = $' + ($elm$core$String$fromInt(rate) + ' per item')))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: $elm$core$String$fromInt(units) + (' items cost $' + ($elm$core$String$fromInt(total) + '. Cost per item?'))
@@ -10435,10 +11184,13 @@ var $author$project$Game$Problem$Course1$genAreaRect = A2(
 		return {
 			answer: $author$project$Types$AInt(w * h),
 			hint: {
-				answer: '24',
-				prompt: 'Area of rectangle: width=4, height=6?',
+				answer: $elm$core$String$fromInt(w * h),
+				prompt: 'Area of a rectangle: width=' + ($elm$core$String$fromInt(w) + (', height=' + ($elm$core$String$fromInt(h) + '?'))),
 				steps: _List_fromArray(
-					['Area = length × width', '4 × 6 = 24'])
+					[
+						'Area = width × height',
+						$elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt(w * h))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Area of a rectangle: width=' + ($elm$core$String$fromInt(w) + (', height=' + ($elm$core$String$fromInt(h) + '?')))
@@ -10458,10 +11210,13 @@ var $author$project$Game$Problem$Course1$genAreaTriangle = A2(
 		return {
 			answer: $author$project$Types$AInt(((b * h) / 2) | 0),
 			hint: {
-				answer: '12',
-				prompt: 'Area of triangle: base=6, height=4?',
+				answer: $elm$core$String$fromInt(((b * h) / 2) | 0),
+				prompt: 'Area of triangle: base=' + ($elm$core$String$fromInt(b) + (', height=' + ($elm$core$String$fromInt(h) + '?'))),
 				steps: _List_fromArray(
-					['Area = ½ × base × height', '½ × 6 × 4 = 12'])
+					[
+						'Area = ½ × base × height',
+						'½ × ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt(((b * h) / 2) | 0)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Area of triangle: base=' + ($elm$core$String$fromInt(b) + (', height=' + ($elm$core$String$fromInt(h) + '?')))
@@ -10479,12 +11234,19 @@ var $author$project$Game$Problem$Course1$genCircumference = A2(
 		var correct = (2.0 * $elm$core$Basics$pi) * r;
 		return {
 			answer: A2($author$project$Types$AFloat, (2.0 * 3.14) * r, 0.1),
-			hint: {
-				answer: '31.4',
-				prompt: 'Circumference with radius 5? (use π≈3.14)',
-				steps: _List_fromArray(
-					['C = 2πr', 'C = 2 × 3.14 × 5', 'C = 31.4'])
-			},
+			hint: function () {
+				var c314 = (2.0 * 3.14) * r;
+				return {
+					answer: $elm$core$String$fromFloat(c314),
+					prompt: 'Circumference of circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)'),
+					steps: _List_fromArray(
+						[
+							'C = 2πr',
+							'C = 2 × 3.14 × ' + $elm$core$String$fromInt(r),
+							'C = ' + $elm$core$String$fromFloat(c314)
+						])
+				};
+			}(),
 			inputType: $author$project$Types$TDecimal,
 			prompt: 'Circumference of circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)')
 		};
@@ -10506,10 +11268,13 @@ var $author$project$Game$Problem$Course1$genPerimeter = A2(
 					return {
 						answer: $author$project$Types$AInt(2 * (l + w)),
 						hint: {
-							answer: '16',
-							prompt: 'Perimeter of rectangle: length=5, width=3?',
+							answer: $elm$core$String$fromInt(2 * (l + w)),
+							prompt: 'Perimeter of a rectangle: length=' + ($elm$core$String$fromInt(l) + (', width=' + ($elm$core$String$fromInt(w) + '?'))),
 							steps: _List_fromArray(
-								['P = 2(length + width)', 'P = 2(5 + 3) = 2 × 8 = 16'])
+								[
+									'P = 2(length + width)',
+									'P = 2(' + ($elm$core$String$fromInt(l) + (' + ' + ($elm$core$String$fromInt(w) + (') = 2 × ' + ($elm$core$String$fromInt(l + w) + (' = ' + $elm$core$String$fromInt(2 * (l + w))))))))
+								])
 						},
 						inputType: $author$project$Types$TInteger,
 						prompt: 'Perimeter of a rectangle: length=' + ($elm$core$String$fromInt(l) + (', width=' + ($elm$core$String$fromInt(w) + '?')))
@@ -10530,10 +11295,13 @@ var $author$project$Game$Problem$Course1$genPerimeter = A2(
 					return {
 						answer: $author$project$Types$AInt((a + b) + c),
 						hint: {
-							answer: '12',
-							prompt: 'Perimeter of triangle with sides 3, 4, 5?',
+							answer: $elm$core$String$fromInt((a + b) + c),
+							prompt: 'Perimeter of a triangle with sides ' + ($elm$core$String$fromInt(a) + (', ' + ($elm$core$String$fromInt(b) + (', ' + ($elm$core$String$fromInt(c) + '?'))))),
 							steps: _List_fromArray(
-								['P = a + b + c', 'P = 3 + 4 + 5 = 12'])
+								[
+									'P = a + b + c',
+									'P = ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' + ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt((a + b) + c)))))))
+								])
 						},
 						inputType: $author$project$Types$TInteger,
 						prompt: 'Perimeter of a triangle with sides ' + ($elm$core$String$fromInt(a) + (', ' + ($elm$core$String$fromInt(b) + (', ' + ($elm$core$String$fromInt(c) + '?')))))
@@ -10561,10 +11329,14 @@ var $author$project$Game$Problem$Course1$genSurfaceArea = A2(
 		return {
 			answer: $author$project$Types$AInt(sa),
 			hint: {
-				answer: '52',
-				prompt: 'Surface area of 2×3×4 prism?',
+				answer: $elm$core$String$fromInt(sa),
+				prompt: 'Surface area of rectangular prism: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?'))))),
 				steps: _List_fromArray(
-					['SA = 2(lw + lh + wh)', '= 2(2×3 + 2×4 + 3×4)', '= 2(6 + 8 + 12) = 2 × 26 = 52'])
+					[
+						'SA = 2(lw + lh + wh)',
+						'= 2(' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + (' + ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(h) + (' + ' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + ')'))))))))))),
+						'= 2(' + ($elm$core$String$fromInt(l * w) + (' + ' + ($elm$core$String$fromInt(l * h) + (' + ' + ($elm$core$String$fromInt(w * h) + (') = ' + $elm$core$String$fromInt(sa)))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Surface area of rectangular prism: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?')))))
@@ -10588,10 +11360,13 @@ var $author$project$Game$Problem$Course1$genVolumeBox = A2(
 		return {
 			answer: $author$project$Types$AInt((l * w) * h),
 			hint: {
-				answer: '24',
-				prompt: 'Volume of 2×3×4 box?',
+				answer: $elm$core$String$fromInt((l * w) * h),
+				prompt: 'Volume of box: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?'))))),
 				steps: _List_fromArray(
-					['V = length × width × height', '2 × 3 × 4 = 24'])
+					[
+						'V = length × width × height',
+						$elm$core$String$fromInt(l) + (' × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt((l * w) * h))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Volume of box: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?')))))
@@ -10655,10 +11430,18 @@ var $author$project$Game$Problem$Course1$genIQR = A2(
 				return {
 					answer: $author$project$Types$AInt(iqr),
 					hint: {
-						answer: '10',
-						prompt: 'IQR of {2, 5, 7, 9, 12, 15, 17, 20}?',
+						answer: $elm$core$String$fromInt(iqr),
+						prompt: 'Find the IQR of: {' + (numStr + '}'),
 						steps: _List_fromArray(
-							['Q1 = average of 2nd and 3rd values: (5+7)/2 = 6', 'Q3 = average of 6th and 7th values: (15+17)/2 = 16', 'IQR = Q3 - Q1 = 16 - 6 = 10'])
+							[
+								'Q1 = average of 2nd and 3rd values: (' + ($elm$core$String$fromInt(
+								getAt(1)) + ('+' + ($elm$core$String$fromInt(
+								getAt(2)) + (')/2 = ' + $elm$core$String$fromInt(q1))))),
+								'Q3 = average of 6th and 7th values: (' + ($elm$core$String$fromInt(
+								getAt(5)) + ('+' + ($elm$core$String$fromInt(
+								getAt(6)) + (')/2 = ' + $elm$core$String$fromInt(q3))))),
+								'IQR = Q3 - Q1 = ' + ($elm$core$String$fromInt(q3) + (' - ' + ($elm$core$String$fromInt(q1) + (' = ' + $elm$core$String$fromInt(iqr)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Find the IQR of: {' + (numStr + '}')
@@ -10705,10 +11488,23 @@ var $author$project$Game$Problem$Course1$genMAD = A2(
 				return {
 					answer: $author$project$Types$AInt(mad),
 					hint: {
-						answer: '2',
-						prompt: 'MAD of {6, 8, 10, 12}?',
+						answer: $elm$core$String$fromInt(mad),
+						prompt: 'Find the mean absolute deviation (MAD) of: {' + (numStr + '}'),
 						steps: _List_fromArray(
-							['Mean = (6+8+10+12)/4 = 9', 'Deviations: |6-9|=3, |8-9|=1, |10-9|=1, |12-9|=3', 'MAD = (3+1+1+3)/4 = 8/4 = 2'])
+							[
+								'Mean = ' + $elm$core$String$fromInt(m),
+								'Deviations: ' + A2(
+								$elm$core$String$join,
+								', ',
+								A2(
+									$elm$core$List$map,
+									function (v) {
+										return '|' + ($elm$core$String$fromInt(v) + ('-' + ($elm$core$String$fromInt(m) + ('|=' + $elm$core$String$fromInt(
+											$elm$core$Basics$abs(v - m))))));
+									},
+									vals)),
+								'MAD = ' + $elm$core$String$fromInt(mad)
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Find the mean absolute deviation (MAD) of: {' + (numStr + '}')
@@ -10744,10 +11540,16 @@ var $author$project$Game$Problem$Course1$genMean = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '5',
-						prompt: 'Mean of {2, 4, 6, 8}?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'Mean of {' + (numStr + '}?'),
 						steps: _List_fromArray(
-							['Add all values: 2+4+6+8 = 20', 'Divide by count: 20 ÷ 4 = 5'])
+							[
+								'Add all: ' + (A2(
+								$elm$core$String$join,
+								' + ',
+								A2($elm$core$List$map, $elm$core$String$fromInt, nums)) + (' = ' + $elm$core$String$fromInt(s))),
+								'Divide by ' + ($elm$core$String$fromInt(n) + (': ' + ($elm$core$String$fromInt(s) + (' / ' + ($elm$core$String$fromInt(n) + (' = ' + $elm$core$String$fromInt(correct)))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Mean of {' + (numStr + '}?')
@@ -10794,10 +11596,17 @@ var $author$project$Game$Problem$Course1$genMedian = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '5',
-						prompt: 'Median of {2, 4, 6, 8}?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'Median of {' + (numStr + '}?'),
 						steps: _List_fromArray(
-							['List is already sorted: 2, 4, 6, 8', 'Even count: average the two middle values', '(4 + 6) ÷ 2 = 5'])
+							[
+								'Sorted: ' + A2(
+								$elm$core$String$join,
+								', ',
+								A2($elm$core$List$map, $elm$core$String$fromInt, sorted)),
+								'Even count — average the two middle values',
+								'(' + ($elm$core$String$fromInt(mid1) + (' + ' + ($elm$core$String$fromInt(mid2) + (') / 2 = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Median of {' + (numStr + '}?')
@@ -10827,10 +11636,6 @@ var $elm$core$List$maximum = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
-	});
 var $elm$core$List$minimum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -10867,10 +11672,14 @@ var $author$project$Game$Problem$Course1$genRange = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '7',
-						prompt: 'Range of {3, 7, 2, 9}?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'Range of {' + (numStr + '}?'),
 						steps: _List_fromArray(
-							['Range = maximum - minimum', 'Max = 9, Min = 2', '9 - 2 = 7'])
+							[
+								'Maximum: ' + $elm$core$String$fromInt(mx),
+								'Minimum: ' + $elm$core$String$fromInt(mn),
+								'Range = ' + ($elm$core$String$fromInt(mx) + (' − ' + ($elm$core$String$fromInt(mn) + (' = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Range of {' + (numStr + '}?')
@@ -10966,10 +11775,13 @@ var $author$project$Game$Problem$Course2$genConvertFDP = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '75%',
-										prompt: 'Convert 3/4 to a percent.',
+										answer: $elm$core$String$fromInt(pct) + '%',
+										prompt: 'Convert ' + (A2($author$project$Game$Problem$Course2$showFrac, n, d) + ' to a percent.'),
 										steps: _List_fromArray(
-											['Divide numerator by denominator: 3 ÷ 4 = 0.75', 'Multiply by 100: 0.75 × 100 = 75%'])
+											[
+												'Divide numerator by denominator: ' + ($elm$core$String$fromInt(n) + (' / ' + ($elm$core$String$fromInt(d) + (' = ' + $elm$core$String$fromFloat(n / d))))),
+												'Multiply by 100: ' + ($elm$core$String$fromFloat(n / d) + (' × 100 = ' + ($elm$core$String$fromInt(pct) + '%')))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Convert ' + (A2($author$project$Game$Problem$Course2$showFrac, n, d) + ' to a percent.')
@@ -11008,10 +11820,13 @@ var $author$project$Game$Problem$Course2$genConvertFDP = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '35%',
-										prompt: 'Convert 0.35 to a percent.',
+										answer: $elm$core$String$fromInt(pct) + '%',
+										prompt: 'Convert ' + ($elm$core$String$fromFloat(dec) + ' to a percent.'),
 										steps: _List_fromArray(
-											['Multiply by 100 (move decimal 2 places right)', '0.35 × 100 = 35%'])
+											[
+												'Multiply by 100 (move decimal 2 places right)',
+												$elm$core$String$fromFloat(dec) + (' × 100 = ' + ($elm$core$String$fromInt(pct) + '%'))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Convert ' + ($elm$core$String$fromFloat(dec) + ' to a percent.')
@@ -11032,10 +11847,13 @@ var $author$project$Game$Problem$Course2$genConvertFDP = A2(
 						return {
 							answer: A2($author$project$Types$AFloat, dec, 0.001),
 							hint: {
-								answer: '0.35',
-								prompt: 'Convert 35% to a decimal.',
+								answer: $elm$core$String$fromFloat(dec),
+								prompt: 'Convert ' + ($elm$core$String$fromInt(pct) + '% to a decimal.'),
 								steps: _List_fromArray(
-									['Divide by 100 (move decimal 2 places left)', '35 ÷ 100 = 0.35'])
+									[
+										'Divide by 100 (move decimal 2 places left)',
+										$elm$core$String$fromInt(pct) + (' / 100 = ' + $elm$core$String$fromFloat(dec))
+									])
 							},
 							inputType: $author$project$Types$TDecimal,
 							prompt: 'Convert ' + ($elm$core$String$fromInt(pct) + '% to a decimal.')
@@ -11085,10 +11903,19 @@ var $author$project$Game$Problem$Course2$genExpSquareRoot = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '27',
-								prompt: '3³ = ?',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: $elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course2$superscript(exp) + ' = ?'),
 								steps: _List_fromArray(
-									['3³ = 3 × 3 × 3', '= 9 × 3 = 27'])
+									[
+										$elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course2$superscript(exp) + (' = ' + A2(
+										$elm$core$String$join,
+										' × ',
+										A2(
+											$elm$core$List$repeat,
+											exp,
+											$elm$core$String$fromInt(base))))),
+										'= ' + $elm$core$String$fromInt(correct)
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: $elm$core$String$fromInt(base) + ($author$project$Game$Problem$Course2$superscript(exp) + ' = ?')
@@ -11115,10 +11942,13 @@ var $author$project$Game$Problem$Course2$genExpSquareRoot = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '6',
-								prompt: '√36 = ?',
+								answer: $elm$core$String$fromInt(root),
+								prompt: '√' + ($elm$core$String$fromInt(sq) + ' = ?'),
 								steps: _List_fromArray(
-									['Ask: what number times itself equals 36?', '6 × 6 = 36, so √36 = 6'])
+									[
+										'Ask: what number times itself equals ' + ($elm$core$String$fromInt(sq) + '?'),
+										$elm$core$String$fromInt(root) + (' × ' + ($elm$core$String$fromInt(root) + (' = ' + ($elm$core$String$fromInt(sq) + (', so √' + ($elm$core$String$fromInt(sq) + (' = ' + $elm$core$String$fromInt(root))))))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: '√' + ($elm$core$String$fromInt(sq) + ' = ?')
@@ -11176,10 +12006,14 @@ var $author$project$Game$Problem$Course2$genFracAddSub = A2(
 								return {
 									answer: A2($author$project$Types$AFraction, rn, rd),
 									hint: {
-										answer: '5/6',
-										prompt: '1/2 + 1/3 = ?',
+										answer: A2($author$project$Game$Problem$Course2$showFrac, rn, rd),
+										prompt: A2($author$project$Game$Problem$Course2$showFrac, pn1, pd1) + (opStr + (A2($author$project$Game$Problem$Course2$showFrac, pn2, pd2) + ' = ?')),
 										steps: _List_fromArray(
-											['Find LCD: LCD(2,3) = 6', '1/2 = 3/6 and 1/3 = 2/6', '3/6 + 2/6 = 5/6'])
+											[
+												'Find LCD: LCD(' + ($elm$core$String$fromInt(pd1) + (', ' + ($elm$core$String$fromInt(pd2) + (') = ' + $elm$core$String$fromInt(commonD))))),
+												A2($author$project$Game$Problem$Course2$showFrac, pn1, pd1) + (' = ' + (A2($author$project$Game$Problem$Course2$showFrac, pn1 * ((commonD / pd1) | 0), commonD) + (' and ' + (A2($author$project$Game$Problem$Course2$showFrac, pn2, pd2) + (' = ' + A2($author$project$Game$Problem$Course2$showFrac, pn2 * ((commonD / pd2) | 0), commonD)))))),
+												A2($author$project$Game$Problem$Course2$showFrac, pn1 * ((commonD / pd1) | 0), commonD) + (opStr + (A2($author$project$Game$Problem$Course2$showFrac, pn2 * ((commonD / pd2) | 0), commonD) + (' = ' + A2($author$project$Game$Problem$Course2$showFrac, rn, rd))))
+											])
 									},
 									inputType: $author$project$Types$TFraction,
 									prompt: A2($author$project$Game$Problem$Course2$showFrac, pn1, pd1) + (opStr + (A2($author$project$Game$Problem$Course2$showFrac, pn2, pd2) + ' = ?'))
@@ -11223,10 +12057,15 @@ var $author$project$Game$Problem$Course2$genFracMulDiv = A2(
 					return {
 						answer: A2($author$project$Types$AFraction, rn, rd),
 						hint: {
-							answer: '1/2',
-							prompt: '2/3 × 3/4 = ?',
+							answer: A2($author$project$Game$Problem$Course2$showFrac, rn, rd),
+							prompt: A2($author$project$Game$Problem$Course2$showFrac, n1, d1) + (' × ' + (A2($author$project$Game$Problem$Course2$showFrac, n2, d2) + ' = ?')),
 							steps: _List_fromArray(
-								['Multiply numerators: 2 × 3 = 6', 'Multiply denominators: 3 × 4 = 12', 'Simplify 6/12: GCF is 6, so 1/2'])
+								[
+									'Multiply numerators: ' + ($elm$core$String$fromInt(n1) + (' × ' + ($elm$core$String$fromInt(n2) + (' = ' + $elm$core$String$fromInt(n1 * n2))))),
+									'Multiply denominators: ' + ($elm$core$String$fromInt(d1) + (' × ' + ($elm$core$String$fromInt(d2) + (' = ' + $elm$core$String$fromInt(d1 * d2))))),
+									'Simplify ' + (A2($author$project$Game$Problem$Course2$showFrac, n1 * n2, d1 * d2) + (': GCF is ' + ($elm$core$String$fromInt(
+									A2($author$project$Game$Problem$Common$gcd, n1 * n2, d1 * d2)) + (', so ' + A2($author$project$Game$Problem$Course2$showFrac, rn, rd)))))
+								])
 						},
 						inputType: $author$project$Types$TFraction,
 						prompt: A2($author$project$Game$Problem$Course2$showFrac, n1, d1) + (' × ' + (A2($author$project$Game$Problem$Course2$showFrac, n2, d2) + ' = ?'))
@@ -11238,13 +12077,17 @@ var $author$project$Game$Problem$Course2$genFracMulDiv = A2(
 					return {
 						answer: A2($author$project$Types$AFraction, rn, rd),
 						hint: {
-							answer: '5/6',
-							prompt: '2/3 ÷ 4/5 = ?',
+							answer: A2($author$project$Game$Problem$Course2$showFrac, rn, rd),
+							prompt: A2($author$project$Game$Problem$Course2$showFrac, n1, d1) + (' / ' + (A2($author$project$Game$Problem$Course2$showFrac, n2, d2) + ' = ?')),
 							steps: _List_fromArray(
-								['Keep, Change, Flip', '2/3 × 5/4 = 10/12', 'Simplify: 5/6'])
+								[
+									'Keep, Change, Flip: ' + (A2($author$project$Game$Problem$Course2$showFrac, n1, d1) + (' × ' + A2($author$project$Game$Problem$Course2$showFrac, d2, n2))),
+									'Multiply: ' + A2($author$project$Game$Problem$Course2$showFrac, n1 * d2, d1 * n2),
+									'Simplify: ' + A2($author$project$Game$Problem$Course2$showFrac, rn, rd)
+								])
 						},
 						inputType: $author$project$Types$TFraction,
-						prompt: A2($author$project$Game$Problem$Course2$showFrac, n1, d1) + (' ÷ ' + (A2($author$project$Game$Problem$Course2$showFrac, n2, d2) + ' = ?'))
+						prompt: A2($author$project$Game$Problem$Course2$showFrac, n1, d1) + (' / ' + (A2($author$project$Game$Problem$Course2$showFrac, n2, d2) + ' = ?'))
 					};
 				}
 			},
@@ -11277,20 +12120,37 @@ var $author$project$Game$Problem$Course2$genIntAddSubNeg = A2(
 				return (!op) ? {
 					answer: $author$project$Types$AInt(a + b),
 					hint: {
-						answer: '-5',
-						prompt: '(-12) + 7 = ?',
-						steps: _List_fromArray(
-							['Different signs: subtract absolute values', '12 - 7 = 5, keep sign of larger: negative', 'Answer: -5'])
+						answer: $elm$core$String$fromInt(a + b),
+						prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?')),
+						steps: (((a >= 0) && (b >= 0)) || ((a < 0) && (b < 0))) ? _List_fromArray(
+							[
+								'Same signs: add absolute values',
+								$elm$core$String$fromInt(
+								$elm$core$Basics$abs(a)) + (' + ' + ($elm$core$String$fromInt(
+								$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(
+								$elm$core$Basics$abs(a) + $elm$core$Basics$abs(b))))),
+								'Keep the sign: ' + $elm$core$String$fromInt(a + b)
+							]) : _List_fromArray(
+							[
+								'Different signs: subtract smaller absolute value from larger',
+								'abs values: ' + ($elm$core$String$fromInt(
+								$elm$core$Basics$abs(a)) + (' and ' + $elm$core$String$fromInt(
+								$elm$core$Basics$abs(b)))),
+								'Answer: ' + $elm$core$String$fromInt(a + b)
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?'))
 				} : {
 					answer: $author$project$Types$AInt(a - b),
 					hint: {
-						answer: '13',
-						prompt: '5 - (-8) = ?',
+						answer: $elm$core$String$fromInt(a - b),
+						prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' - ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?')),
 						steps: _List_fromArray(
-							['Subtracting a negative = adding a positive', '5 - (-8) = 5 + 8 = 13'])
+							[
+								'Subtracting ' + ($author$project$Game$Problem$Course2$showSigned(b) + (' is the same as adding ' + $author$project$Game$Problem$Course2$showSigned(-b))),
+								$author$project$Game$Problem$Course2$showSigned(a) + (' + ' + ($author$project$Game$Problem$Course2$showSigned(-b) + (' = ' + $elm$core$String$fromInt(a - b))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' - ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?'))
@@ -11315,27 +12175,61 @@ var $author$project$Game$Problem$Course2$genIntAddSubPos = A2(
 					return {
 						answer: $author$project$Types$AInt(a + b),
 						hint: {
-							answer: '473',
-							prompt: '125 + 348 = ?',
+							answer: $elm$core$String$fromInt(a + b),
+							prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + ' = ?')),
 							steps: _List_fromArray(
-								['Add ones: 5 + 8 = 13, write 3 carry 1', 'Add tens: 2 + 4 + 1 = 7', 'Add hundreds: 1 + 3 = 4', 'Answer: 473'])
+								[
+									'Add ones: ' + ($elm$core$String$fromInt(
+									A2($elm$core$Basics$modBy, 10, a)) + (' + ' + ($elm$core$String$fromInt(
+									A2($elm$core$Basics$modBy, 10, b)) + (' = ' + $elm$core$String$fromInt(
+									A2($elm$core$Basics$modBy, 10, a) + A2($elm$core$Basics$modBy, 10, b)))))),
+									'Add tens: ' + ($elm$core$String$fromInt(
+									A2($elm$core$Basics$modBy, 10, (a / 10) | 0)) + (' + ' + $elm$core$String$fromInt(
+									A2($elm$core$Basics$modBy, 10, (b / 10) | 0)))),
+									'Add hundreds: ' + ($elm$core$String$fromInt((a / 100) | 0) + (' + ' + $elm$core$String$fromInt((b / 100) | 0))),
+									'Answer: ' + $elm$core$String$fromInt(a + b)
+								])
 						},
 						inputType: $author$project$Types$TInteger,
 						prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + ' = ?'))
 					};
 				} else {
+					var str = $elm$core$String$fromInt;
 					var small = A2($elm$core$Basics$min, a, b);
+					var tensS = A2($elm$core$Basics$modBy, 10, (small / 10) | 0);
+					var onesS = A2($elm$core$Basics$modBy, 10, small);
+					var hundredsS = (small / 100) | 0;
 					var big = A2($elm$core$Basics$max, a, b);
+					var onesB = A2($elm$core$Basics$modBy, 10, big);
+					var borrow1 = (_Utils_cmp(onesB, onesS) < 0) ? 1 : 0;
+					var onesResult = (onesB + (borrow1 * 10)) - onesS;
+					var onesStep = (borrow1 === 1) ? ('Ones: ' + (str(onesB) + (' < ' + (str(onesS) + (', borrow 10 → ' + (str(onesB + 10) + (' − ' + (str(onesS) + (' = ' + str(onesResult)))))))))) : ('Ones: ' + (str(onesB) + (' − ' + (str(onesS) + (' = ' + str(onesResult))))));
+					var origTens = A2($elm$core$Basics$modBy, 10, (big / 10) | 0);
+					var tensB = origTens - borrow1;
+					var borrow2 = (_Utils_cmp(tensB, tensS) < 0) ? 1 : 0;
+					var hundredsB = ((big / 100) | 0) - borrow2;
+					var tensResult = (tensB + (borrow2 * 10)) - tensS;
+					var tensStep = ((borrow1 === 1) && (borrow2 === 1)) ? ('Tens: ' + (str(origTens) + (' − 1 (lent) then borrow 10 → ' + (str(origTens + 9) + (' − ' + (str(tensS) + (' = ' + str(tensResult)))))))) : ((borrow1 === 1) ? ('Tens: ' + (str(origTens) + (' − 1 (lent to ones) − ' + (str(tensS) + (' = ' + str(tensResult)))))) : ((borrow2 === 1) ? ('Tens: ' + (str(origTens) + (' < ' + (str(tensS) + (', borrow 10 → ' + (str(origTens + 10) + (' − ' + (str(tensS) + (' = ' + str(tensResult)))))))))) : ('Tens: ' + (str(origTens) + (' − ' + (str(tensS) + (' = ' + str(tensResult))))))));
 					return {
 						answer: $author$project$Types$AInt(big - small),
 						hint: {
-							answer: '348',
-							prompt: '473 - 125 = ?',
-							steps: _List_fromArray(
-								['Subtract ones: 3 - 5 → borrow, 13 - 5 = 8', 'Subtract tens: 6 - 2 = 4 (after borrowing)', 'Subtract hundreds: 4 - 1 = 3', 'Answer: 348'])
+							answer: str(big - small),
+							prompt: str(big) + (' - ' + (str(small) + ' = ?')),
+							steps: _Utils_ap(
+								_List_fromArray(
+									[onesStep, tensStep]),
+								_Utils_ap(
+									((big >= 100) || (hundredsS > 0)) ? _List_fromArray(
+										[
+											'Hundreds: ' + (str(hundredsB) + (' − ' + (str(hundredsS) + (' = ' + str(hundredsB - hundredsS)))))
+										]) : _List_Nil,
+									_List_fromArray(
+										[
+											'Answer: ' + str(big - small)
+										])))
 						},
 						inputType: $author$project$Types$TInteger,
-						prompt: $elm$core$String$fromInt(big) + (' - ' + ($elm$core$String$fromInt(small) + ' = ?'))
+						prompt: str(big) + (' - ' + (str(small) + ' = ?'))
 					};
 				}
 			},
@@ -11365,10 +12259,17 @@ var $author$project$Game$Problem$Course2$genIntMulDiv = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '-24',
-								prompt: '(-6) × 4 = ?',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' × ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?')),
 								steps: _List_fromArray(
-									['Multiply absolute values: 6 × 4 = 24', 'Different signs → negative', 'Answer: -24'])
+									[
+										'Multiply absolute values: ' + ($elm$core$String$fromInt(
+										$elm$core$Basics$abs(a)) + (' × ' + ($elm$core$String$fromInt(
+										$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(
+										$elm$core$Basics$abs(a) * $elm$core$Basics$abs(b)))))),
+										(((a >= 0) && (b >= 0)) || ((a < 0) && (b < 0))) ? 'Same signs → positive' : 'Different signs → negative',
+										'Answer: ' + $elm$core$String$fromInt(correct)
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' × ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?'))
@@ -11396,13 +12297,20 @@ var $author$project$Game$Problem$Course2$genIntMulDiv = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '4',
-								prompt: '(-24) ÷ (-6) = ?',
+								answer: $elm$core$String$fromInt(q),
+								prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' / ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?')),
 								steps: _List_fromArray(
-									['Divide absolute values: 24 ÷ 6 = 4', 'Same signs → positive', 'Answer: 4'])
+									[
+										'Divide absolute values: ' + ($elm$core$String$fromInt(
+										$elm$core$Basics$abs(a)) + (' / ' + ($elm$core$String$fromInt(
+										$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(
+										$elm$core$Basics$abs(q)))))),
+										(((a >= 0) && (b > 0)) || ((a < 0) && (b < 0))) ? 'Same signs → positive' : 'Different signs → negative',
+										'Answer: ' + $elm$core$String$fromInt(q)
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
-							prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' ÷ ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?'))
+							prompt: $author$project$Game$Problem$Course2$showSigned(a) + (' / ' + ($author$project$Game$Problem$Course2$showSigned(b) + ' = ?'))
 						};
 					},
 					$author$project$Game$Problem$Common$wrongChoicesInt(q));
@@ -11434,10 +12342,17 @@ var $author$project$Game$Problem$Course2$genSimplifyFrac = A2(
 				return {
 					answer: A2($author$project$Types$AFraction, ansN, ansD),
 					hint: {
-						answer: '3/4',
-						prompt: 'Simplify: 12/16',
+						answer: A2($author$project$Game$Problem$Course2$showFrac, ansN, ansD),
+						prompt: 'Simplify: ' + A2($author$project$Game$Problem$Course2$showFrac, bigN, bigD),
 						steps: _List_fromArray(
-							['GCF of 12 and 16 is 4', '12 ÷ 4 = 3, 16 ÷ 4 = 4', 'Answer: 3/4'])
+							[
+								'GCF of ' + ($elm$core$String$fromInt(bigN) + (' and ' + ($elm$core$String$fromInt(bigD) + (' is ' + $elm$core$String$fromInt(
+								A2($author$project$Game$Problem$Common$gcd, bigN, bigD)))))),
+								$elm$core$String$fromInt(bigN) + (' / ' + ($elm$core$String$fromInt(
+								A2($author$project$Game$Problem$Common$gcd, bigN, bigD)) + (' = ' + ($elm$core$String$fromInt(ansN) + (', ' + ($elm$core$String$fromInt(bigD) + (' / ' + ($elm$core$String$fromInt(
+								A2($author$project$Game$Problem$Common$gcd, bigN, bigD)) + (' = ' + $elm$core$String$fromInt(ansD)))))))))),
+								'Answer: ' + A2($author$project$Game$Problem$Course2$showFrac, ansN, ansD)
+							])
 					},
 					inputType: $author$project$Types$TFraction,
 					prompt: 'Simplify: ' + A2($author$project$Game$Problem$Course2$showFrac, bigN, bigD)
@@ -11493,10 +12408,14 @@ var $author$project$Game$Problem$Course2$genCombineLike = A2(
 					{
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: '8x',
-							prompt: 'Combine: 3x + 5x',
+							answer: correct,
+							prompt: 'Combine: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x'))),
 							steps: _List_fromArray(
-								['Like terms have the same variable part', 'Add coefficients: 3 + 5 = 8', 'Answer: 8x'])
+								[
+									'Like terms have the same variable part',
+									'Add coefficients: ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a + b))))),
+									'Answer: ' + correct
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: 'Combine: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x')))
@@ -11523,10 +12442,14 @@ var $author$project$Game$Problem$Course2$genCombineLike = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '6x + 4',
-						prompt: 'Simplify: 2x + 3 + 4x + 1',
+						answer: correct,
+						prompt: 'Simplify: ' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (' + ' + ($elm$core$String$fromInt(r.c) + ('x + ' + $elm$core$String$fromInt(r.d))))))),
 						steps: _List_fromArray(
-							['Group x terms: 2x + 4x = 6x', 'Group constants: 3 + 1 = 4', 'Answer: 6x + 4'])
+							[
+								'Group x terms: ' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.c) + ('x = ' + ($elm$core$String$fromInt(xCoeff) + 'x'))))),
+								'Group constants: ' + ($elm$core$String$fromInt(r.b) + (' + ' + ($elm$core$String$fromInt(r.d) + (' = ' + $elm$core$String$fromInt(constant))))),
+								'Answer: ' + correct
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Simplify: ' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (' + ' + ($elm$core$String$fromInt(r.c) + ('x + ' + $elm$core$String$fromInt(r.d)))))))
@@ -11566,10 +12489,15 @@ var $author$project$Game$Problem$Course2$genDistributive = A2(
 					{
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: '6x + 12',
-							prompt: 'Expand: 3(2x + 4)',
+							answer: correct,
+							prompt: 'Expand: ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + ('x + ' + ($elm$core$String$fromInt(c) + ')'))))),
 							steps: _List_fromArray(
-								['Multiply 3 by each term inside', '3 × 2x = 6x', '3 × 4 = 12', 'Answer: 6x + 12'])
+								[
+									'Multiply ' + ($elm$core$String$fromInt(a) + ' by each term inside'),
+									$elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + ('x = ' + ($elm$core$String$fromInt(a * b) + 'x')))),
+									$elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(a * c)))),
+									'Answer: ' + correct
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: 'Expand: ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + ('x + ' + ($elm$core$String$fromInt(c) + ')')))))
@@ -11600,10 +12528,13 @@ var $author$project$Game$Problem$Course2$genDistributive = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '32',
-								prompt: 'Compute: 4(3 + 5)',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: 'Compute: ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + (' + ' + ($elm$core$String$fromInt(c) + ')'))))),
 								steps: _List_fromArray(
-									['Distribute: 4×3 + 4×5', '= 12 + 20 = 32'])
+									[
+										'Distribute: ' + ($elm$core$String$fromInt(a) + ('×' + ($elm$core$String$fromInt(b) + (' + ' + ($elm$core$String$fromInt(a) + ('×' + $elm$core$String$fromInt(c))))))),
+										'= ' + ($elm$core$String$fromInt(a * b) + (' + ' + ($elm$core$String$fromInt(a * c) + (' = ' + $elm$core$String$fromInt(correct)))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Compute: ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + (' + ' + ($elm$core$String$fromInt(c) + ')')))))
@@ -11642,10 +12573,14 @@ var $author$project$Game$Problem$Course2$genFactorExpr = A2(
 		return {
 			answer: $author$project$Types$AChoice(0),
 			hint: {
-				answer: '3(2x + 3)',
-				prompt: 'Factor: 6x + 9',
+				answer: correct,
+				prompt: 'Factor: ' + ($elm$core$String$fromInt(termA) + ('x + ' + $elm$core$String$fromInt(termB))),
 				steps: _List_fromArray(
-					['GCF of 6 and 9 is 3', '6x ÷ 3 = 2x, 9 ÷ 3 = 3', 'Answer: 3(2x + 3)'])
+					[
+						'GCF of ' + ($elm$core$String$fromInt(termA) + (' and ' + ($elm$core$String$fromInt(termB) + (' is ' + $elm$core$String$fromInt(f))))),
+						$elm$core$String$fromInt(termA) + ('x / ' + ($elm$core$String$fromInt(f) + (' = ' + ($elm$core$String$fromInt(a) + ('x, ' + ($elm$core$String$fromInt(termB) + (' / ' + ($elm$core$String$fromInt(f) + (' = ' + $elm$core$String$fromInt(b)))))))))),
+						'Answer: ' + correct
+					])
 			},
 			inputType: $author$project$Types$TChoice(choices),
 			prompt: 'Factor: ' + ($elm$core$String$fromInt(termA) + ('x + ' + $elm$core$String$fromInt(termB)))
@@ -11686,10 +12621,14 @@ var $author$project$Game$Problem$Course2$genMonomialOps = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '6x⁵',
-								prompt: 'Simplify: 2x² × 3x³',
+								answer: correct,
+								prompt: 'Simplify: ' + ($elm$core$String$fromInt(r.a) + ('x' + ($author$project$Game$Problem$Course2$superscript(r.m) + (' × ' + ($elm$core$String$fromInt(r.b) + ('x' + $author$project$Game$Problem$Course2$superscript(r.n))))))),
 								steps: _List_fromArray(
-									['Multiply coefficients: 2 × 3 = 6', 'Add exponents: 2 + 3 = 5', 'Answer: 6x⁵'])
+									[
+										'Multiply coefficients: ' + ($elm$core$String$fromInt(r.a) + (' × ' + ($elm$core$String$fromInt(r.b) + (' = ' + $elm$core$String$fromInt(coeff))))),
+										'Add exponents: ' + ($elm$core$String$fromInt(r.m) + (' + ' + ($elm$core$String$fromInt(r.n) + (' = ' + $elm$core$String$fromInt(exp_))))),
+										'Answer: ' + correct
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Simplify: ' + ($elm$core$String$fromInt(r.a) + ('x' + ($author$project$Game$Problem$Course2$superscript(r.m) + (' × ' + ($elm$core$String$fromInt(r.b) + ('x' + $author$project$Game$Problem$Course2$superscript(r.n)))))))
@@ -11725,13 +12664,17 @@ var $author$project$Game$Problem$Course2$genMonomialOps = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '3x³',
-								prompt: 'Simplify: 6x⁴ ÷ 2x',
+								answer: correct,
+								prompt: 'Simplify: ' + ($elm$core$String$fromInt(a) + ('x' + ($author$project$Game$Problem$Course2$superscript(m) + (' / ' + ($elm$core$String$fromInt(r.b) + ('x' + $author$project$Game$Problem$Course2$superscript(n_))))))),
 								steps: _List_fromArray(
-									['Divide coefficients: 6 ÷ 2 = 3', 'Subtract exponents: 4 - 1 = 3', 'Answer: 3x³'])
+									[
+										'Divide coefficients: ' + ($elm$core$String$fromInt(a) + (' / ' + ($elm$core$String$fromInt(r.b) + (' = ' + $elm$core$String$fromInt(r.q))))),
+										'Subtract exponents: ' + ($elm$core$String$fromInt(m) + (' - ' + ($elm$core$String$fromInt(n_) + (' = ' + $elm$core$String$fromInt(expResult))))),
+										'Answer: ' + correct
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
-							prompt: 'Simplify: ' + ($elm$core$String$fromInt(a) + ('x' + ($author$project$Game$Problem$Course2$superscript(m) + (' ÷ ' + ($elm$core$String$fromInt(r.b) + ('x' + $author$project$Game$Problem$Course2$superscript(n_)))))))
+							prompt: 'Simplify: ' + ($elm$core$String$fromInt(a) + ('x' + ($author$project$Game$Problem$Course2$superscript(m) + (' / ' + ($elm$core$String$fromInt(r.b) + ('x' + $author$project$Game$Problem$Course2$superscript(n_)))))))
 						};
 					},
 					A5(
@@ -11765,10 +12708,14 @@ var $author$project$Game$Problem$Course2$genMonomialOps = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '8x⁶',
-								prompt: 'Simplify: (2x²)³',
+								answer: correct,
+								prompt: 'Simplify: (' + ($elm$core$String$fromInt(a) + ('x' + ($author$project$Game$Problem$Course2$superscript(m) + (')' + $author$project$Game$Problem$Course2$superscript(n))))),
 								steps: _List_fromArray(
-									['Raise coefficient to power: 2³ = 8', 'Multiply exponents: 2 × 3 = 6', 'Answer: 8x⁶'])
+									[
+										'Raise coefficient to power: ' + ($elm$core$String$fromInt(a) + ($author$project$Game$Problem$Course2$superscript(n) + (' = ' + $elm$core$String$fromInt(coeffResult)))),
+										'Multiply exponents: ' + ($elm$core$String$fromInt(m) + (' × ' + ($elm$core$String$fromInt(n) + (' = ' + $elm$core$String$fromInt(expResult))))),
+										'Answer: ' + correct
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Simplify: (' + ($elm$core$String$fromInt(a) + ('x' + ($author$project$Game$Problem$Course2$superscript(m) + (')' + $author$project$Game$Problem$Course2$superscript(n)))))
@@ -11808,10 +12755,13 @@ var $author$project$Game$Problem$Course2$genOrderOfOps = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '14',
-										prompt: '2 + 3 × 4 = ?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?')))),
 										steps: _List_fromArray(
-											['Multiply first (PEMDAS): 3 × 4 = 12', 'Then add: 2 + 12 = 14'])
+											[
+												'Multiply first (PEMDAS): ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(b * c))))),
+												'Then add: ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b * c) + (' = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?'))))
@@ -11846,10 +12796,13 @@ var $author$project$Game$Problem$Course2$genOrderOfOps = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '20',
-										prompt: '(2 + 3) × 4 = ?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: '(' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (') × ' + ($elm$core$String$fromInt(c) + ' = ?'))))),
 										steps: _List_fromArray(
-											['Parentheses first: 2 + 3 = 5', 'Then multiply: 5 × 4 = 20'])
+											[
+												'Parentheses first: ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a + b))))),
+												'Then multiply: ' + ($elm$core$String$fromInt(a + b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: '(' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (') × ' + ($elm$core$String$fromInt(c) + ' = ?')))))
@@ -11884,10 +12837,14 @@ var $author$project$Game$Problem$Course2$genOrderOfOps = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '17',
-										prompt: '3² + 2 × 4 = ?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: $elm$core$String$fromInt(a) + ('² + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?')))),
 										steps: _List_fromArray(
-											['Exponent first: 3² = 9', 'Multiply: 2 × 4 = 8', 'Add: 9 + 8 = 17'])
+											[
+												'Exponent first: ' + ($elm$core$String$fromInt(a) + ('² = ' + $elm$core$String$fromInt(a * a))),
+												'Multiply: ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(b * c))))),
+												'Add: ' + ($elm$core$String$fromInt(a * a) + (' + ' + ($elm$core$String$fromInt(b * c) + (' = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: $elm$core$String$fromInt(a) + ('² + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?'))))
@@ -11928,10 +12885,14 @@ var $author$project$Game$Problem$Course2$genSimplifyExpr = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '6x + 6',
-					prompt: 'Simplify: 2(x + 3) + 4x',
+					answer: correct,
+					prompt: 'Simplify: ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') + ' + ($elm$core$String$fromInt(c) + 'x'))))),
 					steps: _List_fromArray(
-						['Distribute: 2(x+3) = 2x + 6', 'Combine x terms: 2x + 4x = 6x', 'Answer: 6x + 6'])
+						[
+							'Distribute: ' + ($elm$core$String$fromInt(a) + ('(x+' + ($elm$core$String$fromInt(b) + (') = ' + ($elm$core$String$fromInt(a) + ('x + ' + $elm$core$String$fromInt(constant))))))),
+							'Combine x terms: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(c) + ('x = ' + ($elm$core$String$fromInt(coeff) + 'x'))))),
+							'Answer: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Simplify: ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') + ' + ($elm$core$String$fromInt(c) + 'x')))))
@@ -12006,10 +12967,14 @@ var $author$project$Game$Problem$Course2$genTranslateEval = A2(
 				return {
 					answer: $author$project$Types$AInt((a * x) - b),
 					hint: {
-						answer: '10',
-						prompt: 'Evaluate 3x - 2 when x = 4',
+						answer: $elm$core$String$fromInt((a * x) - b),
+						prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x - ' + ($elm$core$String$fromInt(b) + (' when x = ' + $elm$core$String$fromInt(x))))),
 						steps: _List_fromArray(
-							['Replace x with 4: 3(4) - 2', 'Multiply: 12 - 2', 'Subtract: 10'])
+							[
+								'Replace x with ' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(x) + (') - ' + $elm$core$String$fromInt(b))))))),
+								'Multiply: ' + ($elm$core$String$fromInt(a * x) + (' - ' + $elm$core$String$fromInt(b))),
+								'Subtract: ' + $elm$core$String$fromInt((a * x) - b)
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x - ' + ($elm$core$String$fromInt(b) + (' when x = ' + $elm$core$String$fromInt(x)))))
@@ -12057,10 +13022,13 @@ var $author$project$Game$Problem$Course2$genMultiStepEq = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '4',
-				prompt: 'Solve: 2(x + 3) = 14',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') = ' + $elm$core$String$fromInt(c))))),
 				steps: _List_fromArray(
-					['Step 1: Divide both sides by 2: x + 3 = 7', 'Step 2: Subtract 3 from both sides: x = 4'])
+					[
+						'Step 1: Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt((c / a) | 0))))),
+						'Step 2: Subtract ' + ($elm$core$String$fromInt(b) + (' from both sides: x = ' + $elm$core$String$fromInt(x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') = ' + $elm$core$String$fromInt(c)))))
@@ -12088,10 +13056,13 @@ var $author$project$Game$Problem$Course2$genOneStepEq = A2(
 						return {
 							answer: $author$project$Types$AInt(x),
 							hint: {
-								answer: '7',
-								prompt: 'Solve: x + 5 = 12',
+								answer: $elm$core$String$fromInt(x),
+								prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(a + x))),
 								steps: _List_fromArray(
-									['Subtract 5 from both sides', 'x = 12 - 5 = 7'])
+									[
+										'Subtract ' + ($elm$core$String$fromInt(a) + ' from both sides'),
+										'x = ' + ($elm$core$String$fromInt(a + x) + (' - ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(a + x)))
@@ -12111,10 +13082,13 @@ var $author$project$Game$Problem$Course2$genOneStepEq = A2(
 						return {
 							answer: $author$project$Types$AInt(x),
 							hint: {
-								answer: '13',
-								prompt: 'Solve: x - 4 = 9',
+								answer: $elm$core$String$fromInt(x),
+								prompt: 'Solve: x - ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x - a))),
 								steps: _List_fromArray(
-									['Add 4 to both sides', 'x = 9 + 4 = 13'])
+									[
+										'Add ' + ($elm$core$String$fromInt(a) + ' to both sides'),
+										'x = ' + ($elm$core$String$fromInt(x - a) + (' + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Solve: x - ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x - a)))
@@ -12134,10 +13108,13 @@ var $author$project$Game$Problem$Course2$genOneStepEq = A2(
 						return {
 							answer: $author$project$Types$AInt(x),
 							hint: {
-								answer: '7',
-								prompt: 'Solve: 5x = 35',
+								answer: $elm$core$String$fromInt(x),
+								prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(a * x))),
 								steps: _List_fromArray(
-									['Divide both sides by 5', 'x = 35 ÷ 5 = 7'])
+									[
+										'Divide both sides by ' + $elm$core$String$fromInt(a),
+										'x = ' + ($elm$core$String$fromInt(a * x) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(a * x)))
@@ -12157,10 +13134,13 @@ var $author$project$Game$Problem$Course2$genOneStepEq = A2(
 						return {
 							answer: $author$project$Types$AInt(x * a),
 							hint: {
-								answer: '12',
-								prompt: 'Solve: x/3 = 4',
+								answer: $elm$core$String$fromInt(x * a),
+								prompt: 'Solve: x/' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x))),
 								steps: _List_fromArray(
-									['Multiply both sides by 3', 'x = 4 × 3 = 12'])
+									[
+										'Multiply both sides by ' + $elm$core$String$fromInt(a),
+										'x = ' + ($elm$core$String$fromInt(x) + (' × ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x * a)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Solve: x/' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))
@@ -12188,10 +13168,14 @@ var $author$project$Game$Problem$Course2$genOneStepIneq = A2(
 				return {
 					answer: A2($author$project$Types$AInequality, dir, x),
 					hint: {
-						answer: 'x > 4',
-						prompt: 'Solve: 3x > 12',
+						answer: 'x ' + (dirStr + (' ' + $elm$core$String$fromInt(x))),
+						prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x ' + (dirStr + (' ' + $elm$core$String$fromInt(b))))),
 						steps: _List_fromArray(
-							['Divide both sides by 3', 'x > 12 ÷ 3 = 4', 'Answer: x > 4'])
+							[
+								'Divide both sides by ' + $elm$core$String$fromInt(a),
+								'x ' + (dirStr + (' ' + ($elm$core$String$fromInt(b) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x))))))),
+								'Answer: x ' + (dirStr + (' ' + $elm$core$String$fromInt(x)))
+							])
 					},
 					inputType: $author$project$Types$TInequality,
 					prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x ' + (dirStr + (' ' + $elm$core$String$fromInt(b)))))
@@ -12214,10 +13198,13 @@ var $author$project$Game$Problem$Course2$genTwoStepEq = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '5',
-				prompt: 'Solve: 3x + 4 = 19',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c))))),
 				steps: _List_fromArray(
-					['Step 1: Subtract 4 from both sides: 3x = 15', 'Step 2: Divide both sides by 3: x = 5'])
+					[
+						'Step 1: Subtract ' + ($elm$core$String$fromInt(b) + (' from both sides: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(c - b))))),
+						'Step 2: Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x = ' + $elm$core$String$fromInt(x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c)))))
@@ -12247,10 +13234,13 @@ var $author$project$Game$Problem$Course2$genTwoStepIneq = A2(
 				return {
 					answer: A2($author$project$Types$AInequality, dir, x),
 					hint: {
-						answer: 'x > 4',
-						prompt: 'Solve: 2x + 3 > 11',
+						answer: 'x ' + (dirStr + (' ' + $elm$core$String$fromInt(x))),
+						prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' ' + (dirStr + (' ' + $elm$core$String$fromInt(c))))))),
 						steps: _List_fromArray(
-							['Step 1: Subtract 3 from both sides: 2x > 8', 'Step 2: Divide both sides by 2: x > 4'])
+							[
+								'Step 1: Subtract ' + ($elm$core$String$fromInt(b) + (' from both sides: ' + ($elm$core$String$fromInt(a) + ('x ' + (dirStr + (' ' + $elm$core$String$fromInt(c - b))))))),
+								'Step 2: Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x ' + (dirStr + (' ' + $elm$core$String$fromInt(x)))))
+							])
 					},
 					inputType: $author$project$Types$TInequality,
 					prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' ' + (dirStr + (' ' + $elm$core$String$fromInt(c)))))))
@@ -12311,10 +13301,17 @@ var $author$project$Game$Problem$Course2$genDiscountMarkup = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '$40',
-								prompt: 'Item costs $50, 20% discount. Sale price?',
-								steps: _List_fromArray(
-									['Discount amount: 20% × $50 = $10', 'Sale price: $50 - $10 = $40'])
+								answer: '$' + $elm$core$String$fromInt(salePrice),
+								prompt: 'An item costs $' + ($elm$core$String$fromInt(price) + ('. There is a ' + ($elm$core$String$fromInt(pct) + ('% ' + (verb + ('. What is the ' + (action + '?'))))))),
+								steps: (!t) ? _List_fromArray(
+									[
+										verb + (' amount: ' + ($elm$core$String$fromInt(pct) + ('% × $' + ($elm$core$String$fromInt(price) + (' = $' + $elm$core$String$fromInt(amount)))))),
+										action + (': $' + ($elm$core$String$fromInt(price) + (' - $' + ($elm$core$String$fromInt(amount) + (' = $' + $elm$core$String$fromInt(salePrice))))))
+									]) : _List_fromArray(
+									[
+										verb + (' amount: ' + ($elm$core$String$fromInt(pct) + ('% × $' + ($elm$core$String$fromInt(price) + (' = $' + $elm$core$String$fromInt(amount)))))),
+										action + (': $' + ($elm$core$String$fromInt(price) + (' + $' + ($elm$core$String$fromInt(amount) + (' = $' + $elm$core$String$fromInt(salePrice))))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'An item costs $' + ($elm$core$String$fromInt(price) + ('. There is a ' + ($elm$core$String$fromInt(pct) + ('% ' + (verb + ('. What is the ' + (action + '?')))))))
@@ -12356,10 +13353,14 @@ var $author$project$Game$Problem$Course2$genPercentProportion = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '20',
-								prompt: 'What is 25% of 80?',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?'))),
 								steps: _List_fromArray(
-									['Set up: 25/100 = x/80', 'Cross multiply: 100x = 25 × 80 = 2000', 'x = 2000 ÷ 100 = 20'])
+									[
+										'Set up: ' + ($elm$core$String$fromInt(pct) + ('/100 = x/' + $elm$core$String$fromInt(whole))),
+										'Cross multiply: 100x = ' + ($elm$core$String$fromInt(pct) + (' × ' + ($elm$core$String$fromInt(whole) + (' = ' + $elm$core$String$fromInt(pct * whole))))),
+										'x = ' + ($elm$core$String$fromInt(pct * whole) + (' / 100 = ' + $elm$core$String$fromInt(correct)))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?')))
@@ -12400,10 +13401,14 @@ var $author$project$Game$Problem$Course2$genPercentProportion = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '25%',
-								prompt: '20 is what percent of 80?',
+								answer: $elm$core$String$fromInt(pct) + '%',
+								prompt: $elm$core$String$fromInt(part) + (' is what percent of ' + ($elm$core$String$fromInt(whole) + '?')),
 								steps: _List_fromArray(
-									['Set up: x/100 = 20/80', 'Cross multiply: 80x = 2000', 'x = 25%'])
+									[
+										'Set up: x/100 = ' + ($elm$core$String$fromInt(part) + ('/' + $elm$core$String$fromInt(whole))),
+										'Cross multiply: ' + ($elm$core$String$fromInt(whole) + ('x = ' + $elm$core$String$fromInt(part * 100))),
+										'x = ' + ($elm$core$String$fromInt(pct) + '%')
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: $elm$core$String$fromInt(part) + (' is what percent of ' + ($elm$core$String$fromInt(whole) + '?'))
@@ -12454,10 +13459,14 @@ var $author$project$Game$Problem$Course2$genRatioSimplify = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '2:3',
-								prompt: 'Simplify 8:12',
+								answer: $elm$core$String$fromInt(rn) + (':' + $elm$core$String$fromInt(rd)),
+								prompt: 'Simplify the ratio ' + ($elm$core$String$fromInt(n) + (':' + $elm$core$String$fromInt(d))),
 								steps: _List_fromArray(
-									['GCF of 8 and 12 is 4', '8 ÷ 4 = 2, 12 ÷ 4 = 3', 'Simplified: 2:3'])
+									[
+										'GCF of ' + ($elm$core$String$fromInt(n) + (' and ' + ($elm$core$String$fromInt(d) + (' is ' + $elm$core$String$fromInt(g))))),
+										$elm$core$String$fromInt(n) + (' / ' + ($elm$core$String$fromInt(g) + (' = ' + ($elm$core$String$fromInt(rn) + (', ' + ($elm$core$String$fromInt(d) + (' / ' + ($elm$core$String$fromInt(g) + (' = ' + $elm$core$String$fromInt(rd)))))))))),
+										'Simplified: ' + ($elm$core$String$fromInt(rn) + (':' + $elm$core$String$fromInt(rd)))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Simplify the ratio ' + ($elm$core$String$fromInt(n) + (':' + $elm$core$String$fromInt(d)))
@@ -12493,10 +13502,13 @@ var $author$project$Game$Problem$Course2$genScaleDrawing = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '30 m',
-						prompt: 'Scale: 1 cm = 10 m. Drawing: 3 cm. Actual length?',
+						answer: $elm$core$String$fromInt(actual) + ' m',
+						prompt: 'A map scale is 1 cm = ' + ($elm$core$String$fromInt(scale) + (' m. A road is ' + ($elm$core$String$fromInt(drawing) + ' cm on the map. How long is the actual road?'))),
 						steps: _List_fromArray(
-							['Set up proportion: 1/10 = 3/x', 'x = 3 × 10 = 30 m'])
+							[
+								'Set up proportion: 1/' + ($elm$core$String$fromInt(scale) + (' = ' + ($elm$core$String$fromInt(drawing) + '/x'))),
+								'x = ' + ($elm$core$String$fromInt(drawing) + (' × ' + ($elm$core$String$fromInt(scale) + (' = ' + ($elm$core$String$fromInt(actual) + ' m')))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'A map scale is 1 cm = ' + ($elm$core$String$fromInt(scale) + (' m. A road is ' + ($elm$core$String$fromInt(drawing) + ' cm on the map. How long is the actual road?')))
@@ -12532,10 +13544,13 @@ var $author$project$Game$Problem$Course2$genSimilarFigures = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '6',
-								prompt: 'Similar rectangles: 2×4 and 3×?. Find the missing side.',
+								answer: $elm$core$String$fromInt(x),
+								prompt: 'Two similar rectangles. First has sides ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(a * k) + ('. Second has short side ' + ($elm$core$String$fromInt(b) + '. Find the long side.'))))),
 								steps: _List_fromArray(
-									['Find scale factor: 4 ÷ 2 = 2', 'Apply to other side: 3 × 2 = 6'])
+									[
+										'Find scale factor: ' + ($elm$core$String$fromInt(a * k) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(k))))),
+										'Apply to other side: ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(x)))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Two similar rectangles. First has sides ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(a * k) + ('. Second has short side ' + ($elm$core$String$fromInt(b) + '. Find the long side.')))))
@@ -12572,10 +13587,14 @@ var $author$project$Game$Problem$Course2$genSimpleInterest = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '$60',
-						prompt: 'P=$500, r=4%, t=3 years. Interest?',
+						answer: '$' + $elm$core$String$fromInt(interest),
+						prompt: 'Principal: $' + ($elm$core$String$fromInt(p) + (', Rate: ' + ($elm$core$String$fromInt(r) + ('% per year, Time: ' + ($elm$core$String$fromInt(t) + ' years. Find the simple interest.'))))),
 						steps: _List_fromArray(
-							['Formula: I = P × r × t', 'I = 500 × 0.04 × 3', 'I = 500 × 0.12 = $60'])
+							[
+								'Formula: I = P × r × t',
+								'I = ' + ($elm$core$String$fromInt(p) + (' × ' + ($elm$core$String$fromFloat(r / 100.0) + (' × ' + $elm$core$String$fromInt(t))))),
+								'I = $' + $elm$core$String$fromInt(interest)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Principal: $' + ($elm$core$String$fromInt(p) + (', Rate: ' + ($elm$core$String$fromInt(r) + ('% per year, Time: ' + ($elm$core$String$fromInt(t) + ' years. Find the simple interest.')))))
@@ -12611,10 +13630,14 @@ var $author$project$Game$Problem$Course2$genSolveProportion = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '15',
-				prompt: '3/9 = 5/x. Solve for x.',
+				answer: $elm$core$String$fromInt(x),
+				prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/x. Solve for x.')))),
 				steps: _List_fromArray(
-					['Cross multiply: 3 × x = 9 × 5', '3x = 45', 'x = 45 ÷ 3 = 15'])
+					[
+						'Cross multiply: ' + ($elm$core$String$fromInt(a) + (' × x = ' + ($elm$core$String$fromInt(b) + (' × ' + $elm$core$String$fromInt(c))))),
+						$elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(b * c)),
+						'x = ' + ($elm$core$String$fromInt(b * c) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/x. Solve for x.'))))
@@ -12644,10 +13667,13 @@ var $author$project$Game$Problem$Course2$genUnitRate = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '$5',
-								prompt: '4 books cost $20. Cost per book?',
+								answer: '$' + $elm$core$String$fromInt(rate),
+								prompt: $elm$core$String$fromInt(units) + (' books cost $' + ($elm$core$String$fromInt(total) + '. Cost per book?')),
 								steps: _List_fromArray(
-									['Unit rate = total ÷ quantity', '$20 ÷ 4 = $5'])
+									[
+										'Unit rate = total / quantity',
+										'$' + ($elm$core$String$fromInt(total) + (' / ' + ($elm$core$String$fromInt(units) + (' = $' + $elm$core$String$fromInt(rate)))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: $elm$core$String$fromInt(units) + (' books cost $' + ($elm$core$String$fromInt(total) + '. Cost per book?'))
@@ -12680,10 +13706,12 @@ var $author$project$Game$Problem$Course2$genUnitRate = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '30 mph',
-								prompt: '60 miles in 2 hours. Unit rate?',
+								answer: $elm$core$String$fromInt(rate) + ' mph',
+								prompt: 'A car travels ' + ($elm$core$String$fromInt(miles) + (' miles in ' + ($elm$core$String$fromInt(hours) + ' hours. What is the unit rate?'))),
 								steps: _List_fromArray(
-									['Divide miles by hours: 60 ÷ 2 = 30 mph'])
+									[
+										'Divide miles by hours: ' + ($elm$core$String$fromInt(miles) + (' / ' + ($elm$core$String$fromInt(hours) + (' = ' + ($elm$core$String$fromInt(rate) + ' mph')))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'A car travels ' + ($elm$core$String$fromInt(miles) + (' miles in ' + ($elm$core$String$fromInt(hours) + ' hours. What is the unit rate?')))
@@ -12768,10 +13796,13 @@ var $author$project$Game$Problem$Course2$genLinearFuncValue = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '13',
-						prompt: 'If f(x) = 3x + 1, find f(4).',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'If f(x) = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + (', find f(' + ($elm$core$String$fromInt(x) + ').'))))),
 						steps: _List_fromArray(
-							['Replace x with 4: f(4) = 3(4) + 1', '= 12 + 1 = 13'])
+							[
+								'Replace x with ' + ($elm$core$String$fromInt(x) + (': f(' + ($elm$core$String$fromInt(x) + (') = ' + ($elm$core$String$fromInt(m) + ('(' + ($elm$core$String$fromInt(x) + (') + ' + $elm$core$String$fromInt(b))))))))),
+								'= ' + ($elm$core$String$fromInt(m * x) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'If f(x) = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + (', find f(' + ($elm$core$String$fromInt(x) + ').')))))
@@ -12820,10 +13851,14 @@ var $author$project$Game$Problem$Course2$genProportionalRelation = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '15',
-								prompt: 'y varies directly with x. When x=1, y=3. Find y when x=5.',
+								answer: $elm$core$String$fromInt(y),
+								prompt: 'y varies directly with x. When x=1, y=' + ($elm$core$String$fromInt(k) + ('. Find y when x=' + ($elm$core$String$fromInt(x) + '.'))),
 								steps: _List_fromArray(
-									['Direct variation: y = kx where k = y/x', 'k = 3 (when x=1, y=3)', 'y = 3 × 5 = 15'])
+									[
+										'Direct variation: y = kx where k = y/x',
+										'k = ' + ($elm$core$String$fromInt(k) + (' (when x=1, y=' + ($elm$core$String$fromInt(k) + ')'))),
+										'y = ' + ($elm$core$String$fromInt(k) + (' × ' + ($elm$core$String$fromInt(x) + (' = ' + $elm$core$String$fromInt(y)))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'y varies directly with x. When x=1, y=' + ($elm$core$String$fromInt(k) + ('. Find y when x=' + ($elm$core$String$fromInt(x) + '.')))
@@ -12847,10 +13882,36 @@ var $author$project$Game$Problem$Course2$genQuadrant = A2(
 		return {
 			answer: $author$project$Types$AChoice(q),
 			hint: {
-				answer: 'Quadrant II',
-				prompt: 'Which quadrant is (-3, 5)?',
+				answer: 'Quadrant ' + function () {
+					switch (q) {
+						case 0:
+							return 'I';
+						case 1:
+							return 'II';
+						case 2:
+							return 'III';
+						default:
+							return 'IV';
+					}
+				}(),
+				prompt: 'The point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ') lies in which quadrant?'))),
 				steps: _List_fromArray(
-					['Quadrant I: (+, +), Quadrant II: (-, +)', 'Quadrant III: (-, -), Quadrant IV: (+, -)', '(-3, 5): x negative, y positive → Quadrant II'])
+					[
+						'Quadrant I: (+, +), Quadrant II: (-, +)',
+						'Quadrant III: (-, -), Quadrant IV: (+, -)',
+						'(' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ('): x ' + (((x > 0) ? 'positive' : 'negative') + (', y ' + (((y > 0) ? 'positive' : 'negative') + (' → Quadrant ' + function () {
+						switch (q) {
+							case 0:
+								return 'I';
+							case 1:
+								return 'II';
+							case 2:
+								return 'III';
+							default:
+								return 'IV';
+						}
+					}()))))))))
+					])
 			},
 			inputType: $author$project$Types$TChoice(
 				_List_fromArray(
@@ -12890,10 +13951,14 @@ var $author$project$Game$Problem$Course2$genSlopeFromPoints = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2',
-						prompt: 'Slope through (1, 2) and (3, 6)?',
+						answer: slopeStr,
+						prompt: 'Find the slope of the line through (' + ($elm$core$String$fromInt(x1) + (', ' + ($elm$core$String$fromInt(y1val) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ').'))))))),
 						steps: _List_fromArray(
-							['Slope = (y₂ - y₁) / (x₂ - x₁)', '= (6 - 2) / (3 - 1)', '= 4 / 2 = 2'])
+							[
+								'Slope = (y₂ - y₁) / (x₂ - x₁)',
+								'= (' + ($elm$core$String$fromInt(y2) + (' - ' + ($elm$core$String$fromInt(y1val) + (') / (' + ($elm$core$String$fromInt(x2) + (' - ' + ($elm$core$String$fromInt(x1) + ')'))))))),
+								'= ' + ($elm$core$String$fromInt(slope) + (' / ' + ($elm$core$String$fromInt(denom) + (' = ' + slopeStr))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Find the slope of the line through (' + ($elm$core$String$fromInt(x1) + (', ' + ($elm$core$String$fromInt(y1val) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ').')))))))
@@ -12921,10 +13986,13 @@ var $author$project$Game$Problem$Course2$genSlopeIntercept = A2(
 		return {
 			answer: $author$project$Types$AInt(y),
 			hint: {
-				answer: '11',
-				prompt: 'y = 2x + 3, find y when x = 4',
+				answer: $elm$core$String$fromInt(y),
+				prompt: 'For y = ' + ($author$project$Game$Problem$Course2$showSigned(m) + ('x + ' + ($author$project$Game$Problem$Course2$showSigned(b) + (', find y when x = ' + $elm$core$String$fromInt(x))))),
 				steps: _List_fromArray(
-					['Substitute x = 4: y = 2(4) + 3', 'y = 8 + 3 = 11'])
+					[
+						'Substitute x = ' + ($elm$core$String$fromInt(x) + (': y = ' + ($author$project$Game$Problem$Course2$showSigned(m) + ('(' + ($elm$core$String$fromInt(x) + (') + ' + $author$project$Game$Problem$Course2$showSigned(b))))))),
+						'y = ' + ($elm$core$String$fromInt(m * x) + (' + ' + ($author$project$Game$Problem$Course2$showSigned(b) + (' = ' + $elm$core$String$fromInt(y)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'For y = ' + ($author$project$Game$Problem$Course2$showSigned(m) + ('x + ' + ($author$project$Game$Problem$Course2$showSigned(b) + (', find y when x = ' + $elm$core$String$fromInt(x)))))
@@ -12985,9 +14053,12 @@ var $author$project$Game$Problem$Course2$genAngleClassify = A2(
 							answer: $author$project$Types$AChoice(0),
 							hint: {
 								answer: 'Acute',
-								prompt: 'A 45° angle is?',
+								prompt: 'An angle measuring ' + ($elm$core$String$fromInt(deg) + '° is:'),
 								steps: _List_fromArray(
-									['Acute angles are between 0° and 90°', '45° < 90°, so it is acute'])
+									[
+										'Acute angles are between 0° and 90°',
+										$elm$core$String$fromInt(deg) + '° < 90°, so it is acute'
+									])
 							},
 							inputType: $author$project$Types$TChoice(
 								_List_fromArray(
@@ -13008,9 +14079,12 @@ var $author$project$Game$Problem$Course2$genAngleClassify = A2(
 							answer: $author$project$Types$AChoice(0),
 							hint: {
 								answer: 'Obtuse',
-								prompt: 'A 120° angle is?',
+								prompt: 'An angle measuring ' + ($elm$core$String$fromInt(deg) + '° is:'),
 								steps: _List_fromArray(
-									['Obtuse angles are between 90° and 180°', '90° < 120° < 180°, so it is obtuse'])
+									[
+										'Obtuse angles are between 90° and 180°',
+										'90° < ' + ($elm$core$String$fromInt(deg) + '° < 180°, so it is obtuse')
+									])
 							},
 							inputType: $author$project$Types$TChoice(
 								_List_fromArray(
@@ -13063,10 +14137,13 @@ var $author$project$Game$Problem$Course2$genCompSuppl = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '55°',
-								prompt: 'Complementary angles. One is 35°. Other?',
+								answer: $elm$core$String$fromInt(x) + '°',
+								prompt: 'Two angles are complementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.'),
 								steps: _List_fromArray(
-									['Complementary angles sum to 90°', '90° - 35° = 55°'])
+									[
+										'Complementary angles sum to 90°',
+										'90° - ' + ($elm$core$String$fromInt(a) + ('° = ' + ($elm$core$String$fromInt(x) + '°')))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Two angles are complementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.')
@@ -13097,10 +14174,13 @@ var $author$project$Game$Problem$Course2$genCompSuppl = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '120°',
-								prompt: 'Supplementary angles. One is 60°. Other?',
+								answer: $elm$core$String$fromInt(x) + '°',
+								prompt: 'Two angles are supplementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.'),
 								steps: _List_fromArray(
-									['Supplementary angles sum to 180°', '180° - 60° = 120°'])
+									[
+										'Supplementary angles sum to 180°',
+										'180° - ' + ($elm$core$String$fromInt(a) + ('° = ' + ($elm$core$String$fromInt(x) + '°')))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Two angles are supplementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.')
@@ -13133,10 +14213,14 @@ var $author$project$Game$Problem$Course2$genTranslation = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '(5, 3)',
-					prompt: 'Translate (2, -1) by (3, 4). New point?',
+					answer: correct,
+					prompt: 'Translate point (' + ($elm$core$String$fromInt(r.x) + (', ' + ($elm$core$String$fromInt(r.y) + (') by (' + ($author$project$Game$Problem$Course2$showSigned(r.dx) + (', ' + ($author$project$Game$Problem$Course2$showSigned(r.dy) + '). New point?'))))))),
 					steps: _List_fromArray(
-						['Add dx to x: 2 + 3 = 5', 'Add dy to y: (-1) + 4 = 3', 'New point: (5, 3)'])
+						[
+							'Add dx to x: ' + ($elm$core$String$fromInt(r.x) + (' + ' + ($author$project$Game$Problem$Course2$showSigned(r.dx) + (' = ' + $elm$core$String$fromInt(nx))))),
+							'Add dy to y: ' + ($elm$core$String$fromInt(r.y) + (' + ' + ($author$project$Game$Problem$Course2$showSigned(r.dy) + (' = ' + $elm$core$String$fromInt(ny))))),
+							'New point: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Translate point (' + ($elm$core$String$fromInt(r.x) + (', ' + ($elm$core$String$fromInt(r.y) + (') by (' + ($author$project$Game$Problem$Course2$showSigned(r.dx) + (', ' + ($author$project$Game$Problem$Course2$showSigned(r.dy) + '). New point?')))))))
@@ -13225,10 +14309,13 @@ var $author$project$Game$Problem$Course2$genTriangleSum = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '60°',
-						prompt: 'Triangle angles: 50° and 70°. Third angle?',
+						answer: $elm$core$String$fromInt(safeC) + '°',
+						prompt: 'A triangle has angles ' + ($elm$core$String$fromInt(safeA) + ('° and ' + ($elm$core$String$fromInt(safeB) + '°. Find the third angle.'))),
 						steps: _List_fromArray(
-							['Triangle angles sum to 180°', '180° - 50° - 70° = 60°'])
+							[
+								'Triangle angles sum to 180°',
+								'180° - ' + ($elm$core$String$fromInt(safeA) + ('° - ' + ($elm$core$String$fromInt(safeB) + ('° = ' + ($elm$core$String$fromInt(safeC) + '°')))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'A triangle has angles ' + ($elm$core$String$fromInt(safeA) + ('° and ' + ($elm$core$String$fromInt(safeB) + '°. Find the third angle.')))
@@ -13259,10 +14346,14 @@ var $author$project$Game$Problem$Course2$genVerticalAngles = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '70°',
-						prompt: 'One angle is 70°. Vertical angle?',
+						answer: $elm$core$String$fromInt(a) + '°',
+						prompt: 'Two lines intersect. One angle is ' + ($elm$core$String$fromInt(a) + '°. What is the vertical angle?'),
 						steps: _List_fromArray(
-							['Vertical angles are opposite angles formed by intersecting lines', 'Vertical angles are always equal', 'Answer: 70°'])
+							[
+								'Vertical angles are opposite angles formed by intersecting lines',
+								'Vertical angles are always equal',
+								'Answer: ' + ($elm$core$String$fromInt(a) + '°')
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Two lines intersect. One angle is ' + ($elm$core$String$fromInt(a) + '°. What is the vertical angle?')
@@ -13303,20 +14394,26 @@ var $author$project$Game$Problem$Course2$genCircleCalc = A2(
 				return (!t) ? {
 					answer: A2($author$project$Types$AFloat, (2.0 * 3.14) * r, 0.1),
 					hint: {
-						answer: '31.4',
-						prompt: 'Circumference with radius 5? (π≈3.14)',
+						answer: $elm$core$String$fromFloat((2.0 * 3.14) * r),
+						prompt: 'Circumference of a circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)'),
 						steps: _List_fromArray(
-							['C = 2πr', 'C = 2 × 3.14 × 5 = 31.4'])
+							[
+								'C = 2πr',
+								'C = 2 × 3.14 × ' + ($elm$core$String$fromInt(r) + (' = ' + $elm$core$String$fromFloat((2.0 * 3.14) * r)))
+							])
 					},
 					inputType: $author$project$Types$TDecimal,
 					prompt: 'Circumference of a circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)')
 				} : {
 					answer: A2($author$project$Types$AFloat, (3.14 * r) * r, 0.5),
 					hint: {
-						answer: '78.5',
-						prompt: 'Area of circle with radius 5? (π≈3.14)',
+						answer: $elm$core$String$fromFloat((3.14 * r) * r),
+						prompt: 'Area of a circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)'),
 						steps: _List_fromArray(
-							['A = πr²', 'A = 3.14 × 5² = 3.14 × 25 = 78.5'])
+							[
+								'A = πr²',
+								'A = 3.14 × ' + ($elm$core$String$fromInt(r) + ('² = 3.14 × ' + ($elm$core$String$fromInt(r * r) + (' = ' + $elm$core$String$fromFloat((3.14 * r) * r)))))
+							])
 					},
 					inputType: $author$project$Types$TDecimal,
 					prompt: 'Area of a circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)')
@@ -13350,10 +14447,13 @@ var $author$project$Game$Problem$Course2$genPerimArea = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '20',
-										prompt: 'Perimeter of 4×6 rectangle?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: 'Perimeter of a rectangle with width ' + ($elm$core$String$fromInt(w) + (' and height ' + ($elm$core$String$fromInt(h) + '?'))),
 										steps: _List_fromArray(
-											['P = 2(l + w)', 'P = 2(4 + 6) = 2(10) = 20'])
+											[
+												'P = 2(l + w)',
+												'P = 2(' + ($elm$core$String$fromInt(w) + (' + ' + ($elm$core$String$fromInt(h) + (') = 2(' + ($elm$core$String$fromInt(w + h) + (') = ' + $elm$core$String$fromInt(correct)))))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Perimeter of a rectangle with width ' + ($elm$core$String$fromInt(w) + (' and height ' + ($elm$core$String$fromInt(h) + '?')))
@@ -13375,10 +14475,12 @@ var $author$project$Game$Problem$Course2$genPerimArea = A2(
 						return {
 							answer: $author$project$Types$AInt(w * h),
 							hint: {
-								answer: '24',
-								prompt: 'Area of 4×6 rectangle?',
+								answer: $elm$core$String$fromInt(w * h),
+								prompt: 'Area of rectangle: width=' + ($elm$core$String$fromInt(w) + (', height=' + ($elm$core$String$fromInt(h) + '?'))),
 								steps: _List_fromArray(
-									['A = l × w = 4 × 6 = 24'])
+									[
+										'A = l × w = ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt(w * h)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Area of rectangle: width=' + ($elm$core$String$fromInt(w) + (', height=' + ($elm$core$String$fromInt(h) + '?')))
@@ -13399,10 +14501,12 @@ var $author$project$Game$Problem$Course2$genPerimArea = A2(
 						return {
 							answer: $author$project$Types$AInt(((b * h) / 2) | 0),
 							hint: {
-								answer: '12',
-								prompt: 'Area of triangle: base=6, height=4?',
+								answer: $elm$core$String$fromInt(((b * h) / 2) | 0),
+								prompt: 'Area of triangle: base=' + ($elm$core$String$fromInt(b) + (', height=' + ($elm$core$String$fromInt(h) + '?'))),
 								steps: _List_fromArray(
-									['A = ½ × b × h = ½ × 6 × 4 = 12'])
+									[
+										'A = ½ × b × h = ½ × ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt(((b * h) / 2) | 0)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Area of triangle: base=' + ($elm$core$String$fromInt(b) + (', height=' + ($elm$core$String$fromInt(h) + '?')))
@@ -13427,10 +14531,18 @@ var $author$project$Game$Problem$Course2$genSurfaceAreaCylinder = A2(
 				return {
 					answer: A2($author$project$Types$AFloat, sa, 1.0),
 					hint: {
-						answer: '87.92',
-						prompt: 'SA of cylinder r=2, h=5? (π≈3.14)',
-						steps: _List_fromArray(
-							['SA = 2πr² + 2πrh', '= 2×3.14×4 + 2×3.14×2×5', '= 25.12 + 62.8 = 87.92'])
+						answer: $elm$core$String$fromFloat(sa),
+						prompt: 'Surface area of a cylinder with radius ' + ($elm$core$String$fromInt(r) + (' and height ' + ($elm$core$String$fromInt(h) + '? (use π≈3.14)'))),
+						steps: function () {
+							var topBottom = ((2.0 * pi_) * r) * r;
+							var side = ((2.0 * pi_) * r) * h;
+							return _List_fromArray(
+								[
+									'SA = 2πr² + 2πrh',
+									'= 2×3.14×' + ($elm$core$String$fromInt(r * r) + (' + 2×3.14×' + ($elm$core$String$fromInt(r) + ('×' + $elm$core$String$fromInt(h))))),
+									'= ' + ($elm$core$String$fromFloat(topBottom) + (' + ' + ($elm$core$String$fromFloat(side) + (' = ' + $elm$core$String$fromFloat(sa)))))
+								]);
+						}()
 					},
 					inputType: $author$project$Types$TDecimal,
 					prompt: 'Surface area of a cylinder with radius ' + ($elm$core$String$fromInt(r) + (' and height ' + ($elm$core$String$fromInt(h) + '? (use π≈3.14)')))
@@ -13464,10 +14576,14 @@ var $author$project$Game$Problem$Course2$genSurfaceAreaRect = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '52',
-						prompt: 'Surface area of 2×3×4 box?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'Surface area of a rectangular prism: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?'))))),
 						steps: _List_fromArray(
-							['SA = 2(lw + lh + wh)', '= 2(2×3 + 2×4 + 3×4)', '= 2(6 + 8 + 12) = 2(26) = 52'])
+							[
+								'SA = 2(lw + lh + wh)',
+								'= 2(' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + (' + ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(h) + (' + ' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + ')'))))))))))),
+								'= 2(' + ($elm$core$String$fromInt(l * w) + (' + ' + ($elm$core$String$fromInt(l * h) + (' + ' + ($elm$core$String$fromInt(w * h) + (') = 2(' + ($elm$core$String$fromInt(((l * w) + (l * h)) + (w * h)) + (') = ' + $elm$core$String$fromInt(correct)))))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Surface area of a rectangular prism: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?')))))
@@ -13494,10 +14610,14 @@ var $author$project$Game$Problem$Course2$genVolumeCylinder = A2(
 				return {
 					answer: A2($author$project$Types$AFloat, v, 1.0),
 					hint: {
-						answer: '62.8',
-						prompt: 'Volume of cylinder r=2, h=5? (π≈3.14)',
+						answer: $elm$core$String$fromFloat(v),
+						prompt: 'Volume of a cylinder with radius ' + ($elm$core$String$fromInt(r) + (' and height ' + ($elm$core$String$fromInt(h) + '? (use π≈3.14)'))),
 						steps: _List_fromArray(
-							['V = πr²h', '= 3.14 × 2² × 5', '= 3.14 × 4 × 5 = 62.8'])
+							[
+								'V = πr²h',
+								'= 3.14 × ' + ($elm$core$String$fromInt(r) + ('² × ' + $elm$core$String$fromInt(h))),
+								'= 3.14 × ' + ($elm$core$String$fromInt(r * r) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromFloat(v)))))
+							])
 					},
 					inputType: $author$project$Types$TDecimal,
 					prompt: 'Volume of a cylinder with radius ' + ($elm$core$String$fromInt(r) + (' and height ' + ($elm$core$String$fromInt(h) + '? (use π≈3.14)')))
@@ -13523,10 +14643,13 @@ var $author$project$Game$Problem$Course2$genVolumeRect = A2(
 		return {
 			answer: $author$project$Types$AInt((l * w) * h),
 			hint: {
-				answer: '24',
-				prompt: 'Volume of 2×3×4 box?',
+				answer: $elm$core$String$fromInt((l * w) * h),
+				prompt: 'Volume of rectangular prism: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?'))))),
 				steps: _List_fromArray(
-					['V = l × w × h', '= 2 × 3 × 4 = 24'])
+					[
+						'V = l × w × h',
+						'= ' + ($elm$core$String$fromInt(l) + (' × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt((l * w) * h)))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Volume of rectangular prism: ' + ($elm$core$String$fromInt(l) + ('×' + ($elm$core$String$fromInt(w) + ('×' + ($elm$core$String$fromInt(h) + '?')))))
@@ -13587,10 +14710,13 @@ var $author$project$Game$Problem$Course2$genBoxWhisker = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '10',
-						prompt: 'Q1=5, Q3=15. IQR?',
+						answer: $elm$core$String$fromInt(iqr),
+						prompt: 'For data {' + (numStr + ('}: Q1=' + ($elm$core$String$fromInt(q1) + (', Q3=' + ($elm$core$String$fromInt(q3) + '. Find the IQR (interquartile range).'))))),
 						steps: _List_fromArray(
-							['IQR = Q3 - Q1', 'IQR = 15 - 5 = 10'])
+							[
+								'IQR = Q3 - Q1',
+								'IQR = ' + ($elm$core$String$fromInt(q3) + (' - ' + ($elm$core$String$fromInt(q1) + (' = ' + $elm$core$String$fromInt(iqr)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'For data {' + (numStr + ('}: Q1=' + ($elm$core$String$fromInt(q1) + (', Q3=' + ($elm$core$String$fromInt(q3) + '. Find the IQR (interquartile range).')))))
@@ -13618,9 +14744,9 @@ var $author$project$Game$Problem$Course2$genCompoundProb = A2(
 				answer: A2($author$project$Types$AFraction, 1, 12),
 				hint: {
 					answer: '1/12',
-					prompt: 'P(heads) = 1/2, P(rolling 3) = 1/6. P(both)?',
+					prompt: 'You flip a fair coin and roll a 6-sided die. What is P(heads AND rolling a 3)?',
 					steps: _List_fromArray(
-						['For independent events: P(A and B) = P(A) × P(B)', 'P(heads) = 1/2, P(3) = 1/6', '1/2 × 1/6 = 1/12'])
+						['For independent events: P(A and B) = P(A) × P(B)', 'P(heads) = 1/2, P(rolling 3) = 1/6', '1/2 × 1/6 = 1/12'])
 				},
 				inputType: $author$project$Types$TFraction,
 				prompt: 'You flip a fair coin and roll a 6-sided die. What is P(heads AND rolling a 3)?'
@@ -13629,9 +14755,9 @@ var $author$project$Game$Problem$Course2$genCompoundProb = A2(
 				answer: A2($author$project$Types$AFraction, 1, 1),
 				hint: {
 					answer: '1',
-					prompt: 'P(red) = 3/7, P(blue) = 4/7. P(red or blue)?',
+					prompt: 'A bag has 3 red and 4 blue marbles (7 total). What is P(red or blue)?',
 					steps: _List_fromArray(
-						['Mutually exclusive: P(A or B) = P(A) + P(B)', '3/7 + 4/7 = 7/7 = 1', 'Certain event: probability = 1'])
+						['Mutually exclusive: P(A or B) = P(A) + P(B)', 'P(red) = 3/7, P(blue) = 4/7', '3/7 + 4/7 = 7/7 = 1', 'Certain event: probability = 1'])
 				},
 				inputType: $author$project$Types$TFraction,
 				prompt: 'A bag has 3 red and 4 blue marbles (7 total). What is P(red or blue)?'
@@ -13657,10 +14783,13 @@ var $author$project$Game$Problem$Course2$genCountingPrinciple = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '12',
-								prompt: '3 main dishes, 4 drinks. How many combinations?',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: 'A restaurant offers ' + ($elm$core$String$fromInt(a) + (' main dishes and ' + ($elm$core$String$fromInt(b) + ' drinks. How many different meal combinations are possible?'))),
 								steps: _List_fromArray(
-									['Fundamental Counting Principle: multiply the choices', '3 × 4 = 12'])
+									[
+										'Fundamental Counting Principle: multiply the choices',
+										$elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(correct))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'A restaurant offers ' + ($elm$core$String$fromInt(a) + (' main dishes and ' + ($elm$core$String$fromInt(b) + ' drinks. How many different meal combinations are possible?')))
@@ -13689,10 +14818,12 @@ var $author$project$Game$Problem$Course2$genCountingPrinciple = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '12',
-								prompt: '3 colors, 2 sizes, 2 styles. Combinations?',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: 'A shirt comes in ' + ($elm$core$String$fromInt(a) + (' colors, ' + ($elm$core$String$fromInt(b) + (' sizes, and ' + ($elm$core$String$fromInt(c) + ' styles. How many different shirts are possible?'))))),
 								steps: _List_fromArray(
-									['Multiply all choices together: 3 × 2 × 2 = 12'])
+									[
+										'Multiply all choices together: ' + ($elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(correct)))))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'A shirt comes in ' + ($elm$core$String$fromInt(a) + (' colors, ' + ($elm$core$String$fromInt(b) + (' sizes, and ' + ($elm$core$String$fromInt(c) + ' styles. How many different shirts are possible?')))))
@@ -13736,10 +14867,16 @@ var $author$project$Game$Problem$Course2$genMeanMedianMode = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '5',
-										prompt: 'Mean of {2, 4, 6, 8}?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: 'Mean of {' + (numStr + '}?'),
 										steps: _List_fromArray(
-											['Add all values: 2+4+6+8 = 20', 'Divide by count: 20 ÷ 4 = 5'])
+											[
+												'Add all values: ' + (A2(
+												$elm$core$String$join,
+												'+',
+												A2($elm$core$List$map, $elm$core$String$fromInt, nums)) + (' = ' + $elm$core$String$fromInt(s))),
+												'Divide by count: ' + ($elm$core$String$fromInt(s) + (' / ' + ($elm$core$String$fromInt(n) + (' = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Mean of {' + (numStr + '}?')
@@ -13787,10 +14924,13 @@ var $author$project$Game$Problem$Course2$genMeanMedianMode = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '5',
-										prompt: 'Median of {2, 4, 6, 8}?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: 'Median of {' + (numStr + '}?'),
 										steps: _List_fromArray(
-											['Sort the list (already sorted)', 'Even count: average middle two: (4+6)/2 = 5'])
+											[
+												'Sort the list: ' + numStr,
+												'Even count: average middle two: (' + ($elm$core$String$fromInt(mid1) + ('+' + ($elm$core$String$fromInt(mid2) + (')/2 = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Median of {' + (numStr + '}?')
@@ -13832,10 +14972,14 @@ var $author$project$Game$Problem$Course2$genMeanMedianMode = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '3',
-										prompt: 'Mode of {3, 3, 5, 7}?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: 'Mode of {' + (numStr + '}? (most frequent)'),
 										steps: _List_fromArray(
-											['Mode = the value that appears most often', '3 appears twice, others once', 'Mode = 3'])
+											[
+												'Mode = the value that appears most often',
+												$elm$core$String$fromInt(correct) + (' appears more than once in: ' + numStr),
+												'Mode = ' + $elm$core$String$fromInt(correct)
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Mode of {' + (numStr + '}? (most frequent)')
@@ -13871,10 +15015,13 @@ var $author$project$Game$Problem$Course2$genSimpleProb = A2(
 				return {
 					answer: A2($author$project$Types$AFraction, rn, rd),
 					hint: {
-						answer: '1/3',
-						prompt: '3 red out of 9 marbles. P(red)?',
+						answer: A2($author$project$Game$Problem$Course2$showFrac, rn, rd),
+						prompt: 'A bag has ' + ($elm$core$String$fromInt(total) + (' marbles. ' + ($elm$core$String$fromInt(fav) + ' are red. What is P(red)?'))),
 						steps: _List_fromArray(
-							['P(event) = favorable outcomes / total outcomes', 'P(red) = 3/9 = 1/3'])
+							[
+								'P(event) = favorable outcomes / total outcomes',
+								'P(red) = ' + (A2($author$project$Game$Problem$Course2$showFrac, fav, total) + (' = ' + A2($author$project$Game$Problem$Course2$showFrac, rn, rd)))
+							])
 					},
 					inputType: $author$project$Types$TFraction,
 					prompt: 'A bag has ' + ($elm$core$String$fromInt(total) + (' marbles. ' + ($elm$core$String$fromInt(fav) + ' are red. What is P(red)?')))
@@ -13945,10 +15092,14 @@ var $author$project$Game$Problem$Course2$genStemLeaf = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '37',
-						prompt: 'Stem=3, leaf=7. What number?',
+						answer: $elm$core$String$fromInt(value),
+						prompt: 'In a stem-and-leaf plot, stem=' + ($elm$core$String$fromInt(stem) + (' and leaf=' + ($elm$core$String$fromInt(leaf) + '. What number does this represent?'))),
 						steps: _List_fromArray(
-							['Stem represents the tens digit', 'Leaf represents the ones digit', 'Stem 3, leaf 7 → 37'])
+							[
+								'Stem represents the tens digit',
+								'Leaf represents the ones digit',
+								'Stem ' + ($elm$core$String$fromInt(stem) + (', leaf ' + ($elm$core$String$fromInt(leaf) + (' → ' + $elm$core$String$fromInt(value)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'In a stem-and-leaf plot, stem=' + ($elm$core$String$fromInt(stem) + (' and leaf=' + ($elm$core$String$fromInt(leaf) + '. What number does this represent?')))
@@ -14021,10 +15172,15 @@ var $author$project$Game$Problem$PreAlgebra$genAbsoluteValue = A2(
 							answer: $author$project$Types$AInt(
 								$elm$core$Basics$abs(n)),
 							hint: {
-								answer: '7',
-								prompt: '|−7| = ?',
+								answer: $elm$core$String$fromInt(
+									$elm$core$Basics$abs(n)),
+								prompt: '|' + ($elm$core$String$fromInt(n) + '| = ?'),
 								steps: _List_fromArray(
-									['Absolute value is the distance from zero', 'It is always non-negative', '|−7| = 7'])
+									[
+										'Absolute value = distance from zero on the number line',
+										'|' + ($elm$core$String$fromInt(n) + ('| = ' + $elm$core$String$fromInt(
+										$elm$core$Basics$abs(n))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: '|' + ($elm$core$String$fromInt(n) + '| = ?')
@@ -14048,10 +15204,18 @@ var $author$project$Game$Problem$PreAlgebra$genAbsoluteValue = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '8',
-										prompt: '|−3| + |5| = ?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: '|' + ($elm$core$String$fromInt(a) + ('| + |' + ($elm$core$String$fromInt(b) + '| = ?'))),
 										steps: _List_fromArray(
-											['Evaluate each absolute value first', '|−3| = 3, |5| = 5', '3 + 5 = 8'])
+											[
+												'Evaluate each absolute value first',
+												'|' + ($elm$core$String$fromInt(a) + ('| = ' + ($elm$core$String$fromInt(
+												$elm$core$Basics$abs(a)) + (', |' + ($elm$core$String$fromInt(b) + ('| = ' + $elm$core$String$fromInt(
+												$elm$core$Basics$abs(b)))))))),
+												$elm$core$String$fromInt(
+												$elm$core$Basics$abs(a)) + (' + ' + ($elm$core$String$fromInt(
+												$elm$core$Basics$abs(b)) + (' = ' + $elm$core$String$fromInt(correct))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: '|' + ($elm$core$String$fromInt(a) + ('| + |' + ($elm$core$String$fromInt(b) + '| = ?')))
@@ -14077,10 +15241,23 @@ var $author$project$Game$Problem$PreAlgebra$genAbsoluteValue = A2(
 							{
 								answer: $author$project$Types$AChoice(correct),
 								hint: {
-									answer: '|−8|',
-									prompt: 'Which is greater: |−8| or |5|?',
+									answer: (_Utils_cmp(
+										$elm$core$Basics$abs(a),
+										$elm$core$Basics$abs(b)) > 0) ? ('|' + ($elm$core$String$fromInt(a) + '|')) : ('|' + ($elm$core$String$fromInt(b) + '|')),
+									prompt: 'Which is greater: |' + ($elm$core$String$fromInt(a) + ('| or |' + ($elm$core$String$fromInt(b) + '|?'))),
 									steps: _List_fromArray(
-										['|−8| = 8, |5| = 5', '8 > 5, so |−8| is greater'])
+										[
+											'|' + ($elm$core$String$fromInt(a) + ('| = ' + ($elm$core$String$fromInt(
+											$elm$core$Basics$abs(a)) + (', |' + ($elm$core$String$fromInt(b) + ('| = ' + $elm$core$String$fromInt(
+											$elm$core$Basics$abs(b)))))))),
+											(_Utils_cmp(
+											$elm$core$Basics$abs(a),
+											$elm$core$Basics$abs(b)) > 0) ? ($elm$core$String$fromInt(
+											$elm$core$Basics$abs(a)) + (' > ' + ($elm$core$String$fromInt(
+											$elm$core$Basics$abs(b)) + (', so |' + ($elm$core$String$fromInt(a) + '| is greater'))))) : ($elm$core$String$fromInt(
+											$elm$core$Basics$abs(b)) + (' > ' + ($elm$core$String$fromInt(
+											$elm$core$Basics$abs(a)) + (', so |' + ($elm$core$String$fromInt(b) + '| is greater')))))
+										])
 								},
 								inputType: $author$project$Types$TChoice(
 									_List_fromArray(
@@ -14116,10 +15293,14 @@ var $author$project$Game$Problem$PreAlgebra$genCubeRoot = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '3',
-						prompt: '∛27 = ?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: '∛' + ($elm$core$String$fromInt(cube) + ' = ?'),
 						steps: _List_fromArray(
-							['Ask: what number × itself × itself = 27?', '3 × 3 × 3 = 27', '∛27 = 3'])
+							[
+								'Ask: what number × itself × itself = ' + ($elm$core$String$fromInt(cube) + '?'),
+								$elm$core$String$fromInt(correct) + (' × ' + ($elm$core$String$fromInt(correct) + (' × ' + ($elm$core$String$fromInt(correct) + (' = ' + $elm$core$String$fromInt(cube)))))),
+								'∛' + ($elm$core$String$fromInt(cube) + (' = ' + $elm$core$String$fromInt(correct)))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: '∛' + ($elm$core$String$fromInt(cube) + ' = ?')
@@ -14160,10 +15341,14 @@ var $author$project$Game$Problem$PreAlgebra$genFracOps = A2(
 								return {
 									answer: A2($author$project$Types$AFraction, srn, srd),
 									hint: {
-										answer: '5/6',
-										prompt: '1/2 + 1/3 = ?',
+										answer: A2($author$project$Game$Problem$PreAlgebra$showFrac, srn, srd),
+										prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' + ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?')),
 										steps: _List_fromArray(
-											['Find LCD: LCD(2,3) = 6', '1/2 = 3/6, 1/3 = 2/6', '3/6 + 2/6 = 5/6'])
+											[
+												'LCD of ' + ($elm$core$String$fromInt(d1) + (' and ' + ($elm$core$String$fromInt(d2) + (' = ' + $elm$core$String$fromInt(rd))))),
+												A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' = ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n1 * d2, rd) + (', ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + (' = ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, n2 * d1, rd)))))),
+												A2($author$project$Game$Problem$PreAlgebra$showFrac, n1 * d2, rd) + (' + ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2 * d1, rd) + (' = ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd) + (' = ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, srn, srd))))))
+											])
 									},
 									inputType: $author$project$Types$TFraction,
 									prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' + ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?'))
@@ -14203,10 +15388,17 @@ var $author$project$Game$Problem$PreAlgebra$genFracOps = A2(
 								return {
 									answer: A2($author$project$Types$AFraction, srn, srd),
 									hint: {
-										answer: '5/12',
-										prompt: '3/4 − 1/3 = ?',
+										answer: A2($author$project$Game$Problem$PreAlgebra$showFrac, srn, srd),
+										prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' − ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?')),
 										steps: _List_fromArray(
-											['LCD(4,3) = 12', '3/4 = 9/12, 1/3 = 4/12', '9/12 − 4/12 = 5/12'])
+											[
+												'LCD of ' + ($elm$core$String$fromInt(d1) + (' and ' + ($elm$core$String$fromInt(d2) + (' = ' + $elm$core$String$fromInt(rd))))),
+												A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' = ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n1 * d2, rd) + (', ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + (' = ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, n2 * d1, rd)))))),
+												A2($author$project$Game$Problem$PreAlgebra$showFrac, n1 * d2, rd) + (' − ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2 * d1, rd) + (' = ' + (A2(
+												$author$project$Game$Problem$PreAlgebra$showFrac,
+												$elm$core$Basics$abs(rn),
+												rd) + (' = ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, srn, srd))))))
+											])
 									},
 									inputType: $author$project$Types$TFraction,
 									prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' − ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?'))
@@ -14239,10 +15431,14 @@ var $author$project$Game$Problem$PreAlgebra$genFracOps = A2(
 						return {
 							answer: A2($author$project$Types$AFraction, rn, rd),
 							hint: {
-								answer: '1/2',
-								prompt: '2/3 × 3/4 = ?',
+								answer: A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd),
+								prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' × ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?')),
 								steps: _List_fromArray(
-									['Multiply numerators: 2 × 3 = 6', 'Multiply denominators: 3 × 4 = 12', 'Simplify 6/12 = 1/2'])
+									[
+										'Multiply numerators: ' + ($elm$core$String$fromInt(n1) + (' × ' + ($elm$core$String$fromInt(n2) + (' = ' + $elm$core$String$fromInt(n1 * n2))))),
+										'Multiply denominators: ' + ($elm$core$String$fromInt(d1) + (' × ' + ($elm$core$String$fromInt(d2) + (' = ' + $elm$core$String$fromInt(d1 * d2))))),
+										'Simplify ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n1 * n2, d1 * d2) + (' = ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd)))
+									])
 							},
 							inputType: $author$project$Types$TFraction,
 							prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' × ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?'))
@@ -14277,13 +15473,16 @@ var $author$project$Game$Problem$PreAlgebra$genFracOps = A2(
 						return {
 							answer: A2($author$project$Types$AFraction, rn, rd),
 							hint: {
-								answer: '5/6',
-								prompt: '2/3 ÷ 4/5 = ?',
+								answer: A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd),
+								prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' / ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?')),
 								steps: _List_fromArray(
-									['Multiply by the reciprocal: 2/3 × 5/4', '= 10/12 = 5/6'])
+									[
+										'Multiply by the reciprocal: ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' × ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, d2, n2))),
+										'= ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n1 * d2, d1 * n2) + (' = ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd)))
+									])
 							},
 							inputType: $author$project$Types$TFraction,
-							prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' ÷ ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?'))
+							prompt: A2($author$project$Game$Problem$PreAlgebra$showFrac, n1, d1) + (' / ' + (A2($author$project$Game$Problem$PreAlgebra$showFrac, n2, d2) + ' = ?'))
 						};
 					},
 					A3(
@@ -14326,9 +15525,12 @@ var $author$project$Game$Problem$PreAlgebra$genNegativeExponent = A2(
 							answer: $author$project$Types$AChoice(0),
 							hint: {
 								answer: '1',
-								prompt: '5⁰ = ?',
+								prompt: $elm$core$String$fromInt(base) + '⁰ = ?',
 								steps: _List_fromArray(
-									['Any non-zero number raised to the 0 power equals 1', '5⁰ = 1'])
+									[
+										'Any non-zero number raised to the 0 power equals 1',
+										$elm$core$String$fromInt(base) + '⁰ = 1'
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: $elm$core$String$fromInt(base) + '⁰ = ?'
@@ -14354,10 +15556,13 @@ var $author$project$Game$Problem$PreAlgebra$genNegativeExponent = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '1/4',
-								prompt: '2⁻² = ?',
+								answer: correct,
+								prompt: $elm$core$String$fromInt(base) + ($author$project$Game$Problem$PreAlgebra$superscript(-expAbs) + ' = ?'),
 								steps: _List_fromArray(
-									['Negative exponent means take the reciprocal', '2⁻² = 1/(2²) = 1/4'])
+									[
+										'Negative exponent means take the reciprocal',
+										$elm$core$String$fromInt(base) + ($author$project$Game$Problem$PreAlgebra$superscript(-expAbs) + (' = 1/(' + ($elm$core$String$fromInt(base) + ($author$project$Game$Problem$PreAlgebra$superscript(expAbs) + (') = ' + correct)))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: $elm$core$String$fromInt(base) + ($author$project$Game$Problem$PreAlgebra$superscript(-expAbs) + ' = ?')
@@ -14398,10 +15603,13 @@ var $author$project$Game$Problem$PreAlgebra$genOrderOfOps = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '11',
-										prompt: '3 + 4 × 2 = ?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?')))),
 										steps: _List_fromArray(
-											['Multiplication before addition (PEMDAS)', '4 × 2 = 8, then 3 + 8 = 11'])
+											[
+												'Multiplication before addition (PEMDAS)',
+												$elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + ($elm$core$String$fromInt(b * c) + (', then ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b * c) + (' = ' + $elm$core$String$fromInt(correct))))))))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + ' = ?'))))
@@ -14436,10 +15644,13 @@ var $author$project$Game$Problem$PreAlgebra$genOrderOfOps = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '20',
-										prompt: '(2 + 3) × 4 = ?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: '(' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (') × ' + ($elm$core$String$fromInt(c) + ' = ?'))))),
 										steps: _List_fromArray(
-											['Parentheses first: 2 + 3 = 5', 'Then multiply: 5 × 4 = 20'])
+											[
+												'Parentheses first: ' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a + b))))),
+												'Then multiply: ' + ($elm$core$String$fromInt(a + b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: '(' + ($elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + (') × ' + ($elm$core$String$fromInt(c) + ' = ?')))))
@@ -14471,10 +15682,15 @@ var $author$project$Game$Problem$PreAlgebra$genOrderOfOps = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '6',
-										prompt: '2² + 5 − 3 = ?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: $elm$core$String$fromInt(r.a) + ($author$project$Game$Problem$PreAlgebra$superscript(r.b) + (' + ' + ($elm$core$String$fromInt(r.c) + (' − ' + ($elm$core$String$fromInt(r.d) + ' = ?'))))),
 										steps: _List_fromArray(
-											['Exponent first: 2² = 4', 'Then left to right: 4 + 5 − 3 = 6'])
+											[
+												'Exponent first: ' + ($elm$core$String$fromInt(r.a) + ($author$project$Game$Problem$PreAlgebra$superscript(r.b) + (' = ' + $elm$core$String$fromInt(
+												A2($elm$core$Basics$pow, r.a, r.b))))),
+												'Then left to right: ' + ($elm$core$String$fromInt(
+												A2($elm$core$Basics$pow, r.a, r.b)) + (' + ' + ($elm$core$String$fromInt(r.c) + (' − ' + ($elm$core$String$fromInt(r.d) + (' = ' + $elm$core$String$fromInt(correct)))))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: $elm$core$String$fromInt(r.a) + ($author$project$Game$Problem$PreAlgebra$superscript(r.b) + (' + ' + ($elm$core$String$fromInt(r.c) + (' − ' + ($elm$core$String$fromInt(r.d) + ' = ?')))))
@@ -14495,6 +15711,19 @@ var $author$project$Game$Problem$PreAlgebra$genOrderOfOps = A2(
 		}
 	},
 	A2($elm$random$Random$int, 0, 2));
+var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var $elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			$elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var $elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3($elm$core$String$repeatHelp, n, chunk, '');
+	});
 var $author$project$Game$Problem$PreAlgebra$genSciNotation = A2(
 	$elm$random$Random$andThen,
 	function (direction) {
@@ -14516,10 +15745,14 @@ var $author$project$Game$Problem$PreAlgebra$genSciNotation = A2(
 					{
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: '3 × 10^3',
-							prompt: 'Write 3000 in scientific notation.',
+							answer: correct,
+							prompt: 'Write ' + ($elm$core$String$fromInt(value) + ' in scientific notation.'),
 							steps: _List_fromArray(
-								['Move decimal so only one digit is before it', '3000 → 3.000 × 10^3', 'Answer: 3 × 10^3'])
+								[
+									'Move decimal so only one digit is before it',
+									$elm$core$String$fromInt(value) + (' → ' + ($elm$core$String$fromInt(coeff) + ('.' + (A2($elm$core$String$repeat, expn, '0') + (' × 10^' + $elm$core$String$fromInt(expn)))))),
+									'Answer: ' + correct
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: 'Write ' + ($elm$core$String$fromInt(value) + ' in scientific notation.')
@@ -14538,10 +15771,15 @@ var $author$project$Game$Problem$PreAlgebra$genSciNotation = A2(
 				return {
 					answer: $author$project$Types$AInt(value),
 					hint: {
-						answer: '400',
-						prompt: 'Evaluate: 4 × 10^2',
+						answer: $elm$core$String$fromInt(value),
+						prompt: 'Evaluate: ' + ($elm$core$String$fromInt(coeff) + (' × 10^' + $elm$core$String$fromInt(expn))),
 						steps: _List_fromArray(
-							['10^2 = 100', '4 × 100 = 400'])
+							[
+								'10^' + ($elm$core$String$fromInt(expn) + (' = ' + $elm$core$String$fromInt(
+								A2($elm$core$Basics$pow, 10, expn)))),
+								$elm$core$String$fromInt(coeff) + (' × ' + ($elm$core$String$fromInt(
+								A2($elm$core$Basics$pow, 10, expn)) + (' = ' + $elm$core$String$fromInt(value))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Evaluate: ' + ($elm$core$String$fromInt(coeff) + (' × 10^' + $elm$core$String$fromInt(expn)))
@@ -14570,10 +15808,14 @@ var $author$project$Game$Problem$PreAlgebra$genSimplifyFrac = A2(
 				return {
 					answer: A2($author$project$Types$AFraction, rn, rd),
 					hint: {
-						answer: '3/4',
-						prompt: 'Simplify 6/8',
+						answer: A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd),
+						prompt: 'Simplify ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, n, d),
 						steps: _List_fromArray(
-							['Find GCF of 6 and 8: GCF = 2', 'Divide both by 2: 6÷2=3, 8÷2=4', 'Answer: 3/4'])
+							[
+								'GCF of ' + ($elm$core$String$fromInt(n) + (' and ' + ($elm$core$String$fromInt(d) + (' is ' + $elm$core$String$fromInt(g))))),
+								'Divide both by ' + ($elm$core$String$fromInt(g) + (': ' + ($elm$core$String$fromInt(n) + ('/' + ($elm$core$String$fromInt(g) + ('=' + ($elm$core$String$fromInt(rn) + (', ' + ($elm$core$String$fromInt(d) + ('/' + ($elm$core$String$fromInt(g) + ('=' + $elm$core$String$fromInt(rd))))))))))))),
+								'Answer: ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd)
+							])
 					},
 					inputType: $author$project$Types$TFraction,
 					prompt: 'Simplify ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, n, d)
@@ -14601,10 +15843,14 @@ var $author$project$Game$Problem$PreAlgebra$genSquareRoot = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '6',
-						prompt: '√36 = ?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: '√' + ($elm$core$String$fromInt(sq) + ' = ?'),
 						steps: _List_fromArray(
-							['Ask: what number × itself = 36?', '6 × 6 = 36', '√36 = 6'])
+							[
+								'Ask: what number × itself = ' + ($elm$core$String$fromInt(sq) + '?'),
+								$elm$core$String$fromInt(correct) + (' × ' + ($elm$core$String$fromInt(correct) + (' = ' + $elm$core$String$fromInt(sq)))),
+								'√' + ($elm$core$String$fromInt(sq) + (' = ' + $elm$core$String$fromInt(correct)))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: '√' + ($elm$core$String$fromInt(sq) + ' = ?')
@@ -14657,10 +15903,13 @@ var $author$project$Game$Problem$PreAlgebra$genCombineLike = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '21',
-						prompt: 'If x = 3, what is 2x + 5x?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'If x = ' + ($elm$core$String$fromInt(x) + (', what is ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x?'))))),
 						steps: _List_fromArray(
-							['Combine like terms: 2x + 5x = 7x', 'Substitute: 7(3) = 21'])
+							[
+								'Combine like terms: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('x = ' + ($elm$core$String$fromInt(a + b) + 'x'))))),
+								'Substitute: ' + ($elm$core$String$fromInt(a + b) + ('(' + ($elm$core$String$fromInt(x) + (') = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'If x = ' + ($elm$core$String$fromInt(x) + (', what is ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + 'x?')))))
@@ -14697,10 +15946,14 @@ var $author$project$Game$Problem$PreAlgebra$genDistributeAndCombine = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '12',
-								prompt: 'Simplify 3(x + 2) + 5 when x = 1',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: 'Simplify ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') + ' + ($elm$core$String$fromInt(c) + (' when x = ' + $elm$core$String$fromInt(x))))))),
 								steps: _List_fromArray(
-									['Distribute: 3(x) + 3(2) + 5 = 3x + 6 + 5', 'Combine: 3x + 11', 'x=1: 3 + 11 = 12 (wait, 3(1)+11=14)... Actually 3x+11 at x=1 is 14', 'Follow same steps with your numbers'])
+									[
+										'Distribute: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(a * b) + (' + ' + $elm$core$String$fromInt(c))))),
+										'Combine constants: ' + ($elm$core$String$fromInt(a) + ('x + ' + $elm$core$String$fromInt((a * b) + c))),
+										'x=' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(a * x) + (' + ' + ($elm$core$String$fromInt((a * b) + c) + (' = ' + $elm$core$String$fromInt(correct)))))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Simplify ' + ($elm$core$String$fromInt(a) + ('(x + ' + ($elm$core$String$fromInt(b) + (') + ' + ($elm$core$String$fromInt(c) + (' when x = ' + $elm$core$String$fromInt(x)))))))
@@ -14741,10 +15994,14 @@ var $author$project$Game$Problem$PreAlgebra$genFactorLinear = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '3(2x + 3)',
-						prompt: 'Factor: 6x + 9',
+						answer: $elm$core$String$fromInt(g) + ('(x + ' + ($elm$core$String$fromInt(k + 1) + ')')),
+						prompt: 'Factor: ' + ($elm$core$String$fromInt(a) + ('x + ' + $elm$core$String$fromInt(b))),
 						steps: _List_fromArray(
-							['Find GCF of 6 and 9: GCF = 3', 'Factor out 3: 3(2x + 3)'])
+							[
+								'Find GCF of ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + (': GCF = ' + $elm$core$String$fromInt(g))))),
+								'Divide each term by ' + ($elm$core$String$fromInt(g) + (': ' + ($elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(g) + ('=' + ($elm$core$String$fromInt(k) + (', ' + ($elm$core$String$fromInt(b) + ('/' + ($elm$core$String$fromInt(g) + ('=' + $elm$core$String$fromInt(k + 1))))))))))))),
+								'Factored: ' + ($elm$core$String$fromInt(g) + ('(x + ' + ($elm$core$String$fromInt(k + 1) + ')')))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Factor: ' + ($elm$core$String$fromInt(a) + ('x + ' + $elm$core$String$fromInt(b)))
@@ -14779,10 +16036,14 @@ var $author$project$Game$Problem$PreAlgebra$genMonomialOps = A2(
 							{
 								answer: $author$project$Types$AChoice(0),
 								hint: {
-									answer: '6x^5',
-									prompt: '2x² × 3x³ = ?',
+									answer: correct,
+									prompt: $elm$core$String$fromInt(r.a) + ('x^' + ($elm$core$String$fromInt(r.m) + (' × ' + ($elm$core$String$fromInt(r.b) + ('x^' + ($elm$core$String$fromInt(r.n) + ' = ?')))))),
 									steps: _List_fromArray(
-										['Multiply coefficients: 2 × 3 = 6', 'Add exponents: x² × x³ = x^5', 'Answer: 6x^5'])
+										[
+											'Multiply coefficients: ' + ($elm$core$String$fromInt(r.a) + (' × ' + ($elm$core$String$fromInt(r.b) + (' = ' + $elm$core$String$fromInt(coeff))))),
+											'Add exponents: x^' + ($elm$core$String$fromInt(r.m) + (' × x^' + ($elm$core$String$fromInt(r.n) + (' = x^' + $elm$core$String$fromInt(expn))))),
+											'Answer: ' + correct
+										])
 								},
 								inputType: $author$project$Types$TChoice(choices),
 								prompt: $elm$core$String$fromInt(r.a) + ('x^' + ($elm$core$String$fromInt(r.m) + (' × ' + ($elm$core$String$fromInt(r.b) + ('x^' + ($elm$core$String$fromInt(r.n) + ' = ?'))))))
@@ -14819,13 +16080,17 @@ var $author$project$Game$Problem$PreAlgebra$genMonomialOps = A2(
 									{
 										answer: $author$project$Types$AChoice(0),
 										hint: {
-											answer: '3x^2',
-											prompt: '6x^4 ÷ 2x^2 = ?',
+											answer: correct,
+											prompt: $elm$core$String$fromInt(a) + ('x^' + ($elm$core$String$fromInt(m) + (' / ' + ($elm$core$String$fromInt(r.b) + ('x^' + ($elm$core$String$fromInt(r.n) + ' = ?')))))),
 											steps: _List_fromArray(
-												['Divide coefficients: 6 ÷ 2 = 3', 'Subtract exponents: x^4 ÷ x^2 = x^2', 'Answer: 3x^2'])
+												[
+													'Divide coefficients: ' + ($elm$core$String$fromInt(a) + (' / ' + ($elm$core$String$fromInt(r.b) + (' = ' + $elm$core$String$fromInt(r.q))))),
+													'Subtract exponents: x^' + ($elm$core$String$fromInt(m) + (' / x^' + ($elm$core$String$fromInt(r.n) + (' = x^' + $elm$core$String$fromInt(expn))))),
+													'Answer: ' + correct
+												])
 										},
 										inputType: $author$project$Types$TChoice(choices),
-										prompt: $elm$core$String$fromInt(a) + ('x^' + ($elm$core$String$fromInt(m) + (' ÷ ' + ($elm$core$String$fromInt(r.b) + ('x^' + ($elm$core$String$fromInt(r.n) + ' = ?'))))))
+										prompt: $elm$core$String$fromInt(a) + ('x^' + ($elm$core$String$fromInt(m) + (' / ' + ($elm$core$String$fromInt(r.b) + ('x^' + ($elm$core$String$fromInt(r.n) + ' = ?'))))))
 									});
 							},
 							A2($author$project$Game$Problem$Common$randInt, r.n + 1, r.n + 3));
@@ -14860,10 +16125,14 @@ var $author$project$Game$Problem$PreAlgebra$genMonomialOps = A2(
 							{
 								answer: $author$project$Types$AChoice(0),
 								hint: {
-									answer: '8x^6',
-									prompt: '(2x²)³ = ?',
+									answer: correct,
+									prompt: '(' + ($elm$core$String$fromInt(a) + ('x^' + ($elm$core$String$fromInt(m) + (')^' + ($elm$core$String$fromInt(n) + ' = ?'))))),
 									steps: _List_fromArray(
-										['Raise coefficient to power: 2³ = 8', 'Multiply exponents: 2 × 3 = 6', 'Answer: 8x^6'])
+										[
+											'Raise coefficient to power: ' + ($elm$core$String$fromInt(a) + ($author$project$Game$Problem$PreAlgebra$superscript(n) + (' = ' + $elm$core$String$fromInt(coeff)))),
+											'Multiply exponents: ' + ($elm$core$String$fromInt(m) + (' × ' + ($elm$core$String$fromInt(n) + (' = ' + $elm$core$String$fromInt(expn))))),
+											'Answer: ' + correct
+										])
 								},
 								inputType: $author$project$Types$TChoice(choices),
 								prompt: '(' + ($elm$core$String$fromInt(a) + ('x^' + ($elm$core$String$fromInt(m) + (')^' + ($elm$core$String$fromInt(n) + ' = ?')))))
@@ -14903,10 +16172,14 @@ var $author$project$Game$Problem$PreAlgebra$genPolyAddSub = A2(
 					{
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: '7x + 7',
-							prompt: '(3x + 2) + (4x + 5) = ?',
+							answer: correct,
+							prompt: '(' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (') ' + (opStr + (' (' + ($elm$core$String$fromInt(r.c) + ('x + ' + ($elm$core$String$fromInt(r.d) + ') = ?'))))))))),
 							steps: _List_fromArray(
-								['Combine x terms: 3x + 4x = 7x', 'Combine constants: 2 + 5 = 7', 'Answer: 7x + 7'])
+								[
+									'Combine x terms: ' + ($elm$core$String$fromInt(r.a) + ('x ' + (opStr + (' ' + ($elm$core$String$fromInt(r.c) + ('x = ' + ($elm$core$String$fromInt(xCoeff) + 'x'))))))),
+									'Combine constants: ' + ($elm$core$String$fromInt(r.b) + (' ' + (opStr + (' ' + ($elm$core$String$fromInt(r.d) + (' = ' + $elm$core$String$fromInt(con))))))),
+									'Answer: ' + correct
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: '(' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (') ' + (opStr + (' (' + ($elm$core$String$fromInt(r.c) + ('x + ' + ($elm$core$String$fromInt(r.d) + ') = ?')))))))))
@@ -15016,10 +16289,13 @@ var $author$project$Game$Problem$PreAlgebra$genEqWithFractions = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '7',
-				prompt: 'Solve: (x + 3)/2 = 5',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: (x + ' + ($elm$core$String$fromInt(a) + (')/' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c))))),
 				steps: _List_fromArray(
-					['Multiply both sides by 2: x + 3 = 10', 'Subtract 3: x = 7'])
+					[
+						'Multiply both sides by ' + ($elm$core$String$fromInt(b) + (': x + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(b * c))))),
+						'Subtract ' + ($elm$core$String$fromInt(a) + (': x = ' + $elm$core$String$fromInt(x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: (x + ' + ($elm$core$String$fromInt(a) + (')/' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(c)))))
@@ -15041,10 +16317,15 @@ var $author$project$Game$Problem$PreAlgebra$genMultiStepEq = A2(
 		return {
 			answer: $author$project$Types$AInt(r.x),
 			hint: {
-				answer: '3',
-				prompt: 'Solve: 3(x + 2) + 1 = 16',
+				answer: $elm$core$String$fromInt(r.x),
+				prompt: 'Solve: ' + ($elm$core$String$fromInt(r.a) + ('(x + ' + ($elm$core$String$fromInt(r.b) + (') + ' + ($elm$core$String$fromInt(r.c) + (' = ' + $elm$core$String$fromInt(rhs))))))),
 				steps: _List_fromArray(
-					['Distribute: 3x + 6 + 1 = 16', 'Combine: 3x + 7 = 16', 'Subtract 7: 3x = 9', 'Divide by 3: x = 3'])
+					[
+						'Distribute: ' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.a * r.b) + (' + ' + ($elm$core$String$fromInt(r.c) + (' = ' + $elm$core$String$fromInt(rhs))))))),
+						'Combine: ' + ($elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt((r.a * r.b) + r.c) + (' = ' + $elm$core$String$fromInt(rhs))))),
+						'Subtract ' + ($elm$core$String$fromInt((r.a * r.b) + r.c) + (': ' + ($elm$core$String$fromInt(r.a) + ('x = ' + $elm$core$String$fromInt(r.a * r.x))))),
+						'Divide by ' + ($elm$core$String$fromInt(r.a) + (': x = ' + $elm$core$String$fromInt(r.x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: ' + ($elm$core$String$fromInt(r.a) + ('(x + ' + ($elm$core$String$fromInt(r.b) + (') + ' + ($elm$core$String$fromInt(r.c) + (' = ' + $elm$core$String$fromInt(rhs)))))))
@@ -15071,10 +16352,13 @@ var $author$project$Game$Problem$PreAlgebra$genOneStepEq = A2(
 				return {
 					answer: $author$project$Types$AInt(x),
 					hint: {
-						answer: '5',
-						prompt: 'Solve: x + 4 = 9',
+						answer: $elm$core$String$fromInt(x),
+						prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(a + x))),
 						steps: _List_fromArray(
-							['Subtract 4 from both sides', 'x = 9 − 4 = 5'])
+							[
+								'Subtract ' + ($elm$core$String$fromInt(a) + ' from both sides'),
+								'x = ' + ($elm$core$String$fromInt(a + x) + (' − ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Solve: x + ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(a + x)))
@@ -15092,10 +16376,13 @@ var $author$project$Game$Problem$PreAlgebra$genOneStepEq = A2(
 				return {
 					answer: $author$project$Types$AInt(x),
 					hint: {
-						answer: '5',
-						prompt: 'Solve: 3x = 15',
+						answer: $elm$core$String$fromInt(x),
+						prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(a * x))),
 						steps: _List_fromArray(
-							['Divide both sides by 3', 'x = 15 ÷ 3 = 5'])
+							[
+								'Divide both sides by ' + $elm$core$String$fromInt(a),
+								'x = ' + ($elm$core$String$fromInt(a * x) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(a * x)))
@@ -15117,10 +16404,13 @@ var $author$project$Game$Problem$PreAlgebra$genRationalEq = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '12',
-				prompt: 'Solve: x/4 = 3',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: x/' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(b))),
 				steps: _List_fromArray(
-					['Multiply both sides by 4', 'x = 3 × 4 = 12'])
+					[
+						'Multiply both sides by ' + $elm$core$String$fromInt(a),
+						'x = ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: x/' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(b)))
@@ -15139,10 +16429,13 @@ var $author$project$Game$Problem$PreAlgebra$genSolveBySquareRoot = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '7',
-				prompt: 'Solve: x² = 49',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: x² = ' + ($elm$core$String$fromInt(n) + '  (give the positive solution)'),
 				steps: _List_fromArray(
-					['Take the square root of both sides', 'x = √49 = 7  (positive root)'])
+					[
+						'Take the square root of both sides',
+						'x = √' + ($elm$core$String$fromInt(n) + (' = ' + ($elm$core$String$fromInt(x) + '  (positive root)')))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: x² = ' + ($elm$core$String$fromInt(n) + '  (give the positive solution)')
@@ -15162,10 +16455,13 @@ var $author$project$Game$Problem$PreAlgebra$genTwoStepEq = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '4',
-				prompt: 'Solve: 2x + 3 = 11',
+				answer: $elm$core$String$fromInt(x),
+				prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt((a * x) + b))))),
 				steps: _List_fromArray(
-					['Subtract 3 from both sides: 2x = 8', 'Divide both sides by 2: x = 4'])
+					[
+						'Subtract ' + ($elm$core$String$fromInt(b) + (' from both sides: ' + ($elm$core$String$fromInt(a) + ('x = ' + $elm$core$String$fromInt(a * x))))),
+						'Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x = ' + $elm$core$String$fromInt(x)))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt((a * x) + b)))))
@@ -15195,10 +16491,13 @@ var $author$project$Game$Problem$PreAlgebra$genTwoStepInequality = A2(
 				return {
 					answer: A2($author$project$Types$AInequality, dir, x),
 					hint: {
-						answer: 'x > 4',
-						prompt: 'Solve: 2x + 3 > 11',
+						answer: 'x ' + (dirStr + (' ' + $elm$core$String$fromInt(x))),
+						prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' ' + (dirStr + (' ' + $elm$core$String$fromInt(rhs))))))),
 						steps: _List_fromArray(
-							['Subtract 3 from both sides: 2x > 8', 'Divide both sides by 2: x > 4'])
+							[
+								'Subtract ' + ($elm$core$String$fromInt(b) + (' from both sides: ' + ($elm$core$String$fromInt(a) + ('x ' + (dirStr + (' ' + $elm$core$String$fromInt(a * x))))))),
+								'Divide both sides by ' + ($elm$core$String$fromInt(a) + (': x ' + (dirStr + (' ' + $elm$core$String$fromInt(x)))))
+							])
 					},
 					inputType: $author$project$Types$TInequality,
 					prompt: 'Solve: ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + (' ' + (dirStr + (' ' + $elm$core$String$fromInt(rhs)))))))
@@ -15250,10 +16549,13 @@ var $author$project$Game$Problem$PreAlgebra$genPercentChange = A2(
 				return {
 					answer: $author$project$Types$AInt(newVal),
 					hint: {
-						answer: '$60',
-						prompt: 'Price of $50 increases by 20%. New price?',
+						answer: '$' + $elm$core$String$fromInt(newVal),
+						prompt: 'A price of $' + ($elm$core$String$fromInt(original) + (' is ' + (dirStr + (' by ' + ($elm$core$String$fromInt(pct) + '%. New price?'))))),
 						steps: _List_fromArray(
-							['Find the change: 20% of 50 = 10', 'Add to original: 50 + 10 = 60'])
+							[
+								'Find the change: ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(original) + (' = ' + $elm$core$String$fromInt(change))))),
+								((!dir) ? 'Add to original: ' : 'Subtract from original: ') + ($elm$core$String$fromInt(original) + (((!dir) ? ' + ' : ' − ') + ($elm$core$String$fromInt(change) + (' = ' + $elm$core$String$fromInt(newVal)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'A price of $' + ($elm$core$String$fromInt(original) + (' is ' + (dirStr + (' by ' + ($elm$core$String$fromInt(pct) + '%. New price?')))))
@@ -15280,10 +16582,14 @@ var $author$project$Game$Problem$PreAlgebra$genPercentProportion = A2(
 				return {
 					answer: $author$project$Types$AInt(correct),
 					hint: {
-						answer: '20',
-						prompt: 'What is 25% of 80?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?'))),
 						steps: _List_fromArray(
-							['Percent proportion: part/whole = percent/100', 'part/80 = 25/100', 'part = 80 × 25/100 = 20'])
+							[
+								'Percent proportion: part/whole = percent/100',
+								'part/' + ($elm$core$String$fromInt(whole) + (' = ' + ($elm$core$String$fromInt(pct) + '/100'))),
+								'part = ' + ($elm$core$String$fromInt(whole) + (' × ' + ($elm$core$String$fromInt(pct) + ('/100 = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'What is ' + ($elm$core$String$fromInt(pct) + ('% of ' + ($elm$core$String$fromInt(whole) + '?')))
@@ -15320,10 +16626,14 @@ var $author$project$Game$Problem$PreAlgebra$genRatio = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '2:3',
-					prompt: 'Simplify 6:9',
+					answer: correct,
+					prompt: 'Simplify the ratio ' + ($elm$core$String$fromInt(a) + (':' + $elm$core$String$fromInt(b))),
 					steps: _List_fromArray(
-						['GCF of 6 and 9 is 3', '6÷3 = 2, 9÷3 = 3', 'Simplified: 2:3'])
+						[
+							'GCF of ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + (' is ' + $elm$core$String$fromInt((a / ra) | 0))))),
+							$elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt((a / ra) | 0) + (' = ' + ($elm$core$String$fromInt(ra) + (', ' + ($elm$core$String$fromInt(b) + ('/' + ($elm$core$String$fromInt((b / rb) | 0) + (' = ' + $elm$core$String$fromInt(rb)))))))))),
+							'Simplified: ' + correct
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Simplify the ratio ' + ($elm$core$String$fromInt(a) + (':' + $elm$core$String$fromInt(b)))
@@ -15343,10 +16653,13 @@ var $author$project$Game$Problem$PreAlgebra$genSimilarFigures = A2(
 		return {
 			answer: $author$project$Types$AInt(missing),
 			hint: {
-				answer: '12',
-				prompt: 'Scale factor 3:1, smaller side = 4. Larger side?',
+				answer: $elm$core$String$fromInt(missing),
+				prompt: 'Two similar triangles. Smaller triangle has a side of ' + ($elm$core$String$fromInt(side) + (' cm. The scale factor is ' + ($elm$core$String$fromInt(scale) + ':1. Find the corresponding side of the larger triangle.'))),
 				steps: _List_fromArray(
-					['Multiply the smaller side by the scale factor', '4 × 3 = 12'])
+					[
+						'Multiply the smaller side by the scale factor',
+						$elm$core$String$fromInt(side) + (' × ' + ($elm$core$String$fromInt(scale) + (' = ' + $elm$core$String$fromInt(missing))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Two similar triangles. Smaller triangle has a side of ' + ($elm$core$String$fromInt(side) + (' cm. The scale factor is ' + ($elm$core$String$fromInt(scale) + ':1. Find the corresponding side of the larger triangle.')))
@@ -15367,10 +16680,13 @@ var $author$project$Game$Problem$PreAlgebra$genSimpleInterest = A2(
 		return {
 			answer: $author$project$Types$AInt(interest),
 			hint: {
-				answer: '$60',
-				prompt: 'P=$500, r=4%, t=3 years. Interest?',
+				answer: '$' + $elm$core$String$fromInt(interest),
+				prompt: 'Simple interest: Principal = $' + ($elm$core$String$fromInt(p) + (', Rate = ' + ($elm$core$String$fromInt(r) + ('% per year, Time = ' + ($elm$core$String$fromInt(t) + ' years. Find the interest.'))))),
 				steps: _List_fromArray(
-					['I = P × r × t', 'I = 500 × 0.04 × 3 = 60'])
+					[
+						'I = P × r × t',
+						'I = ' + ($elm$core$String$fromInt(p) + (' × 0.0' + ($elm$core$String$fromInt(r) + (' × ' + ($elm$core$String$fromInt(t) + (' = ' + $elm$core$String$fromInt(interest)))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Simple interest: Principal = $' + ($elm$core$String$fromInt(p) + (', Rate = ' + ($elm$core$String$fromInt(r) + ('% per year, Time = ' + ($elm$core$String$fromInt(t) + ' years. Find the interest.')))))
@@ -15404,10 +16720,13 @@ var $author$project$Game$Problem$PreAlgebra$genSolveProportion = A2(
 		return {
 			answer: $author$project$Types$AInt(x),
 			hint: {
-				answer: '15',
-				prompt: '2/6 = 5/x',
+				answer: $elm$core$String$fromInt(x),
+				prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/x')))),
 				steps: _List_fromArray(
-					['Cross multiply: 2x = 6 × 5 = 30', 'Divide: x = 30 ÷ 2 = 15'])
+					[
+						'Cross multiply: ' + ($elm$core$String$fromInt(a) + ('x = ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(c) + (' = ' + $elm$core$String$fromInt(b * c))))))),
+						'Divide: x = ' + ($elm$core$String$fromInt(b * c) + (' / ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(x)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: $elm$core$String$fromInt(a) + ('/' + ($elm$core$String$fromInt(b) + (' = ' + ($elm$core$String$fromInt(c) + '/x'))))
@@ -15434,10 +16753,13 @@ var $author$project$Game$Problem$PreAlgebra$genUnitRate = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '$5',
-						prompt: '4 items cost $20. Cost per item?',
+						answer: '$' + $elm$core$String$fromInt(rate),
+						prompt: $elm$core$String$fromInt(units) + (' items cost $' + ($elm$core$String$fromInt(total) + '. What is the cost per item?')),
 						steps: _List_fromArray(
-							['Unit rate = total cost ÷ number of items', '$20 ÷ 4 = $5'])
+							[
+								'Unit rate = total cost / number of items',
+								'$' + ($elm$core$String$fromInt(total) + (' / ' + ($elm$core$String$fromInt(units) + (' = $' + $elm$core$String$fromInt(rate)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: $elm$core$String$fromInt(units) + (' items cost $' + ($elm$core$String$fromInt(total) + '. What is the cost per item?'))
@@ -15482,10 +16804,13 @@ var $author$project$Game$Problem$PreAlgebra$genDirectVariation = A2(
 		return {
 			answer: $author$project$Types$AInt(y2),
 			hint: {
-				answer: '15',
-				prompt: 'y = kx. When x=2, y=6. Find y when x=5.',
+				answer: $elm$core$String$fromInt(y2),
+				prompt: 'y varies directly with x. When x = ' + ($elm$core$String$fromInt(x1) + (', y = ' + ($elm$core$String$fromInt(y1) + ('. Find y when x = ' + ($elm$core$String$fromInt(x2) + '.'))))),
 				steps: _List_fromArray(
-					['Find k: k = y/x = 6/2 = 3', 'y = 3 × 5 = 15'])
+					[
+						'Find k: k = y/x = ' + ($elm$core$String$fromInt(y1) + ('/' + ($elm$core$String$fromInt(x1) + (' = ' + $elm$core$String$fromInt(k))))),
+						'y = ' + ($elm$core$String$fromInt(k) + (' × ' + ($elm$core$String$fromInt(x2) + (' = ' + $elm$core$String$fromInt(y2)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'y varies directly with x. When x = ' + ($elm$core$String$fromInt(x1) + (', y = ' + ($elm$core$String$fromInt(y1) + ('. Find y when x = ' + ($elm$core$String$fromInt(x2) + '.')))))
@@ -15521,10 +16846,13 @@ var $author$project$Game$Problem$PreAlgebra$genDomainRange = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: 'No',
-						prompt: 'Is {(1,2),(1,3)} a function?',
+						answer: correct,
+						prompt: 'Is ' + (pairs + ' a function?'),
 						steps: _List_fromArray(
-							['A function has exactly one output for each input', 'x=1 maps to both 2 and 3, so not a function'])
+							[
+								'A function has exactly one output for each input',
+								(!isFn) ? 'Each x-value appears only once, so it is a function' : 'x=1 maps to two different y-values, so it is not a function'
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Is ' + (pairs + ' a function?')
@@ -15567,20 +16895,32 @@ var $author$project$Game$Problem$PreAlgebra$genDomainRange = A2(
 								return (!drChoice) ? {
 									answer: $author$project$Types$AInt(xMin),
 									hint: {
-										answer: '2',
-										prompt: 'For {(2,4),(5,1),(3,7)}, min domain?',
+										answer: $elm$core$String$fromInt(xMin),
+										prompt: 'For ' + (pairStr + ', what is the minimum value of the domain?'),
 										steps: _List_fromArray(
-											['Domain = set of all x-values (inputs)', 'x-values: 2, 5, 3 → minimum is 2'])
+											[
+												'Domain = set of all x-values (inputs)',
+												'x-values: ' + (A2(
+												$elm$core$String$join,
+												', ',
+												A2($elm$core$List$map, $elm$core$String$fromInt, xs)) + (' → minimum is ' + $elm$core$String$fromInt(xMin)))
+											])
 									},
 									inputType: $author$project$Types$TInteger,
 									prompt: 'For ' + (pairStr + ', what is the minimum value of the domain?')
 								} : {
 									answer: $author$project$Types$AInt(yMin),
 									hint: {
-										answer: '1',
-										prompt: 'For {(2,4),(5,1),(3,7)}, min range?',
+										answer: $elm$core$String$fromInt(yMin),
+										prompt: 'For ' + (pairStr + ', what is the minimum value of the range?'),
 										steps: _List_fromArray(
-											['Range = set of all y-values (outputs)', 'y-values: 4, 1, 7 → minimum is 1'])
+											[
+												'Range = set of all y-values (outputs)',
+												'y-values: ' + (A2(
+												$elm$core$String$join,
+												', ',
+												A2($elm$core$List$map, $elm$core$String$fromInt, ys)) + (' → minimum is ' + $elm$core$String$fromInt(yMin)))
+											])
 									},
 									inputType: $author$project$Types$TInteger,
 									prompt: 'For ' + (pairStr + ', what is the minimum value of the range?')
@@ -15633,10 +16973,15 @@ var $author$project$Game$Problem$PreAlgebra$genIdentifySlope = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '3',
-								prompt: 'y = 3x + 5. Slope?',
+								answer: $elm$core$String$fromInt(correct),
+								prompt: 'y = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + ('. What is the ' + (((!ask) ? 'slope' : 'y-intercept') + '?'))))),
 								steps: _List_fromArray(
-									['In y = mx + b, m is the slope and b is the y-intercept', 'Slope = 3'])
+									[
+										'In y = mx + b, m is the slope and b is the y-intercept',
+										_Utils_ap(
+										(!ask) ? 'Slope = m = ' : 'y-intercept = b = ',
+										$elm$core$String$fromInt(correct))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'y = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + ('. What is the ' + (((!ask) ? 'slope' : 'y-intercept') + '?')))))
@@ -15663,10 +17008,13 @@ var $author$project$Game$Problem$PreAlgebra$genSlopeFormula = A2(
 				return {
 					answer: $author$project$Types$AInt(r.m),
 					hint: {
-						answer: '2',
-						prompt: 'Slope of (0,1) and (2,5)?',
+						answer: $elm$core$String$fromInt(r.m),
+						prompt: 'Use the slope formula: points (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ')'))))))),
 						steps: _List_fromArray(
-							['m = (y₂ − y₁)/(x₂ − x₁)', 'm = (5 − 1)/(2 − 0) = 4/2 = 2'])
+							[
+								'm = (y₂ − y₁)/(x₂ − x₁)',
+								'm = (' + ($elm$core$String$fromInt(y2) + (' − ' + ($elm$core$String$fromInt(r.y1) + (')/(' + ($elm$core$String$fromInt(x2) + (' − ' + ($elm$core$String$fromInt(r.x1) + (') = ' + ($elm$core$String$fromInt(y2 - r.y1) + ('/' + ($elm$core$String$fromInt(dx) + (' = ' + $elm$core$String$fromInt(r.m)))))))))))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Use the slope formula: points (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ')')))))))
@@ -15698,10 +17046,13 @@ var $author$project$Game$Problem$PreAlgebra$genSlopeFromPoints = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2',
-						prompt: 'Slope through (1, 2) and (3, 6)?',
+						answer: $elm$core$String$fromInt(r.m),
+						prompt: 'Find the slope through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ')'))))))),
 						steps: _List_fromArray(
-							['slope = (y₂ − y₁)/(x₂ − x₁)', '(6 − 2)/(3 − 1) = 4/2 = 2'])
+							[
+								'slope = (y₂ − y₁)/(x₂ − x₁)',
+								'(' + ($elm$core$String$fromInt(y2) + (' − ' + ($elm$core$String$fromInt(r.y1) + (')/(' + ($elm$core$String$fromInt(x2) + (' − ' + ($elm$core$String$fromInt(r.x1) + (') = ' + ($elm$core$String$fromInt(y2 - r.y1) + ('/' + ($elm$core$String$fromInt(x2 - r.x1) + (' = ' + $elm$core$String$fromInt(r.m)))))))))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Find the slope through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') and (' + ($elm$core$String$fromInt(x2) + (', ' + ($elm$core$String$fromInt(y2) + ')')))))))
@@ -15729,10 +17080,13 @@ var $author$project$Game$Problem$PreAlgebra$genSlopeIntercept = A2(
 		return {
 			answer: $author$project$Types$AInt(y),
 			hint: {
-				answer: '7',
-				prompt: 'y = 2x + 1. Find y when x = 3.',
+				answer: $elm$core$String$fromInt(y),
+				prompt: 'y = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + ('. Find y when x = ' + ($elm$core$String$fromInt(x0) + '.'))))),
 				steps: _List_fromArray(
-					['Substitute x = 3: y = 2(3) + 1', 'y = 6 + 1 = 7'])
+					[
+						'Substitute x = ' + ($elm$core$String$fromInt(x0) + (': y = ' + ($elm$core$String$fromInt(m) + ('(' + ($elm$core$String$fromInt(x0) + (') + ' + $elm$core$String$fromInt(b))))))),
+						'y = ' + ($elm$core$String$fromInt(m * x0) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(y)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'y = ' + ($elm$core$String$fromInt(m) + ('x + ' + ($elm$core$String$fromInt(b) + ('. Find y when x = ' + ($elm$core$String$fromInt(x0) + '.')))))
@@ -15760,10 +17114,12 @@ var $author$project$Game$Problem$PreAlgebra$genWriteLinearEq = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2',
-						prompt: 'Line through (0,1) and (3,7). Slope?',
+						answer: slopeStr,
+						prompt: 'A line passes through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(y1) + (') and (' + ($elm$core$String$fromInt(r.x2) + (', ' + ($elm$core$String$fromInt(y2) + '). What is the slope?'))))))),
 						steps: _List_fromArray(
-							['m = (7 − 1)/(3 − 0) = 6/3 = 2'])
+							[
+								'm = (' + ($elm$core$String$fromInt(y2) + (' − ' + ($elm$core$String$fromInt(y1) + (')/(' + ($elm$core$String$fromInt(r.x2) + (' − ' + ($elm$core$String$fromInt(r.x1) + (') = ' + ($elm$core$String$fromInt(y2 - y1) + ('/' + ($elm$core$String$fromInt(r.x2 - r.x1) + (' = ' + slopeStr))))))))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'A line passes through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(y1) + (') and (' + ($elm$core$String$fromInt(r.x2) + (', ' + ($elm$core$String$fromInt(y2) + '). What is the slope?')))))))
@@ -15812,10 +17168,13 @@ var $author$project$Game$Problem$PreAlgebra$genSystemApp = A2(
 		return {
 			answer: A2($author$project$Types$ASystem, x, y),
 			hint: {
-				answer: 'x=3, y=7',
-				prompt: 'Sum=10, difference=4. x+y=10, y-x=4',
+				answer: 'x=' + ($elm$core$String$fromInt(x) + (', y=' + $elm$core$String$fromInt(y))),
+				prompt: 'Sum=' + ($elm$core$String$fromInt(s) + (', difference=' + ($elm$core$String$fromInt(d) + ('. x+y=' + ($elm$core$String$fromInt(s) + (', y-x=' + $elm$core$String$fromInt(d))))))),
 				steps: _List_fromArray(
-					['Add equations: 2y = 14  →  y = 7', 'Substitute: x + 7 = 10  →  x = 3'])
+					[
+						'Add equations: 2y = ' + ($elm$core$String$fromInt(s + d) + ('  →  y = ' + $elm$core$String$fromInt(y))),
+						'Substitute: x + ' + ($elm$core$String$fromInt(y) + (' = ' + ($elm$core$String$fromInt(s) + ('  →  x = ' + $elm$core$String$fromInt(x)))))
+					])
 			},
 			inputType: $author$project$Types$TSystem,
 			prompt: 'Two numbers have a sum of ' + ($elm$core$String$fromInt(s) + (' and a difference of ' + ($elm$core$String$fromInt(d) + ('.\nLet x = smaller, y = larger.\nSolve the system:\nx + y = ' + ($elm$core$String$fromInt(s) + ('\ny − x = ' + ($elm$core$String$fromInt(d) + '\n\nEnter x:')))))))
@@ -15836,10 +17195,14 @@ var $author$project$Game$Problem$PreAlgebra$genSystemElimination = A2(
 		return {
 			answer: A2($author$project$Types$ASystem, x, y),
 			hint: {
-				answer: 'x=4, y=1',
-				prompt: '2x + y = 9, x + y = 5',
+				answer: 'x=' + ($elm$core$String$fromInt(x) + (', y=' + $elm$core$String$fromInt(y))),
+				prompt: '2x + y = ' + ($elm$core$String$fromInt(eq1rhs) + (', x + y = ' + $elm$core$String$fromInt(eq2rhs))),
 				steps: _List_fromArray(
-					['Subtract equation 2 from equation 1', '(2x+y) − (x+y) = 9−5  →  x = 4', 'Substitute: 4 + y = 5  →  y = 1'])
+					[
+						'Subtract equation 2 from equation 1',
+						'(2x+y) − (x+y) = ' + ($elm$core$String$fromInt(eq1rhs) + ('−' + ($elm$core$String$fromInt(eq2rhs) + ('  →  x = ' + $elm$core$String$fromInt(x))))),
+						'Substitute: ' + ($elm$core$String$fromInt(x) + (' + y = ' + ($elm$core$String$fromInt(eq2rhs) + ('  →  y = ' + $elm$core$String$fromInt(y)))))
+					])
 			},
 			inputType: $author$project$Types$TSystem,
 			prompt: 'Solve by elimination:\n2x + y = ' + ($elm$core$String$fromInt(eq1rhs) + ('\nx + y = ' + ($elm$core$String$fromInt(eq2rhs) + '\n\nEnter x:')))
@@ -15864,10 +17227,15 @@ var $author$project$Game$Problem$PreAlgebra$genSystemSubstitution = A2(
 		return {
 			answer: A2($author$project$Types$ASystem, x, y),
 			hint: {
-				answer: 'x=5, y=2',
-				prompt: 'x + y = 7, x − y = 3',
+				answer: 'x=' + ($elm$core$String$fromInt(x) + (', y=' + $elm$core$String$fromInt(y))),
+				prompt: 'x + y = ' + ($elm$core$String$fromInt(s) + (', x − y = ' + dStr)),
 				steps: _List_fromArray(
-					['From equation 2: x = y + 3', 'Substitute into equation 1: (y+3) + y = 7', '2y + 3 = 7  →  y = 2', 'x = 2 + 3 = 5'])
+					[
+						'From equation 2: x = y + ' + dStr,
+						'Substitute into equation 1: (y + ' + (dStr + (') + y = ' + $elm$core$String$fromInt(s))),
+						'2y + ' + (dStr + (' = ' + ($elm$core$String$fromInt(s) + ('  →  y = ' + $elm$core$String$fromInt(y))))),
+						'x = ' + ($elm$core$String$fromInt(y) + (' + ' + (dStr + (' = ' + $elm$core$String$fromInt(x)))))
+					])
 			},
 			inputType: $author$project$Types$TSystem,
 			prompt: 'Solve by substitution:\nx + y = ' + ($elm$core$String$fromInt(s) + ('\nx − y = ' + (dStr + '\n\nEnter x:')))
@@ -15901,10 +17269,13 @@ var $author$project$Game$Problem$PreAlgebra$genAngleRelationships = A2(
 				return {
 					answer: $author$project$Types$AInt(b),
 					hint: {
-						answer: '55°',
-						prompt: 'Complementary angles sum to 90°. One is 35°. Other?',
+						answer: $elm$core$String$fromInt(b) + '°',
+						prompt: 'Two angles are complementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.'),
 						steps: _List_fromArray(
-							['Complementary angles add to 90°', '90 − 35 = 55'])
+							[
+								'Complementary angles add to 90°',
+								'90 − ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(b)))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Two angles are complementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.')
@@ -15917,10 +17288,13 @@ var $author$project$Game$Problem$PreAlgebra$genAngleRelationships = A2(
 				return {
 					answer: $author$project$Types$AInt(b),
 					hint: {
-						answer: '70°',
-						prompt: 'Supplementary angles sum to 180°. One is 110°. Other?',
+						answer: $elm$core$String$fromInt(b) + '°',
+						prompt: 'Two angles are supplementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.'),
 						steps: _List_fromArray(
-							['Supplementary angles add to 180°', '180 − 110 = 70'])
+							[
+								'Supplementary angles add to 180°',
+								'180 − ' + ($elm$core$String$fromInt(a) + (' = ' + $elm$core$String$fromInt(b)))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Two angles are supplementary. One measures ' + ($elm$core$String$fromInt(a) + '°. Find the other.')
@@ -15948,10 +17322,16 @@ var $author$project$Game$Problem$PreAlgebra$genAngleTypes = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: 'Obtuse',
-					prompt: 'Classify a 120° angle.',
+					answer: correct,
+					prompt: 'Classify a ' + ($elm$core$String$fromInt(deg) + '° angle.'),
 					steps: _List_fromArray(
-						['Acute: less than 90°', 'Right: exactly 90°', 'Obtuse: between 90° and 180°', 'Straight: exactly 180°'])
+						[
+							'Acute: less than 90°',
+							'Right: exactly 90°',
+							'Obtuse: between 90° and 180°',
+							'Straight: exactly 180°',
+							$elm$core$String$fromInt(deg) + ('° is ' + correct)
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Classify a ' + ($elm$core$String$fromInt(deg) + '° angle.')
@@ -15974,20 +17354,26 @@ var $author$project$Game$Problem$PreAlgebra$genDilation = A2(
 				return (!coord) ? {
 					answer: $author$project$Types$AInt(k * x),
 					hint: {
-						answer: '6',
-						prompt: 'Dilate (3, 4) with scale factor 2. New x?',
+						answer: $elm$core$String$fromInt(k * x),
+						prompt: 'Dilate (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + (') with scale factor ' + ($elm$core$String$fromInt(k) + '. New x-coordinate?'))))),
 						steps: _List_fromArray(
-							['Multiply both coordinates by scale factor', 'x: 3 × 2 = 6'])
+							[
+								'Multiply x by scale factor',
+								'x: ' + ($elm$core$String$fromInt(x) + (' × ' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(k * x)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Dilate (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + (') with scale factor ' + ($elm$core$String$fromInt(k) + '. New x-coordinate?')))))
 				} : {
 					answer: $author$project$Types$AInt(k * y),
 					hint: {
-						answer: '8',
-						prompt: 'Dilate (3, 4) with scale factor 2. New y?',
+						answer: $elm$core$String$fromInt(k * y),
+						prompt: 'Dilate (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + (') with scale factor ' + ($elm$core$String$fromInt(k) + '. New y-coordinate?'))))),
 						steps: _List_fromArray(
-							['Multiply both coordinates by scale factor', 'y: 4 × 2 = 8'])
+							[
+								'Multiply y by scale factor',
+								'y: ' + ($elm$core$String$fromInt(y) + (' × ' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(k * y)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Dilate (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + (') with scale factor ' + ($elm$core$String$fromInt(k) + '. New y-coordinate?')))))
@@ -16018,10 +17404,13 @@ var $author$project$Game$Problem$PreAlgebra$genInteriorAngles = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '720°',
-						prompt: 'Sum of interior angles of a hexagon (6 sides)?',
+						answer: $elm$core$String$fromInt(correct) + '°',
+						prompt: 'What is the sum of interior angles of a polygon with ' + ($elm$core$String$fromInt(n) + ' sides?'),
 						steps: _List_fromArray(
-							['Formula: (n − 2) × 180°', '(6 − 2) × 180 = 4 × 180 = 720'])
+							[
+								'Formula: (n − 2) × 180°',
+								'(' + ($elm$core$String$fromInt(n) + (' − 2) × 180 = ' + ($elm$core$String$fromInt(n - 2) + (' × 180 = ' + $elm$core$String$fromInt(correct)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'What is the sum of interior angles of a polygon with ' + ($elm$core$String$fromInt(n) + ' sides?')
@@ -16046,20 +17435,28 @@ var $author$project$Game$Problem$PreAlgebra$genPythagorean = A2(
 				return (!missing) ? {
 					answer: $author$project$Types$AInt(c),
 					hint: {
-						answer: '5',
-						prompt: 'Legs 3 and 4. Hypotenuse?',
+						answer: $elm$core$String$fromInt(c),
+						prompt: 'Right triangle: legs ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + '. Find the hypotenuse.'))),
 						steps: _List_fromArray(
-							['a² + b² = c²', '3² + 4² = 9 + 16 = 25', 'c = √25 = 5'])
+							[
+								'a² + b² = c²',
+								$elm$core$String$fromInt(a) + ('² + ' + ($elm$core$String$fromInt(b) + ('² = ' + ($elm$core$String$fromInt(a * a) + (' + ' + ($elm$core$String$fromInt(b * b) + (' = ' + $elm$core$String$fromInt((a * a) + (b * b))))))))),
+								'c = √' + ($elm$core$String$fromInt((a * a) + (b * b)) + (' = ' + $elm$core$String$fromInt(c)))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Right triangle: legs ' + ($elm$core$String$fromInt(a) + (' and ' + ($elm$core$String$fromInt(b) + '. Find the hypotenuse.')))
 				} : {
 					answer: $author$project$Types$AInt(b),
 					hint: {
-						answer: '4',
-						prompt: 'Leg 3, hypotenuse 5. Find other leg.',
+						answer: $elm$core$String$fromInt(b),
+						prompt: 'Right triangle: one leg ' + ($elm$core$String$fromInt(a) + (', hypotenuse ' + ($elm$core$String$fromInt(c) + '. Find the other leg.'))),
 						steps: _List_fromArray(
-							['a² + b² = c²', '3² + b² = 5²', '9 + b² = 25  →  b² = 16  →  b = 4'])
+							[
+								'a² + b² = c²',
+								$elm$core$String$fromInt(a) + ('² + b² = ' + ($elm$core$String$fromInt(c) + '²')),
+								$elm$core$String$fromInt(a * a) + (' + b² = ' + ($elm$core$String$fromInt(c * c) + ('  →  b² = ' + ($elm$core$String$fromInt((c * c) - (a * a)) + ('  →  b = ' + $elm$core$String$fromInt(b))))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Right triangle: one leg ' + ($elm$core$String$fromInt(a) + (', hypotenuse ' + ($elm$core$String$fromInt(c) + '. Find the other leg.')))
@@ -16096,10 +17493,13 @@ var $author$project$Game$Problem$PreAlgebra$genTransformation = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '-5',
-								prompt: 'Reflect (3, 5) over x-axis. New y?',
+								answer: $elm$core$String$fromInt(reflY),
+								prompt: 'Point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ') reflected over the x-axis. What is the new y-coordinate?'))),
 								steps: _List_fromArray(
-									['Reflection over x-axis: (x, y) → (x, −y)', 'y becomes −y'])
+									[
+										'Reflection over x-axis: (x, y) → (x, −y)',
+										'y = ' + ($elm$core$String$fromInt(y) + (' becomes −(' + ($elm$core$String$fromInt(y) + (') = ' + $elm$core$String$fromInt(reflY)))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Point (' + ($elm$core$String$fromInt(x) + (', ' + ($elm$core$String$fromInt(y) + ') reflected over the x-axis. What is the new y-coordinate?')))
@@ -16120,20 +17520,24 @@ var $author$project$Game$Problem$PreAlgebra$genTransformation = A2(
 						return (!coord) ? {
 							answer: $author$project$Types$AInt(r.x + r.dx),
 							hint: {
-								answer: '6',
-								prompt: 'Translate (2,3) by (+4, −1). New x?',
+								answer: $elm$core$String$fromInt(r.x + r.dx),
+								prompt: 'Translate (' + ($elm$core$String$fromInt(r.x) + (', ' + ($elm$core$String$fromInt(r.y) + (') by (' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dx) + (', ' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dy) + '). New x-coordinate?'))))))),
 								steps: _List_fromArray(
-									['Add dx to x: 2 + 4 = 6'])
+									[
+										'Add dx to x: ' + ($elm$core$String$fromInt(r.x) + (' + ' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dx) + (' = ' + $elm$core$String$fromInt(r.x + r.dx)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Translate (' + ($elm$core$String$fromInt(r.x) + (', ' + ($elm$core$String$fromInt(r.y) + (') by (' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dx) + (', ' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dy) + '). New x-coordinate?')))))))
 						} : {
 							answer: $author$project$Types$AInt(r.y + r.dy),
 							hint: {
-								answer: '2',
-								prompt: 'Translate (2,3) by (+4, −1). New y?',
+								answer: $elm$core$String$fromInt(r.y + r.dy),
+								prompt: 'Translate (' + ($elm$core$String$fromInt(r.x) + (', ' + ($elm$core$String$fromInt(r.y) + (') by (' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dx) + (', ' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dy) + '). New y-coordinate?'))))))),
 								steps: _List_fromArray(
-									['Add dy to y: 3 + (−1) = 2'])
+									[
+										'Add dy to y: ' + ($elm$core$String$fromInt(r.y) + (' + ' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dy) + (' = ' + $elm$core$String$fromInt(r.y + r.dy)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Translate (' + ($elm$core$String$fromInt(r.x) + (', ' + ($elm$core$String$fromInt(r.y) + (') by (' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dx) + (', ' + ($author$project$Game$Problem$PreAlgebra$showSigned(r.dy) + '). New y-coordinate?')))))))
@@ -16163,7 +17567,7 @@ var $author$project$Game$Problem$PreAlgebra$genTriangleSum = A2(
 			answer: $author$project$Types$AInt(50),
 			hint: {
 				answer: '50°',
-				prompt: 'Angles 60° + 70° + ? = 180°',
+				prompt: 'A triangle has angles 60° and 70°. Find the third angle.',
 				steps: _List_fromArray(
 					['Sum of angles in a triangle = 180°', '180 − 60 − 70 = 50'])
 			},
@@ -16172,8 +17576,8 @@ var $author$project$Game$Problem$PreAlgebra$genTriangleSum = A2(
 		} : {
 			answer: $author$project$Types$AInt(c),
 			hint: {
-				answer: '70°',
-				prompt: 'Angles 50° + 60° + ? = 180°',
+				answer: $elm$core$String$fromInt(c) + '°',
+				prompt: 'A triangle has angles ' + ($elm$core$String$fromInt(a) + ('° and ' + ($elm$core$String$fromInt(b) + '°. Find the third angle.'))),
 				steps: _List_fromArray(
 					[
 						'Triangle angle sum = 180°',
@@ -16221,10 +17625,13 @@ var $author$project$Game$Problem$PreAlgebra$genAreaPerimeter = A2(
 				return {
 					answer: $author$project$Types$AInt(w * h),
 					hint: {
-						answer: '40',
-						prompt: 'Area of rectangle: width=5, height=8?',
+						answer: $elm$core$String$fromInt(w * h),
+						prompt: 'Area of rectangle: width = ' + ($elm$core$String$fromInt(w) + (', height = ' + ($elm$core$String$fromInt(h) + '?'))),
 						steps: _List_fromArray(
-							['A = l × w', '5 × 8 = 40'])
+							[
+								'A = l × w',
+								$elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt(w * h))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Area of rectangle: width = ' + ($elm$core$String$fromInt(w) + (', height = ' + ($elm$core$String$fromInt(h) + '?')))
@@ -16243,10 +17650,13 @@ var $author$project$Game$Problem$PreAlgebra$genAreaPerimeter = A2(
 				return {
 					answer: $author$project$Types$AInt(((b * h) / 2) | 0),
 					hint: {
-						answer: '20',
-						prompt: 'Area of triangle: base=8, height=5?',
+						answer: $elm$core$String$fromInt(((b * h) / 2) | 0),
+						prompt: 'Area of triangle: base = ' + ($elm$core$String$fromInt(b) + (', height = ' + ($elm$core$String$fromInt(h) + '?'))),
 						steps: _List_fromArray(
-							['A = ½ × b × h', '½ × 8 × 5 = 20'])
+							[
+								'A = ½ × b × h',
+								'½ × ' + ($elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt(((b * h) / 2) | 0)))))
+							])
 					},
 					inputType: $author$project$Types$TInteger,
 					prompt: 'Area of triangle: base = ' + ($elm$core$String$fromInt(b) + (', height = ' + ($elm$core$String$fromInt(h) + '?')))
@@ -16270,10 +17680,13 @@ var $author$project$Game$Problem$PreAlgebra$genCircleArea = A2(
 					return {
 						answer: $author$project$Types$AInt(correct),
 						hint: {
-							answer: '79',
-							prompt: 'Area of circle with radius 5? (use π≈3.14)',
+							answer: $elm$core$String$fromInt(correct),
+							prompt: 'Area of circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)'),
 							steps: _List_fromArray(
-								['A = πr²', '3.14 × 5² = 3.14 × 25 = 78.5 ≈ 79'])
+								[
+									'A = πr²',
+									'3.14 × ' + ($elm$core$String$fromInt(r) + ('² = 3.14 × ' + ($elm$core$String$fromInt(r * r) + (' ≈ ' + $elm$core$String$fromInt(correct)))))
+								])
 						},
 						inputType: $author$project$Types$TInteger,
 						prompt: 'Area of circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)')
@@ -16283,10 +17696,13 @@ var $author$project$Game$Problem$PreAlgebra$genCircleArea = A2(
 					return {
 						answer: A2($author$project$Types$AFloat, correctF, 0.5),
 						hint: {
-							answer: '31.4',
-							prompt: 'Circumference with radius 5? (use π≈3.14)',
+							answer: $elm$core$String$fromFloat(correctF),
+							prompt: 'Circumference of circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)'),
 							steps: _List_fromArray(
-								['C = 2πr', '2 × 3.14 × 5 = 31.4'])
+								[
+									'C = 2πr',
+									'2 × 3.14 × ' + ($elm$core$String$fromInt(r) + (' = ' + $elm$core$String$fromFloat(correctF)))
+								])
 						},
 						inputType: $author$project$Types$TDecimal,
 						prompt: 'Circumference of circle with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14)')
@@ -16312,10 +17728,14 @@ var $author$project$Game$Problem$PreAlgebra$genCompositeArea = A2(
 		return {
 			answer: $author$project$Types$AInt(total),
 			hint: {
-				answer: '33',
-				prompt: 'Rectangle 6×4 with triangle on top (base=6, height=3). Total area?',
+				answer: $elm$core$String$fromInt(total),
+				prompt: 'A composite figure has a rectangle (width=' + ($elm$core$String$fromInt(w) + (', height=' + ($elm$core$String$fromInt(h1) + (') with a triangle on top (same base, height=' + ($elm$core$String$fromInt(h2) + '). Total area?'))))),
 				steps: _List_fromArray(
-					['Rectangle area: 6 × 4 = 24', 'Triangle area: ½ × 6 × 3 = 9', 'Total: 24 + 9 = 33'])
+					[
+						'Rectangle area: ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h1) + (' = ' + $elm$core$String$fromInt(rectArea))))),
+						'Triangle area: ½ × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h2) + (' = ' + $elm$core$String$fromInt(triArea))))),
+						'Total: ' + ($elm$core$String$fromInt(rectArea) + (' + ' + ($elm$core$String$fromInt(triArea) + (' = ' + $elm$core$String$fromInt(total)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'A composite figure has a rectangle (width=' + ($elm$core$String$fromInt(w) + (', height=' + ($elm$core$String$fromInt(h1) + (') with a triangle on top (same base, height=' + ($elm$core$String$fromInt(h2) + '). Total area?')))))
@@ -16338,10 +17758,15 @@ var $author$project$Game$Problem$PreAlgebra$genSphereVolume = A2(
 			answer: $author$project$Types$AInt(
 				$elm$core$Basics$round(correctF)),
 			hint: {
-				answer: '113',
-				prompt: 'Volume of sphere with radius 3? (π≈3.14)',
+				answer: $elm$core$String$fromInt(
+					$elm$core$Basics$round(correctF)),
+				prompt: 'Volume of sphere with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14, round to nearest whole)'),
 				steps: _List_fromArray(
-					['V = (4/3)πr³', '(4/3) × 3.14 × 27 = 113.04 ≈ 113'])
+					[
+						'V = (4/3)πr³',
+						'(4/3) × 3.14 × ' + ($elm$core$String$fromInt((r * r) * r) + (' ≈ ' + $elm$core$String$fromInt(
+						$elm$core$Basics$round(correctF))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Volume of sphere with radius ' + ($elm$core$String$fromInt(r) + '? (use π≈3.14, round to nearest whole)')
@@ -16362,10 +17787,13 @@ var $author$project$Game$Problem$PreAlgebra$genSurfaceAreaPrism = A2(
 		return {
 			answer: $author$project$Types$AInt(sa),
 			hint: {
-				answer: '52',
-				prompt: 'SA of 2×3×4 prism?',
+				answer: $elm$core$String$fromInt(sa),
+				prompt: 'Surface area of rectangular prism: ' + ($elm$core$String$fromInt(l) + (' × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + '?'))))),
 				steps: _List_fromArray(
-					['SA = 2(lw + lh + wh)', '2(6 + 8 + 12) = 2(26) = 52'])
+					[
+						'SA = 2(lw + lh + wh)',
+						'2(' + ($elm$core$String$fromInt(l * w) + (' + ' + ($elm$core$String$fromInt(l * h) + (' + ' + ($elm$core$String$fromInt(w * h) + (') = 2(' + ($elm$core$String$fromInt(((l * w) + (l * h)) + (w * h)) + (') = ' + $elm$core$String$fromInt(sa)))))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Surface area of rectangular prism: ' + ($elm$core$String$fromInt(l) + (' × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + '?')))))
@@ -16390,10 +17818,15 @@ var $author$project$Game$Problem$PreAlgebra$genVolumeCone = A2(
 			answer: $author$project$Types$AInt(
 				$elm$core$Basics$round(correctF)),
 			hint: {
-				answer: '94',
-				prompt: 'Volume of cone: r=3, h=10? (π≈3.14)',
+				answer: $elm$core$String$fromInt(
+					$elm$core$Basics$round(correctF)),
+				prompt: 'Volume of cone: radius = ' + ($elm$core$String$fromInt(r) + (', height = ' + ($elm$core$String$fromInt(h) + '? (use π≈3.14, round to nearest whole)'))),
 				steps: _List_fromArray(
-					['V = (1/3)πr²h', '(1/3) × 3.14 × 9 × 10 = 94.2 ≈ 94'])
+					[
+						'V = (1/3)πr²h',
+						'(1/3) × 3.14 × ' + ($elm$core$String$fromInt(r * r) + (' × ' + ($elm$core$String$fromInt(h) + (' ≈ ' + $elm$core$String$fromInt(
+						$elm$core$Basics$round(correctF))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Volume of cone: radius = ' + ($elm$core$String$fromInt(r) + (', height = ' + ($elm$core$String$fromInt(h) + '? (use π≈3.14, round to nearest whole)')))
@@ -16417,10 +17850,13 @@ var $author$project$Game$Problem$PreAlgebra$genVolumePrism = A2(
 		return {
 			answer: $author$project$Types$AInt((l * w) * h),
 			hint: {
-				answer: '60',
-				prompt: 'Volume of 3×4×5 prism?',
+				answer: $elm$core$String$fromInt((l * w) * h),
+				prompt: 'Volume of rectangular prism: ' + ($elm$core$String$fromInt(l) + (' × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + '?'))))),
 				steps: _List_fromArray(
-					['V = l × w × h', '3 × 4 × 5 = 60'])
+					[
+						'V = l × w × h',
+						$elm$core$String$fromInt(l) + (' × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt((l * w) * h))))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Volume of rectangular prism: ' + ($elm$core$String$fromInt(l) + (' × ' + ($elm$core$String$fromInt(w) + (' × ' + ($elm$core$String$fromInt(h) + '?')))))
@@ -16500,10 +17936,13 @@ var $author$project$Game$Problem$PreAlgebra$genCountingOutcomes = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '12',
-						prompt: '3 entrees, 4 sides. Number of meals?',
+						answer: $elm$core$String$fromInt(total),
+						prompt: 'A menu has ' + ($elm$core$String$fromInt(choices1) + (' entrees and ' + ($elm$core$String$fromInt(choices2) + ' sides. How many different meals are possible?'))),
 						steps: _List_fromArray(
-							['Counting Principle: multiply the number of choices', '3 × 4 = 12'])
+							[
+								'Counting Principle: multiply the number of choices',
+								$elm$core$String$fromInt(choices1) + (' × ' + ($elm$core$String$fromInt(choices2) + (' = ' + $elm$core$String$fromInt(total))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'A menu has ' + ($elm$core$String$fromInt(choices1) + (' entrees and ' + ($elm$core$String$fromInt(choices2) + ' sides. How many different meals (1 entree + 1 side) are possible?')))
@@ -16536,10 +17975,27 @@ var $author$project$Game$Problem$PreAlgebra$genMAD = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2',
-						prompt: 'MAD of {2, 4, 6, 8}?',
+						answer: $elm$core$String$fromInt(mad),
+						prompt: 'Find the mean absolute deviation (MAD) of {' + (numStr + '}.'),
 						steps: _List_fromArray(
-							['Mean = (2+4+6+8)/4 = 5', 'Deviations: |2−5|=3, |4−5|=1, |6−5|=1, |8−5|=3', 'MAD = (3+1+1+3)/4 = 8/4 = 2'])
+							[
+								'Mean = (' + (A2(
+								$elm$core$String$join,
+								'+',
+								A2($elm$core$List$map, $elm$core$String$fromInt, nums)) + (')/' + ($elm$core$String$fromInt(
+								$elm$core$List$length(nums)) + (' = ' + $elm$core$String$fromInt(mean))))),
+								'Deviations from mean: ' + A2(
+								$elm$core$String$join,
+								', ',
+								A2(
+									$elm$core$List$map,
+									function (x) {
+										return '|' + ($elm$core$String$fromInt(x) + ('−' + ($elm$core$String$fromInt(mean) + ('|=' + $elm$core$String$fromInt(
+											$elm$core$Basics$abs(x - mean))))));
+									},
+									nums)),
+								'MAD = ' + $elm$core$String$fromInt(mad)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Find the mean absolute deviation (MAD) of {' + (numStr + '}.')
@@ -16597,10 +18053,16 @@ var $author$project$Game$Problem$PreAlgebra$genMeasuresOfCenter = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '5',
-										prompt: 'Mean of {2, 8, 6, 4}?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: 'Mean of {' + (numStr + '}?'),
 										steps: _List_fromArray(
-											['Sum = 2+8+6+4 = 20', 'Mean = 20 ÷ 4 = 5'])
+											[
+												'Sum = ' + (A2(
+												$elm$core$String$join,
+												'+',
+												A2($elm$core$List$map, $elm$core$String$fromInt, nums)) + (' = ' + $elm$core$String$fromInt(s))),
+												'Mean = ' + ($elm$core$String$fromInt(s) + (' / ' + ($elm$core$String$fromInt(n) + (' = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Mean of {' + (numStr + '}?')
@@ -16634,10 +18096,14 @@ var $author$project$Game$Problem$PreAlgebra$genMeasuresOfCenter = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '6',
-										prompt: 'Median of {2, 5, 7, 10}?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: 'Median of {' + (numStr + '}?'),
 										steps: _List_fromArray(
-											['Already sorted: 2, 5, 7, 10', 'Even count: average middle two', '(5 + 7) ÷ 2 = 6'])
+											[
+												'Sorted: ' + numStr,
+												'Even count: average middle two: ' + ($elm$core$String$fromInt(mid1) + (' and ' + $elm$core$String$fromInt(mid2))),
+												'(' + ($elm$core$String$fromInt(mid1) + (' + ' + ($elm$core$String$fromInt(mid2) + (') / 2 = ' + $elm$core$String$fromInt(correct)))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Median of {' + (numStr + '}?')
@@ -16668,10 +18134,13 @@ var $author$project$Game$Problem$PreAlgebra$genMeasuresOfCenter = A2(
 								return {
 									answer: $author$project$Types$AChoice(0),
 									hint: {
-										answer: '8',
-										prompt: 'Range of {3, 9, 1, 7}?',
+										answer: $elm$core$String$fromInt(correct),
+										prompt: 'Range of {' + (numStr + '}?'),
 										steps: _List_fromArray(
-											['Range = max − min', '9 − 1 = 8'])
+											[
+												'Range = max − min',
+												$elm$core$String$fromInt(mx) + (' − ' + ($elm$core$String$fromInt(mn) + (' = ' + $elm$core$String$fromInt(correct))))
+											])
 									},
 									inputType: $author$project$Types$TChoice(choices),
 									prompt: 'Range of {' + (numStr + '}?')
@@ -16706,10 +18175,13 @@ var $author$project$Game$Problem$PreAlgebra$genSimpleProbability = A2(
 			{
 				answer: A2($author$project$Types$AFraction, rn, rd),
 				hint: {
-					answer: '3/10',
-					prompt: '3 red, 7 blue. P(red)?',
+					answer: A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd),
+					prompt: 'A bag has ' + ($elm$core$String$fromInt(fav) + (' red marbles and ' + ($elm$core$String$fromInt(rest) + ' blue marbles. Probability of drawing red?'))),
 					steps: _List_fromArray(
-						['P = favorable outcomes / total outcomes', 'P(red) = 3/10'])
+						[
+							'P = favorable outcomes / total outcomes',
+							'P(red) = ' + ($elm$core$String$fromInt(fav) + ('/' + ($elm$core$String$fromInt(total) + (' = ' + A2($author$project$Game$Problem$PreAlgebra$showFrac, rn, rd)))))
+						])
 				},
 				inputType: $author$project$Types$TFraction,
 				prompt: 'A bag has ' + ($elm$core$String$fromInt(fav) + (' red marbles and ' + ($elm$core$String$fromInt(rest) + ' blue marbles. Probability of drawing red?')))
@@ -16734,10 +18206,13 @@ var $author$project$Game$Problem$PreAlgebra$genTwoWayTable = A2(
 						return {
 							answer: $author$project$Types$AInt(grandTotal),
 							hint: {
-								answer: 'Sum all cells',
-								prompt: 'Grand total of a two-way table?',
+								answer: $elm$core$String$fromInt(grandTotal),
+								prompt: 'Find the grand total.',
 								steps: _List_fromArray(
-									['Add all four cell values', 'Or add the two row totals'])
+									[
+										'Add all four cell values: ' + ($elm$core$String$fromInt(r.a) + (' + ' + ($elm$core$String$fromInt(r.b) + (' + ' + ($elm$core$String$fromInt(r.c) + (' + ' + $elm$core$String$fromInt(r.d))))))),
+										'Or add row totals: ' + ($elm$core$String$fromInt(rowTotal1) + (' + ' + ($elm$core$String$fromInt(rowTotal2) + (' = ' + $elm$core$String$fromInt(grandTotal)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Two-way table:\n' + ('         | Cat A | Cat B | Total\n' + ('Group 1  |  ' + ($elm$core$String$fromInt(r.a) + ('   |  ' + ($elm$core$String$fromInt(r.b) + ('   |  ' + ($elm$core$String$fromInt(rowTotal1) + ('\n' + ('Group 2  |  ' + ($elm$core$String$fromInt(r.c) + ('   |  ' + ($elm$core$String$fromInt(r.d) + ('   |  ' + ($elm$core$String$fromInt(rowTotal2) + ('\n' + 'Find the grand total.')))))))))))))))
@@ -16746,10 +18221,12 @@ var $author$project$Game$Problem$PreAlgebra$genTwoWayTable = A2(
 						return {
 							answer: $author$project$Types$AInt(rowTotal1),
 							hint: {
-								answer: '20',
-								prompt: 'Group 1 has Cat A=8 and Cat B=12. Total?',
+								answer: $elm$core$String$fromInt(rowTotal1),
+								prompt: 'How many total are in Group 1?',
 								steps: _List_fromArray(
-									['Add all values in Group 1 row: 8 + 12 = 20'])
+									[
+										'Add all values in Group 1 row: ' + ($elm$core$String$fromInt(r.a) + (' + ' + ($elm$core$String$fromInt(r.b) + (' = ' + $elm$core$String$fromInt(rowTotal1)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Two-way table:\n' + ('         | Cat A | Cat B\n' + ('Group 1  |  ' + ($elm$core$String$fromInt(r.a) + ('   |  ' + ($elm$core$String$fromInt(r.b) + ('\n' + ('Group 2  |  ' + ($elm$core$String$fromInt(r.c) + ('   |  ' + ($elm$core$String$fromInt(r.d) + ('\n' + 'How many total are in Group 1?')))))))))))
@@ -16758,10 +18235,12 @@ var $author$project$Game$Problem$PreAlgebra$genTwoWayTable = A2(
 						return {
 							answer: $author$project$Types$AInt(r.a + r.c),
 							hint: {
-								answer: '20',
-								prompt: 'Cat A has 8 in Group 1 and 12 in Group 2. Total?',
+								answer: $elm$core$String$fromInt(r.a + r.c),
+								prompt: 'How many total are in Category A?',
 								steps: _List_fromArray(
-									['Add all values in Cat A column: 8 + 12 = 20'])
+									[
+										'Add all values in Cat A column: ' + ($elm$core$String$fromInt(r.a) + (' + ' + ($elm$core$String$fromInt(r.c) + (' = ' + $elm$core$String$fromInt(r.a + r.c)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'Two-way table:\n' + ('         | Cat A | Cat B\n' + ('Group 1  |  ' + ($elm$core$String$fromInt(r.a) + ('   |  ' + ($elm$core$String$fromInt(r.b) + ('\n' + ('Group 2  |  ' + ($elm$core$String$fromInt(r.c) + ('   |  ' + ($elm$core$String$fromInt(r.d) + ('\n' + 'How many total are in Category A?')))))))))))
@@ -16843,10 +18322,14 @@ var $author$project$Game$Problem$Algebra1$genExpGrowthDecay = A2(
 							return {
 								answer: $author$project$Types$AChoice(0),
 								hint: {
-									answer: '16',
-									prompt: 'Start: 2 organisms, doubles each hour. After 3 hours?',
+									answer: $elm$core$String$fromInt(result),
+									prompt: 'A colony starts with ' + ($elm$core$String$fromInt(p) + (' organisms and doubles each hour. How many after ' + ($elm$core$String$fromInt(years) + ' hours?'))),
 									steps: _List_fromArray(
-										['A = P · 2^t', 'A = 2 · 2³ = 2 · 8 = 16'])
+										[
+											'A = P · 2^t',
+											'A = ' + ($elm$core$String$fromInt(p) + (' · 2^' + ($elm$core$String$fromInt(years) + (' = ' + ($elm$core$String$fromInt(p) + (' · ' + ($elm$core$String$fromInt(
+											A2($elm$core$Basics$pow, 2, years)) + (' = ' + $elm$core$String$fromInt(result)))))))))
+										])
 								},
 								inputType: $author$project$Types$TChoice(choices),
 								prompt: 'A colony starts with ' + ($elm$core$String$fromInt(p) + (' organisms and doubles each hour. How many after ' + ($elm$core$String$fromInt(years) + ' hours?')))
@@ -16877,10 +18360,14 @@ var $author$project$Game$Problem$Algebra1$genExpGrowthDecay = A2(
 							return {
 								answer: $author$project$Types$AChoice(0),
 								hint: {
-									answer: '1',
-									prompt: '8 grams, halved each year. After 3 years?',
+									answer: $elm$core$String$fromInt(result),
+									prompt: 'A substance of ' + ($elm$core$String$fromInt(p) + (' grams is cut in half each year. How many grams remain after ' + ($elm$core$String$fromInt(years) + ' years? (Assume exact halving)'))),
 									steps: _List_fromArray(
-										['Year 1: 8 ÷ 2 = 4', 'Year 2: 4 ÷ 2 = 2', 'Year 3: 2 ÷ 2 = 1'])
+										[
+											'Each year the amount is divided by 2',
+											'After ' + ($elm$core$String$fromInt(years) + (' years: ' + ($elm$core$String$fromInt(p) + (' / 2^' + ($elm$core$String$fromInt(years) + (' = ' + ($elm$core$String$fromInt(p) + (' / ' + ($elm$core$String$fromInt(
+											A2($elm$core$Basics$pow, factor, years)) + (' = ' + $elm$core$String$fromInt(result)))))))))))
+										])
 								},
 								inputType: $author$project$Types$TChoice(choices),
 								prompt: 'A substance of ' + ($elm$core$String$fromInt(p) + (' grams is cut in half each year. How many grams remain after ' + ($elm$core$String$fromInt(years) + ' years? (Assume exact halving)')))
@@ -16912,10 +18399,14 @@ var $author$project$Game$Problem$Algebra1$genFactorDiffSquares = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '(x + 3)(x − 3)',
-					prompt: 'Factor: x² − 9',
+					answer: correct,
+					prompt: 'Factor: x² − ' + $elm$core$String$fromInt(radicand),
 					steps: _List_fromArray(
-						['Difference of squares: a² − b² = (a+b)(a−b)', '√9 = 3', 'x² − 9 = (x+3)(x−3)'])
+						[
+							'Difference of squares: a² − b² = (a+b)(a−b)',
+							'√' + ($elm$core$String$fromInt(radicand) + (' = ' + $elm$core$String$fromInt(a))),
+							'x² − ' + ($elm$core$String$fromInt(radicand) + (' = ' + correct))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Factor: x² − ' + $elm$core$String$fromInt(radicand)
@@ -16931,10 +18422,13 @@ var $author$project$Game$Problem$Algebra1$genFunctionTable = A2(
 		return {
 			answer: $author$project$Types$AInt((a * x) + b),
 			hint: {
-				answer: '14',
-				prompt: 'f(x) = 3x + 2. Find f(4).',
+				answer: $elm$core$String$fromInt((a * x) + b),
+				prompt: 'Complete the table for f(x) = ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('. What is f(' + ($elm$core$String$fromInt(x) + ')?'))))),
 				steps: _List_fromArray(
-					['Replace x with 4: 3(4) + 2', '= 12 + 2 = 14'])
+					[
+						'Replace x with ' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(x) + (') + ' + $elm$core$String$fromInt(b))))))),
+						'= ' + ($elm$core$String$fromInt(a * x) + (' + ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt((a * x) + b)))))
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'Complete the table for f(x) = ' + ($elm$core$String$fromInt(a) + ('x + ' + ($elm$core$String$fromInt(b) + ('. What is f(' + ($elm$core$String$fromInt(x) + ')?')))))
@@ -16960,10 +18454,13 @@ var $author$project$Game$Problem$Algebra1$genMultiStepIneq = A2(
 		return {
 			answer: A2($author$project$Types$AInequality, dirType, x0),
 			hint: {
-				answer: 'x > 3',
-				prompt: '3x − 2 > 7',
+				answer: 'x ' + (((!r.t) ? '>' : '<') + (' ' + $elm$core$String$fromInt(r.x))),
+				prompt: $elm$core$String$fromInt(r.a) + ('x − ' + ($elm$core$String$fromInt(r.b) + (dirStr + $elm$core$String$fromInt(c)))),
 				steps: _List_fromArray(
-					['Add 2 to both sides: 3x > 9', 'Divide by 3: x > 3'])
+					[
+						'Add ' + ($elm$core$String$fromInt(r.b) + (' to both sides: ' + ($elm$core$String$fromInt(r.a) + ('x ' + (((!r.t) ? '>' : '<') + (' ' + $elm$core$String$fromInt(c + r.b))))))),
+						'Divide by ' + ($elm$core$String$fromInt(r.a) + (': x ' + (((!r.t) ? '>' : '<') + (' ' + $elm$core$String$fromInt(r.x)))))
+					])
 			},
 			inputType: $author$project$Types$TInequality,
 			prompt: $elm$core$String$fromInt(r.a) + ('x − ' + ($elm$core$String$fromInt(r.b) + (dirStr + $elm$core$String$fromInt(c))))
@@ -16987,10 +18484,14 @@ var $author$project$Game$Problem$Algebra1$genPointSlopeEq = A2(
 		return {
 			answer: $author$project$Types$AInt(yTarget),
 			hint: {
-				answer: '8',
-				prompt: 'Through (1, 2) with slope 3. Find y when x = 3.',
+				answer: $elm$core$String$fromInt(yTarget),
+				prompt: 'A line passes through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') with slope ' + ($author$project$Game$Problem$Algebra1$showSigned(r.m) + ('. Find y when x = ' + ($elm$core$String$fromInt(xTarget) + '.'))))))),
 				steps: _List_fromArray(
-					['y − 2 = 3(x − 1)', 'y − 2 = 3(3 − 1) = 6', 'y = 8'])
+					[
+						'y − ' + ($elm$core$String$fromInt(r.y1) + (' = ' + ($elm$core$String$fromInt(r.m) + ('(x − ' + ($elm$core$String$fromInt(r.x1) + ')'))))),
+						'y − ' + ($elm$core$String$fromInt(r.y1) + (' = ' + ($elm$core$String$fromInt(r.m) + ('(' + ($elm$core$String$fromInt(xTarget) + (' − ' + ($elm$core$String$fromInt(r.x1) + (') = ' + $elm$core$String$fromInt(r.m * r.x))))))))),
+						'y = ' + $elm$core$String$fromInt(yTarget)
+					])
 			},
 			inputType: $author$project$Types$TInteger,
 			prompt: 'A line passes through (' + ($elm$core$String$fromInt(r.x1) + (', ' + ($elm$core$String$fromInt(r.y1) + (') with slope ' + ($author$project$Game$Problem$Algebra1$showSigned(r.m) + ('. Find y when x = ' + ($elm$core$String$fromInt(xTarget) + '.')))))))
@@ -17028,10 +18529,13 @@ var $author$project$Game$Problem$Algebra1$genSystemIdentifySolution = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '(3, 2)',
-					prompt: 'Solve: x+y=5, 2x+y=8',
+					answer: correct,
+					prompt: 'Which ordered pair is the solution?\nx + y = ' + ($elm$core$String$fromInt(s) + ('\n2x + y = ' + $elm$core$String$fromInt(t))),
 					steps: _List_fromArray(
-						['Subtract first from second: x = 3', 'Substitute: 3 + y = 5 → y = 2'])
+						[
+							'Subtract first from second: x = ' + $elm$core$String$fromInt(x),
+							'Substitute: ' + ($elm$core$String$fromInt(x) + (' + y = ' + ($elm$core$String$fromInt(s) + (' → y = ' + $elm$core$String$fromInt(y)))))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Which ordered pair is the solution?\nx + y = ' + ($elm$core$String$fromInt(s) + ('\n2x + y = ' + $elm$core$String$fromInt(t)))
@@ -17054,10 +18558,13 @@ var $author$project$Game$Problem$Algebra1$genTwoStepInequality = A2(
 		return {
 			answer: A2($author$project$Types$AInequality, dirType, x0),
 			hint: {
-				answer: 'x > 3',
-				prompt: '2x + 1 > 7',
+				answer: 'x ' + (symStr + (' ' + $elm$core$String$fromInt(r.x))),
+				prompt: $elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (dir + $elm$core$String$fromInt(c)))),
 				steps: _List_fromArray(
-					['Subtract 1: 2x > 6', 'Divide by 2: x > 3'])
+					[
+						'Subtract ' + ($elm$core$String$fromInt(r.b) + (' from both sides: ' + ($elm$core$String$fromInt(r.a) + ('x ' + (symStr + (' ' + $elm$core$String$fromInt(c - r.b))))))),
+						'Divide by ' + ($elm$core$String$fromInt(r.a) + (': x ' + (symStr + (' ' + $elm$core$String$fromInt(r.x)))))
+					])
 			},
 			inputType: $author$project$Types$TInequality,
 			prompt: $elm$core$String$fromInt(r.a) + ('x + ' + ($elm$core$String$fromInt(r.b) + (dir + $elm$core$String$fromInt(c))))
@@ -17090,10 +18597,13 @@ var $author$project$Game$Problem$Algebra1$genVertexForm = A2(
 			{
 				answer: $author$project$Types$AChoice(0),
 				hint: {
-					answer: '(3, 2)',
-					prompt: 'Vertex of y = (x − 3)² + 2?',
+					answer: correct,
+					prompt: 'Find the vertex of y = (x − ' + ($elm$core$String$fromInt(h) + (')² + ' + $elm$core$String$fromInt(k))),
 					steps: _List_fromArray(
-						['Vertex form: y = (x − h)² + k', 'Vertex is at (h, k) = (3, 2)'])
+						[
+							'Vertex form: y = (x − h)² + k',
+							'Vertex is at (h, k) = (' + ($elm$core$String$fromInt(h) + (', ' + ($elm$core$String$fromInt(k) + ')')))
+						])
 				},
 				inputType: $author$project$Types$TChoice(choices),
 				prompt: 'Find the vertex of y = (x − ' + ($elm$core$String$fromInt(h) + (')² + ' + $elm$core$String$fromInt(k)))
@@ -17301,10 +18811,17 @@ var $author$project$Game$Problem$Course1$genAddSub = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '27',
-						prompt: '12 + 15 = ?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + ' = ?')),
 						steps: _List_fromArray(
-							['Line up the ones: 2 + 5 = 7', 'Line up the tens: 1 + 1 = 2', 'Answer: 27'])
+							[
+								'Line up the ones: ' + ($elm$core$String$fromInt(
+								A2($elm$core$Basics$modBy, 10, a)) + (' + ' + ($elm$core$String$fromInt(
+								A2($elm$core$Basics$modBy, 10, b)) + (' = ' + $elm$core$String$fromInt(
+								A2($elm$core$Basics$modBy, 10, a) + A2($elm$core$Basics$modBy, 10, b)))))),
+								'Line up the tens: ' + ($elm$core$String$fromInt((a / 10) | 0) + (' + ' + ($elm$core$String$fromInt((b / 10) | 0) + (' = ' + $elm$core$String$fromInt(((a / 10) | 0) + ((b / 10) | 0)))))),
+								'Answer: ' + $elm$core$String$fromInt(correct)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: $elm$core$String$fromInt(a) + (' + ' + ($elm$core$String$fromInt(b) + ' = ?'))
@@ -17398,10 +18915,14 @@ var $author$project$Game$Problem$Course1$genAreaTrapezoid = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '25',
-						prompt: 'Trapezoid: bases=4 and 6, height=5?',
+						answer: $elm$core$String$fromInt(area),
+						prompt: 'Area of trapezoid: bases=' + ($elm$core$String$fromInt(b1) + (' and ' + ($elm$core$String$fromInt(b2) + (', height=' + ($elm$core$String$fromInt(h) + '?'))))),
 						steps: _List_fromArray(
-							['A = ½ × (b1 + b2) × h', 'A = ½ × (4 + 6) × 5', 'A = ½ × 10 × 5 = 25'])
+							[
+								'A = ½ × (b1 + b2) × h',
+								'A = ½ × (' + ($elm$core$String$fromInt(b1) + (' + ' + ($elm$core$String$fromInt(b2) + (') × ' + $elm$core$String$fromInt(h))))),
+								'A = ½ × ' + ($elm$core$String$fromInt(sumB) + (' × ' + ($elm$core$String$fromInt(h) + (' = ' + $elm$core$String$fromInt(area)))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Area of trapezoid: bases=' + ($elm$core$String$fromInt(b1) + (' and ' + ($elm$core$String$fromInt(b2) + (', height=' + ($elm$core$String$fromInt(h) + '?')))))
@@ -17427,13 +18948,16 @@ var $author$project$Game$Problem$Course1$genDecDiv = A2(
 		return {
 			answer: A2($author$project$Types$AFloat, quotient / 10.0, 0.01),
 			hint: {
-				answer: '1.2',
-				prompt: '4.8 ÷ 4 = ?',
+				answer: $elm$core$String$fromFloat(quotient / 10.0),
+				prompt: $elm$core$String$fromFloat(dividend) + (' / ' + ($elm$core$String$fromInt(divisor) + ' = ?')),
 				steps: _List_fromArray(
-					['Divide ignoring the decimal: 48 ÷ 4 = 12', 'Place the decimal: 1.2'])
+					[
+						'Divide ignoring the decimal: ' + ($elm$core$String$fromInt(divisor * quotient) + (' / ' + ($elm$core$String$fromInt(divisor) + (' = ' + $elm$core$String$fromInt(quotient))))),
+						'Place the decimal: ' + $elm$core$String$fromFloat(quotient / 10.0)
+					])
 			},
 			inputType: $author$project$Types$TDecimal,
-			prompt: $elm$core$String$fromFloat(dividend) + (' ÷ ' + ($elm$core$String$fromInt(divisor) + ' = ?'))
+			prompt: $elm$core$String$fromFloat(dividend) + (' / ' + ($elm$core$String$fromInt(divisor) + ' = ?'))
 		};
 	},
 	A3(
@@ -17451,13 +18975,16 @@ var $author$project$Game$Problem$Course1$genDecDivWhole = A2(
 		return {
 			answer: A2($author$project$Types$AFloat, quotient, 0.01),
 			hint: {
-				answer: '2.5',
-				prompt: '7.5 ÷ 3 = ?',
+				answer: $elm$core$String$fromFloat(quotient),
+				prompt: $elm$core$String$fromFloat(dividend) + (' / ' + ($elm$core$String$fromInt(divisor) + ' = ?')),
 				steps: _List_fromArray(
-					['Divide ignoring the decimal: 75 ÷ 3 = 25', 'Place the decimal 1 position from right: 2.5'])
+					[
+						'Divide ignoring the decimal: ' + ($elm$core$String$fromInt(quotientTenths) + (' × ' + ($elm$core$String$fromInt(divisor) + (' → ' + $elm$core$String$fromFloat(dividend))))),
+						'Quotient: ' + $elm$core$String$fromFloat(quotient)
+					])
 			},
 			inputType: $author$project$Types$TDecimal,
-			prompt: $elm$core$String$fromFloat(dividend) + (' ÷ ' + ($elm$core$String$fromInt(divisor) + ' = ?'))
+			prompt: $elm$core$String$fromFloat(dividend) + (' / ' + ($elm$core$String$fromInt(divisor) + ' = ?'))
 		};
 	},
 	A3(
@@ -17505,10 +19032,14 @@ var $author$project$Game$Problem$Course1$genDecRound = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '3.5',
-						prompt: 'Round 3.47 to the nearest tenth.',
+						answer: corrStr,
+						prompt: 'Round ' + (numStr + ' to the nearest tenth.'),
 						steps: _List_fromArray(
-							['Look at the hundredths digit: 7', '7 ≥ 5, so round the tenths digit up', '3.4 rounds up to 3.5'])
+							[
+								'Look at the hundredths digit: ' + $elm$core$String$fromInt(hundredths),
+								(hundredths >= 5) ? ($elm$core$String$fromInt(hundredths) + ' ≥ 5, so round the tenths digit up') : ($elm$core$String$fromInt(hundredths) + ' < 5, so keep the tenths digit'),
+								'Answer: ' + corrStr
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Round ' + (numStr + ' to the nearest tenth.')
@@ -17538,10 +19069,14 @@ var $author$project$Game$Problem$Course1$genDecSub = A2(
 		return {
 			answer: A2($author$project$Types$AFloat, correct, 0.01),
 			hint: {
-				answer: '3.2',
-				prompt: '5.3 - 2.1 = ?',
+				answer: $elm$core$String$fromFloat(correct),
+				prompt: $elm$core$String$fromFloat(fa) + (' - ' + ($elm$core$String$fromFloat(fb) + ' = ?')),
 				steps: _List_fromArray(
-					['Line up the decimal points', 'Subtract as whole numbers: 53 - 21 = 32', 'Place the decimal: 3.2'])
+					[
+						'Line up the decimal points',
+						'Subtract as whole numbers: ' + ($elm$core$String$fromInt(big) + (' - ' + ($elm$core$String$fromInt(small) + (' = ' + $elm$core$String$fromInt(big - small))))),
+						'Place the decimal: ' + $elm$core$String$fromFloat(correct)
+					])
 			},
 			inputType: $author$project$Types$TDecimal,
 			prompt: $elm$core$String$fromFloat(fa) + (' - ' + ($elm$core$String$fromFloat(fb) + ' = ?'))
@@ -17569,10 +19104,14 @@ var $author$project$Game$Problem$Course1$genDistributive = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '27',
-						prompt: 'Expand: 3(4 + 5)',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'Expand: ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + (' + ' + ($elm$core$String$fromInt(c) + ')'))))),
 						steps: _List_fromArray(
-							['Multiply 3 by each term: 3×4 + 3×5', '= 12 + 15', '= 27'])
+							[
+								'Multiply ' + ($elm$core$String$fromInt(a) + (' by each term: ' + ($elm$core$String$fromInt(a) + ('×' + ($elm$core$String$fromInt(b) + (' + ' + ($elm$core$String$fromInt(a) + ('×' + $elm$core$String$fromInt(c))))))))),
+								'= ' + ($elm$core$String$fromInt(a * b) + (' + ' + $elm$core$String$fromInt(a * c))),
+								'= ' + $elm$core$String$fromInt(correct)
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Expand: ' + ($elm$core$String$fromInt(a) + ('(' + ($elm$core$String$fromInt(b) + (' + ' + ($elm$core$String$fromInt(c) + ')')))))
@@ -17608,10 +19147,14 @@ var $author$project$Game$Problem$Course1$genDivisibility = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: 'Yes',
-								prompt: 'Is 72 divisible by 3?',
+								answer: correct,
+								prompt: 'Is ' + ($elm$core$String$fromInt(n) + (' divisible by ' + ($elm$core$String$fromInt(divisor) + '?'))),
 								steps: _List_fromArray(
-									['Rule for 3: add the digits', '7 + 2 = 9, and 9 is divisible by 3', 'So 72 is divisible by 3'])
+									[
+										'Check: ' + ($elm$core$String$fromInt(n) + (' / ' + ($elm$core$String$fromInt(divisor) + (' = ' + $elm$core$String$fromFloat(n / divisor))))),
+										isDivisible ? ('No remainder, so ' + ($elm$core$String$fromInt(n) + (' is divisible by ' + $elm$core$String$fromInt(divisor)))) : ('Has a remainder, so ' + ($elm$core$String$fromInt(n) + (' is not divisible by ' + $elm$core$String$fromInt(divisor)))),
+										'Answer: ' + correct
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Is ' + ($elm$core$String$fromInt(n) + (' divisible by ' + ($elm$core$String$fromInt(divisor) + '?')))
@@ -17645,10 +19188,14 @@ var $author$project$Game$Problem$Course1$genEquivFrac = A2(
 		return {
 			answer: $author$project$Types$AChoice(0),
 			hint: {
-				answer: '4/6',
-				prompt: 'Which is equivalent to 2/3: 4/6, 4/5, 6/9, 3/4?',
+				answer: correct,
+				prompt: 'Which fraction is equivalent to ' + (A2($author$project$Game$Problem$Course1$showFrac, a, safeB) + '?'),
 				steps: _List_fromArray(
-					['Multiply top and bottom by the same number', '2/3 × 2/2 = 4/6', 'Answer: 4/6'])
+					[
+						'Multiply top and bottom by the same number',
+						A2($author$project$Game$Problem$Course1$showFrac, a, safeB) + (' × ' + ($elm$core$String$fromInt(k) + ('/' + ($elm$core$String$fromInt(k) + (' = ' + correct))))),
+						'Answer: ' + correct
+					])
 			},
 			inputType: $author$project$Types$TChoice(choices),
 			prompt: 'Which fraction is equivalent to ' + (A2($author$project$Game$Problem$Course1$showFrac, a, safeB) + '?')
@@ -17680,10 +19227,13 @@ var $author$project$Game$Problem$Course1$genFracApp = A2(
 						return {
 							answer: A2($author$project$Types$AFraction, rn, rd),
 							hint: {
-								answer: '1/2',
-								prompt: '1/4 + 1/4 = ?',
+								answer: A2($author$project$Game$Problem$Course1$showFrac, rn, rd),
+								prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d) + (' + ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d) + ' = ?')),
 								steps: _List_fromArray(
-									['Same denominator: add numerators', '1/4 + 1/4 = 2/4 = 1/2'])
+									[
+										'Same denominator: add numerators',
+										A2($author$project$Game$Problem$Course1$showFrac, n1, d) + (' + ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d) + (' = ' + (A2($author$project$Game$Problem$Course1$showFrac, n1 + n2, d) + (' = ' + A2($author$project$Game$Problem$Course1$showFrac, rn, rd))))))
+									])
 							},
 							inputType: $author$project$Types$TFraction,
 							prompt: 'You ate ' + (A2($author$project$Game$Problem$Course1$showFrac, n1, d) + (' of a pizza and your friend ate ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d) + '. How much was eaten in total?')))
@@ -17707,10 +19257,13 @@ var $author$project$Game$Problem$Course1$genFracApp = A2(
 						return {
 							answer: A2($author$project$Types$AFraction, rn, rd),
 							hint: {
-								answer: '3/5',
-								prompt: '1 whole minus 2/5 = ?',
+								answer: A2($author$project$Game$Problem$Course1$showFrac, rn, rd),
+								prompt: '1 whole minus ' + (A2($author$project$Game$Problem$Course1$showFrac, used, d) + ' = ?'),
 								steps: _List_fromArray(
-									['1 = 5/5', '5/5 - 2/5 = 3/5'])
+									[
+										'1 = ' + A2($author$project$Game$Problem$Course1$showFrac, d, d),
+										A2($author$project$Game$Problem$Course1$showFrac, d, d) + (' - ' + (A2($author$project$Game$Problem$Course1$showFrac, used, d) + (' = ' + A2($author$project$Game$Problem$Course1$showFrac, rn, rd))))
+									])
 							},
 							inputType: $author$project$Types$TFraction,
 							prompt: 'A rope is 1 metre long. You use ' + (A2($author$project$Game$Problem$Course1$showFrac, used, d) + ' of it. How much is left?')
@@ -17731,10 +19284,13 @@ var $author$project$Game$Problem$Course1$genFracApp = A2(
 						return {
 							answer: $author$project$Types$AInt(((total * n) / d) | 0),
 							hint: {
-								answer: '15',
-								prompt: '20 students, 3/4 passed. How many?',
+								answer: $elm$core$String$fromInt(((total * n) / d) | 0),
+								prompt: $elm$core$String$fromInt(total) + (' students, ' + (A2($author$project$Game$Problem$Course1$showFrac, n, d) + ' passed. How many?')),
 								steps: _List_fromArray(
-									['Multiply: 20 × 3/4', '= 60/4 = 15'])
+									[
+										'Multiply: ' + ($elm$core$String$fromInt(total) + (' × ' + A2($author$project$Game$Problem$Course1$showFrac, n, d))),
+										'= ' + ($elm$core$String$fromInt(total * n) + ('/' + ($elm$core$String$fromInt(d) + (' = ' + $elm$core$String$fromInt(((total * n) / d) | 0)))))
+									])
 							},
 							inputType: $author$project$Types$TInteger,
 							prompt: 'There are ' + ($elm$core$String$fromInt(total) + (' students in a class. ' + (A2($author$project$Game$Problem$Course1$showFrac, n, d) + ' of them passed the test. How many students passed?')))
@@ -17763,13 +19319,18 @@ var $author$project$Game$Problem$Course1$genFracDiv = A2(
 		return {
 			answer: A2($author$project$Types$AFraction, rn, rd),
 			hint: {
-				answer: '5/6',
-				prompt: '2/3 ÷ 4/5 = ?',
+				answer: A2($author$project$Game$Problem$Course1$showFrac, rn, rd),
+				prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' / ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + ' = ?')),
 				steps: _List_fromArray(
-					['Keep, Change, Flip: keep the first fraction, change ÷ to ×, flip the second', '2/3 × 5/4', 'Multiply: (2×5)/(3×4) = 10/12', 'Simplify: 5/6'])
+					[
+						'Keep, Change, Flip: keep the first fraction, change / to ×, flip the second',
+						A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' × ' + A2($author$project$Game$Problem$Course1$showFrac, d2, n2)),
+						'Multiply: (' + ($elm$core$String$fromInt(n1) + ('×' + ($elm$core$String$fromInt(d2) + (')/(' + ($elm$core$String$fromInt(d1) + ('×' + ($elm$core$String$fromInt(n2) + (') = ' + A2($author$project$Game$Problem$Course1$showFrac, n1 * d2, d1 * n2))))))))),
+						'Simplify: ' + A2($author$project$Game$Problem$Course1$showFrac, rn, rd)
+					])
 			},
 			inputType: $author$project$Types$TFraction,
-			prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' ÷ ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + ' = ?'))
+			prompt: A2($author$project$Game$Problem$Course1$showFrac, n1, d1) + (' / ' + (A2($author$project$Game$Problem$Course1$showFrac, n2, d2) + ' = ?'))
 		};
 	},
 	A3(
@@ -17808,10 +19369,13 @@ var $author$project$Game$Problem$Course1$genInequalitySolution = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '5',
-						prompt: 'Which value satisfies x > 4?',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'Which value satisfies x ' + (symbol + (' ' + ($elm$core$String$fromInt(threshold) + '?'))),
 						steps: _List_fromArray(
-							['x > 4 means x must be greater than 4', '5 > 4 is true; 4 and 3 are not greater than 4'])
+							[
+								'x ' + (symbol + (' ' + ($elm$core$String$fromInt(threshold) + (' means x must be ' + (((!dir) ? 'greater' : 'less') + (' than ' + $elm$core$String$fromInt(threshold))))))),
+								$elm$core$String$fromInt(correct) + (' ' + (symbol + (' ' + ($elm$core$String$fromInt(threshold) + (' is true; ' + ($elm$core$String$fromInt(threshold) + ' is not'))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Which value satisfies x ' + (symbol + (' ' + ($elm$core$String$fromInt(threshold) + '?')))
@@ -17826,22 +19390,26 @@ var $author$project$Game$Problem$Course1$genIntCompare = A2(
 		var a = _v0.a;
 		var b = _v0.b;
 		if (_Utils_eq(a, b)) {
+			var bigger2 = b + 1;
 			return $elm$random$Random$constant(
 				{
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2',
-						prompt: 'Which is greater: (-3) or 2?',
+						answer: $author$project$Game$Problem$Course1$showSigned(bigger2),
+						prompt: 'Which is greater: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' or ' + ($author$project$Game$Problem$Course1$showSigned(bigger2) + '?'))),
 						steps: _List_fromArray(
-							['On a number line, numbers to the right are greater', '2 is to the right of (-3), so 2 > (-3)'])
+							[
+								'On a number line, numbers to the right are greater',
+								$author$project$Game$Problem$Course1$showSigned(bigger2) + (' is to the right of ' + ($author$project$Game$Problem$Course1$showSigned(a) + (', so ' + ($author$project$Game$Problem$Course1$showSigned(bigger2) + (' > ' + $author$project$Game$Problem$Course1$showSigned(a))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(
 						_List_fromArray(
 							[
-								$author$project$Game$Problem$Course1$showSigned(b + 1),
+								$author$project$Game$Problem$Course1$showSigned(bigger2),
 								$author$project$Game$Problem$Course1$showSigned(a)
 							])),
-					prompt: 'Which is greater: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' or ' + ($author$project$Game$Problem$Course1$showSigned(b + 1) + '?')))
+					prompt: 'Which is greater: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' or ' + ($author$project$Game$Problem$Course1$showSigned(bigger2) + '?')))
 				});
 		} else {
 			var smaller = A2($elm$core$Basics$min, a, b);
@@ -17857,10 +19425,13 @@ var $author$project$Game$Problem$Course1$genIntCompare = A2(
 				{
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '2',
-						prompt: 'Which is greater: (-3) or 2?',
+						answer: $author$project$Game$Problem$Course1$showSigned(bigger),
+						prompt: 'Which is greater: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' or ' + ($author$project$Game$Problem$Course1$showSigned(b) + '?'))),
 						steps: _List_fromArray(
-							['On a number line, numbers to the right are greater', '2 is to the right of (-3), so 2 > (-3)'])
+							[
+								'On a number line, numbers to the right are greater',
+								$author$project$Game$Problem$Course1$showSigned(bigger) + (' is to the right of ' + ($author$project$Game$Problem$Course1$showSigned(smaller) + (', so ' + ($author$project$Game$Problem$Course1$showSigned(bigger) + (' > ' + $author$project$Game$Problem$Course1$showSigned(smaller))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Which is greater: ' + ($author$project$Game$Problem$Course1$showSigned(a) + (' or ' + ($author$project$Game$Problem$Course1$showSigned(b) + '?')))
@@ -17890,10 +19461,13 @@ var $author$project$Game$Problem$Course1$genMulDiv = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '42',
-								prompt: '6 × 7 = ?',
+								answer: $elm$core$String$fromInt(a * b),
+								prompt: $elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + ' = ?')),
 								steps: _List_fromArray(
-									['Count by 6s: 6, 12, 18, 24, 30, 36, 42', '6 × 7 = 42'])
+									[
+										'Count by ' + ($elm$core$String$fromInt(a) + ('s up to ' + ($elm$core$String$fromInt(b) + ' groups'))),
+										$elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + (' = ' + $elm$core$String$fromInt(a * b))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: $elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(b) + ' = ?'))
@@ -17921,13 +19495,16 @@ var $author$project$Game$Problem$Course1$genMulDiv = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '7',
-								prompt: '42 ÷ 6 = ?',
+								answer: $elm$core$String$fromInt(q),
+								prompt: $elm$core$String$fromInt(a) + (' / ' + ($elm$core$String$fromInt(b) + ' = ?')),
 								steps: _List_fromArray(
-									['Ask: 6 × ? = 42', '6 × 7 = 42, so answer is 7'])
+									[
+										'Ask: ' + ($elm$core$String$fromInt(b) + (' × ? = ' + $elm$core$String$fromInt(a))),
+										$elm$core$String$fromInt(b) + (' × ' + ($elm$core$String$fromInt(q) + (' = ' + ($elm$core$String$fromInt(a) + (', so answer is ' + $elm$core$String$fromInt(q))))))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
-							prompt: $elm$core$String$fromInt(a) + (' ÷ ' + ($elm$core$String$fromInt(b) + ' = ?'))
+							prompt: $elm$core$String$fromInt(a) + (' / ' + ($elm$core$String$fromInt(b) + ' = ?'))
 						};
 					},
 					$author$project$Game$Problem$Common$wrongChoicesInt(q));
@@ -17980,10 +19557,15 @@ var $author$project$Game$Problem$Course1$genPlaceValue = A2(
 					{
 						answer: $author$project$Types$AChoice(0),
 						hint: {
-							answer: '4',
-							prompt: 'What digit is in the tens place of 347?',
+							answer: $elm$core$String$fromInt(correct),
+							prompt: 'What digit is in the ' + (place + (' place of ' + ($elm$core$String$fromInt(n) + '?'))),
 							steps: _List_fromArray(
-								['347 → ones=7, tens=4, hundreds=3', 'The tens digit is 4'])
+								[
+									$elm$core$String$fromInt(n) + (' → ones=' + ($elm$core$String$fromInt(
+									A2($elm$core$Basics$modBy, 10, n)) + (', tens=' + ($elm$core$String$fromInt(
+									A2($elm$core$Basics$modBy, 10, (n / 10) | 0)) + (', hundreds=' + $elm$core$String$fromInt((n / 100) | 0)))))),
+									'The ' + (place + (' digit is ' + $elm$core$String$fromInt(correct)))
+								])
 						},
 						inputType: $author$project$Types$TChoice(choices),
 						prompt: 'What digit is in the ' + (place + (' place of ' + ($elm$core$String$fromInt(n) + '?')))
@@ -18029,10 +19611,25 @@ var $author$project$Game$Problem$Course1$genPrimeComposite = A2(
 		return {
 			answer: $author$project$Types$AChoice(0),
 			hint: {
-				answer: 'Prime',
-				prompt: 'Is 13 prime or composite?',
-				steps: _List_fromArray(
-					['A prime number has exactly 2 factors: 1 and itself', '13 is only divisible by 1 and 13', 'So 13 is prime'])
+				answer: correct,
+				prompt: 'Is ' + ($elm$core$String$fromInt(n) + ' prime or composite?'),
+				steps: isPrime ? _List_fromArray(
+					[
+						'A prime number has exactly 2 factors: 1 and itself',
+						$elm$core$String$fromInt(n) + (' is only divisible by 1 and ' + $elm$core$String$fromInt(n)),
+						'So ' + ($elm$core$String$fromInt(n) + ' is prime')
+					]) : _List_fromArray(
+					[
+						'A composite number has more than 2 factors',
+						'Factors of ' + ($elm$core$String$fromInt(n) + (': ' + A2(
+						$elm$core$String$join,
+						', ',
+						A2(
+							$elm$core$List$map,
+							$elm$core$String$fromInt,
+							$author$project$Game$Problem$Course1$factorsOf(n))))),
+						'So ' + ($elm$core$String$fromInt(n) + ' is composite')
+					])
 			},
 			inputType: $author$project$Types$TChoice(choices),
 			prompt: 'Is ' + ($elm$core$String$fromInt(n) + ' prime or composite?')
@@ -18134,10 +19731,20 @@ var $author$project$Game$Problem$Course1$genPrimeFact = A2(
 		return {
 			answer: $author$project$Types$AChoice(0),
 			hint: {
-				answer: '2² × 3',
-				prompt: 'Prime factorization of 12?',
-				steps: _List_fromArray(
-					['Divide by smallest prime: 12 ÷ 2 = 6', 'Keep dividing: 6 ÷ 2 = 3', '3 is prime. Done: 2 × 2 × 3 = 2² × 3'])
+				answer: correct,
+				prompt: 'Prime factorization of ' + ($elm$core$String$fromInt(n) + '?'),
+				steps: function () {
+					var factors = $author$project$Game$Problem$Course1$primeFactors(n);
+					return _List_fromArray(
+						[
+							'Divide by smallest prime factors of ' + $elm$core$String$fromInt(n),
+							'Prime factors: ' + A2(
+							$elm$core$String$join,
+							' × ',
+							A2($elm$core$List$map, $elm$core$String$fromInt, factors)),
+							'Answer: ' + correct
+						]);
+				}()
 			},
 			inputType: $author$project$Types$TChoice(choices),
 			prompt: 'Prime factorization of ' + ($elm$core$String$fromInt(n) + '?')
@@ -18225,10 +19832,14 @@ var $author$project$Game$Problem$Course1$genRatio = A2(
 						return {
 							answer: $author$project$Types$AChoice(0),
 							hint: {
-								answer: '2:3',
-								prompt: 'Simplify 6:9',
+								answer: $elm$core$String$fromInt(rn) + (':' + $elm$core$String$fromInt(rd)),
+								prompt: 'Simplify the ratio ' + ($elm$core$String$fromInt(n) + (':' + $elm$core$String$fromInt(d))),
 								steps: _List_fromArray(
-									['Find the GCF of 6 and 9: GCF = 3', 'Divide both by 3: 6÷3 = 2, 9÷3 = 3', 'Simplified ratio: 2:3'])
+									[
+										'Find the GCF of ' + ($elm$core$String$fromInt(n) + (' and ' + ($elm$core$String$fromInt(d) + (': GCF = ' + $elm$core$String$fromInt(k))))),
+										'Divide both by ' + ($elm$core$String$fromInt(k) + (': ' + ($elm$core$String$fromInt(n) + ('/' + ($elm$core$String$fromInt(k) + (' = ' + ($elm$core$String$fromInt(rn) + (', ' + ($elm$core$String$fromInt(d) + ('/' + ($elm$core$String$fromInt(k) + (' = ' + $elm$core$String$fromInt(rd))))))))))))),
+										'Simplified ratio: ' + ($elm$core$String$fromInt(rn) + (':' + $elm$core$String$fromInt(rd)))
+									])
 							},
 							inputType: $author$project$Types$TChoice(choices),
 							prompt: 'Simplify the ratio ' + ($elm$core$String$fromInt(n) + (':' + $elm$core$String$fromInt(d)))
@@ -18260,12 +19871,19 @@ var $author$project$Game$Problem$Course1$genRounding = A2(
 					wrong);
 				return {
 					answer: $author$project$Types$AChoice(0),
-					hint: {
-						answer: '350',
-						prompt: 'Round 347 to the nearest ten.',
-						steps: _List_fromArray(
-							['Look at the ones digit: 7', '7 ≥ 5, so round up the tens', '340 rounds up to 350'])
-					},
+					hint: function () {
+						var lookAt = (roundTo === 10) ? A2($elm$core$Basics$modBy, 10, actual) : A2($elm$core$Basics$modBy, 10, (actual / 10) | 0);
+						return {
+							answer: $elm$core$String$fromInt(rounded),
+							prompt: 'Round ' + ($elm$core$String$fromInt(actual) + (' to the nearest ' + (placeStr + '.'))),
+							steps: _List_fromArray(
+								[
+									'Look at the ' + (((roundTo === 10) ? 'ones' : 'tens') + (' digit: ' + $elm$core$String$fromInt(lookAt))),
+									(lookAt >= 5) ? '≥ 5, so round up' : '< 5, so round down',
+									'Answer: ' + $elm$core$String$fromInt(rounded)
+								])
+						};
+					}(),
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Round ' + ($elm$core$String$fromInt(actual) + (' to the nearest ' + (placeStr + '.')))
 				};
@@ -18297,10 +19915,13 @@ var $author$project$Game$Problem$Course1$genVarExpr = A2(
 				return {
 					answer: $author$project$Types$AChoice(0),
 					hint: {
-						answer: '15',
-						prompt: 'Evaluate 3x when x = 5',
+						answer: $elm$core$String$fromInt(correct),
+						prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x when x = ' + $elm$core$String$fromInt(x))),
 						steps: _List_fromArray(
-							['3x means 3 times x', 'Replace x with 5: 3 × 5 = 15'])
+							[
+								$elm$core$String$fromInt(a) + ('x means ' + ($elm$core$String$fromInt(a) + ' times x')),
+								'Replace x with ' + ($elm$core$String$fromInt(x) + (': ' + ($elm$core$String$fromInt(a) + (' × ' + ($elm$core$String$fromInt(x) + (' = ' + $elm$core$String$fromInt(correct)))))))
+							])
 					},
 					inputType: $author$project$Types$TChoice(choices),
 					prompt: 'Evaluate ' + ($elm$core$String$fromInt(a) + ('x when x = ' + $elm$core$String$fromInt(x)))
@@ -19882,7 +21503,7 @@ var $author$project$Main$startBoss = F2(
 						A2($author$project$Game$Battle$initialBattleState, uid, problem)),
 					seed: newSeed
 				}),
-			$elm$core$Platform$Cmd$none);
+			$author$project$Main$focusFirstInput(_Utils_Tuple0));
 	});
 var $author$project$Game$Battle$initialQuestState = F3(
 	function (uid, questIndex, problem) {
@@ -19959,6 +21580,16 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{confirmingExit: false}),
+					$elm$core$Platform$Cmd$none);
+			case 'GoToAct':
+				var course = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							screen: $author$project$Types$MapScreen(
+								{course: course})
+						}),
 					$elm$core$Platform$Cmd$none);
 			case 'SetNameDraft':
 				var draft = msg.a;
@@ -20142,7 +21773,7 @@ var $author$project$Main$update = F2(
 										state,
 										{phase: $author$project$Types$Idle}))
 							}),
-						$elm$core$Platform$Cmd$none);
+						$author$project$Main$focusFirstInput(_Utils_Tuple0));
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
@@ -20214,7 +21845,7 @@ var $author$project$Main$update = F2(
 											state,
 											{phase: $author$project$Types$Idle}))
 								}),
-							$elm$core$Platform$Cmd$none);
+							$author$project$Main$focusFirstInput(_Utils_Tuple0));
 					} else {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					}
@@ -20294,7 +21925,7 @@ var $author$project$Main$update = F2(
 										})),
 								seed: newSeed
 							}),
-						$elm$core$Platform$Cmd$none);
+						$author$project$Main$focusFirstInput(_Utils_Tuple0));
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
@@ -20400,7 +22031,7 @@ var $author$project$Main$update = F2(
 										})),
 								seed: newSeed
 							}),
-						$elm$core$Platform$Cmd$none);
+						$author$project$Main$focusFirstInput(_Utils_Tuple0));
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
@@ -20639,7 +22270,6 @@ var $author$project$Main$confirmExitOverlay = function (playerName) {
 					]))
 			]));
 };
-var $author$project$Types$RetryUnit = {$: 'RetryUnit'};
 var $author$project$Game$Curriculum$bossName = function (uid) {
 	var _v0 = _Utils_Tuple2(uid.course, uid.unit);
 	_v0$41:
@@ -20957,7 +22587,6 @@ var $author$project$View$Battle$viewBossDefeat = F2(
 						]))
 				]));
 	});
-var $author$project$Types$BackToMap = {$: 'BackToMap'};
 var $author$project$Game$Curriculum$unitName = function (uid) {
 	var _v0 = _Utils_Tuple2(uid.course, uid.unit);
 	_v0$41:
@@ -21293,24 +22922,6 @@ var $elm$core$List$concat = function (lists) {
 	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
 var $elm$core$String$foldr = _String_foldr;
@@ -21498,6 +23109,7 @@ var $author$project$Config$multiplierLabel = function (streak) {
 var $author$project$View$Theme$streakGem = '#d4a017';
 var $author$project$View$Battle$playerStatusBar = F2(
 	function (playerName, state) {
+		var isBoss = _Utils_eq(state.mode, $author$project$Types$BossMode);
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -21531,7 +23143,7 @@ var $author$project$View$Battle$playerStatusBar = F2(
 								[
 									$elm$html$Html$text(playerName)
 								])),
-							A3($author$project$View$HpBar$hpBar, 'HP', state.playerHp, $author$project$Config$playerMaxHp)
+							isBoss ? A3($author$project$View$HpBar$hpBar, 'HP', state.playerHp, $author$project$Config$playerMaxHp) : $elm$html$Html$text('')
 						])),
 					A2(
 					$elm$html$Html$div,
@@ -21557,7 +23169,7 @@ var $author$project$View$Battle$playerStatusBar = F2(
 									$elm$html$Html$text(
 									'STREAK ' + $elm$core$String$fromInt(state.streak))
 								])),
-							A2(
+							isBoss ? A2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
@@ -21572,7 +23184,7 @@ var $author$project$View$Battle$playerStatusBar = F2(
 								[
 									$elm$html$Html$text(
 									'ATK ' + $author$project$Config$multiplierLabel(state.streak))
-								]))
+								])) : $elm$html$Html$text('')
 						]))
 				]));
 	});
@@ -21648,6 +23260,175 @@ var $author$project$View$Battle$actionButtons = function (state) {
 			return $elm$html$Html$text('');
 		default:
 			return $elm$html$Html$text('');
+	}
+};
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $author$project$View$Math$leadingDigitCount = F2(
+	function (i, s) {
+		leadingDigitCount:
+		while (true) {
+			var _v0 = $elm$core$String$toInt(
+				A3($elm$core$String$slice, i, i + 1, s));
+			if (_v0.$ === 'Just') {
+				var $temp$i = i + 1,
+					$temp$s = s;
+				i = $temp$i;
+				s = $temp$s;
+				continue leadingDigitCount;
+			} else {
+				return i;
+			}
+		}
+	});
+var $elm$core$String$foldl = _String_foldl;
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $author$project$View$Math$isOp = function (c) {
+	return _Utils_eq(
+		c,
+		_Utils_chr('+')) || (_Utils_eq(
+		c,
+		_Utils_chr('-')) || (_Utils_eq(
+		c,
+		_Utils_chr('×')) || (_Utils_eq(
+		c,
+		_Utils_chr('/')) || (_Utils_eq(
+		c,
+		_Utils_chr('=')) || (_Utils_eq(
+		c,
+		_Utils_chr('<')) || _Utils_eq(
+		c,
+		_Utils_chr('>')))))));
+};
+var $author$project$View$Math$opSpan = function (c) {
+	return A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'color', '#ffd700'),
+				A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				$elm$core$String$fromChar(c))
+			]));
+};
+var $author$project$View$Math$renderWithOps = function (s) {
+	var _v0 = A3(
+		$elm$core$String$foldl,
+		F2(
+			function (c, _v1) {
+				var acc = _v1.a;
+				var buf = _v1.b;
+				if ($author$project$View$Math$isOp(c)) {
+					var prefix = $elm$core$String$isEmpty(buf) ? _List_Nil : _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text(buf)
+								]))
+						]);
+					return _Utils_Tuple2(
+						_Utils_ap(
+							acc,
+							_Utils_ap(
+								prefix,
+								_List_fromArray(
+									[
+										$author$project$View$Math$opSpan(c)
+									]))),
+						'');
+				} else {
+					return _Utils_Tuple2(
+						acc,
+						_Utils_ap(
+							buf,
+							$elm$core$String$fromChar(c)));
+				}
+			}),
+		_Utils_Tuple2(_List_Nil, ''),
+		s);
+	var elems = _v0.a;
+	var remaining = _v0.b;
+	return $elm$core$String$isEmpty(remaining) ? elems : _Utils_ap(
+		elems,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$span,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(remaining)
+					]))
+			]));
+};
+var $elm$html$Html$sup = _VirtualDom_node('sup');
+var $author$project$View$Math$renderSupSegment = function (seg) {
+	var n = A2($author$project$View$Math$leadingDigitCount, 0, seg);
+	var remainder = A2($elm$core$String$dropLeft, n, seg);
+	var digits = A2($elm$core$String$left, n, seg);
+	return A2(
+		$elm$core$List$cons,
+		A2(
+			$elm$html$Html$sup,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'font-size', '1.2em'),
+					A2($elm$html$Html$Attributes$style, 'line-height', '0'),
+					A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+					A2($elm$html$Html$Attributes$style, 'top', '-0.4em')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(digits)
+				])),
+		$author$project$View$Math$renderWithOps(remainder));
+};
+var $elm$core$String$replace = F3(
+	function (before, after, string) {
+		return A2(
+			$elm$core$String$join,
+			after,
+			A2($elm$core$String$split, before, string));
+	});
+var $author$project$View$Math$renderMath = function (raw) {
+	var normalized = A3(
+		$elm$core$String$replace,
+		'³',
+		'^3',
+		A3($elm$core$String$replace, '²', '^2', raw));
+	if (!A2($elm$core$String$contains, '^', normalized)) {
+		return A2(
+			$elm$html$Html$span,
+			_List_Nil,
+			$author$project$View$Math$renderWithOps(normalized));
+	} else {
+		var parts = A2($elm$core$String$split, '^', normalized);
+		return A2(
+			$elm$html$Html$span,
+			_List_Nil,
+			function () {
+				if (!parts.b) {
+					return _List_Nil;
+				} else {
+					var first = parts.a;
+					var rest = parts.b;
+					return _Utils_ap(
+						$author$project$View$Math$renderWithOps(first),
+						A2($elm$core$List$concatMap, $author$project$View$Math$renderSupSegment, rest));
+				}
+			}());
 	}
 };
 var $author$project$View$Battle$resultMessage = function (state) {
@@ -21780,6 +23561,17 @@ var $author$project$View$Input$inputAttrs = function (width) {
 			A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box')
 		]);
 };
+var $author$project$View$Input$onEnter = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'keydown',
+		A2(
+			$elm$json$Json$Decode$andThen,
+			function (key) {
+				return (key === 'Enter') ? $elm$json$Json$Decode$succeed(msg) : $elm$json$Json$Decode$fail('not enter');
+			},
+			A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string)));
+};
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -21793,7 +23585,6 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
@@ -21848,6 +23639,7 @@ var $author$project$View$Input$fractionInput = F2(
 										$author$project$Types$IFraction(
 											{den: den, num: v}));
 								}),
+								$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer),
 								A2($elm$html$Html$Attributes$style, 'text-align', 'center')
 							])),
 					_List_Nil),
@@ -21874,6 +23666,7 @@ var $author$project$View$Input$fractionInput = F2(
 										$author$project$Types$IFraction(
 											{den: v, num: num}));
 								}),
+								$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer),
 								A2($elm$html$Html$Attributes$style, 'text-align', 'center')
 							])),
 					_List_Nil)
@@ -22016,7 +23809,8 @@ var $author$project$View$Input$inequalityInput = F2(
 											return $author$project$Types$UpdateInput(
 												$author$project$Types$IInequality(
 													{dir: dir, val: v}));
-										})
+										}),
+										$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer)
 									])),
 							_List_Nil)
 						]))
@@ -22032,7 +23826,8 @@ var $author$project$View$Input$numericInput = F3(
 					[
 						$elm$html$Html$Attributes$type_('text'),
 						$elm$html$Html$Attributes$value(val),
-						$elm$html$Html$Events$onInput(toMsg)
+						$elm$html$Html$Events$onInput(toMsg),
+						$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer)
 					])),
 			_List_Nil);
 	});
@@ -22083,7 +23878,8 @@ var $author$project$View$Input$rootsInput = F2(
 											return $author$project$Types$UpdateInput(
 												$author$project$Types$IRoots(
 													{r1: v, r2: r2}));
-										})
+										}),
+										$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer)
 									])),
 							_List_Nil)
 						])),
@@ -22122,7 +23918,8 @@ var $author$project$View$Input$rootsInput = F2(
 											return $author$project$Types$UpdateInput(
 												$author$project$Types$IRoots(
 													{r1: r1, r2: v}));
-										})
+										}),
+										$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer)
 									])),
 							_List_Nil)
 						]))
@@ -22175,7 +23972,8 @@ var $author$project$View$Input$systemInput = F2(
 											return $author$project$Types$UpdateInput(
 												$author$project$Types$ISystem(
 													{x: v, y: y}));
-										})
+										}),
+										$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer)
 									])),
 							_List_Nil)
 						])),
@@ -22214,7 +24012,8 @@ var $author$project$View$Input$systemInput = F2(
 											return $author$project$Types$UpdateInput(
 												$author$project$Types$ISystem(
 													{x: x, y: v}));
-										})
+										}),
+										$author$project$View$Input$onEnter($author$project$Types$SubmitAnswer)
 									])),
 							_List_Nil)
 						]))
@@ -22289,14 +24088,15 @@ var $author$project$View$Battle$problemArea = function (state) {
 								A2(
 								$elm$html$Html$Attributes$style,
 								'font-size',
-								$elm$core$String$fromInt($author$project$View$Theme$fontSizeNormal) + 'px'),
+								$elm$core$String$fromInt($author$project$View$Theme$fontSizeLarge) + 'px'),
 								A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream),
-								A2($elm$html$Html$Attributes$style, 'line-height', '1.8'),
-								A2($elm$html$Html$Attributes$style, 'white-space', 'pre-wrap')
+								A2($elm$html$Html$Attributes$style, 'line-height', '2'),
+								A2($elm$html$Html$Attributes$style, 'white-space', 'pre-wrap'),
+								A2($elm$html$Html$Attributes$style, 'word-break', 'break-word')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(state.problem.prompt)
+								$author$project$View$Math$renderMath(state.problem.prompt)
 							]))
 					])),
 				function () {
@@ -22374,26 +24174,61 @@ var $author$project$View$Battle$questHeader = function (state) {
 				$elm$html$Html$text(chapterLabel + (' | ' + label))
 			]));
 };
-var $author$project$Sprite$Act1$genericBoss = F2(
-	function (name, palette) {
-		return {
-			frameA: _List_fromArray(
-				['........BBBBBBBB......', '.......BBBBBBBBBBB....', '......BBBSSBBBSSBBB...', '......BBBSSBBBSSBBB...', '.....BBBBBBBBBBBBBBBB.', '.....BBEWWBBBBBWWEBBB.', '.....BBWRRWBBBWRRWBBB.', '.....BBWRRWBBBWRRWBBB.', '.....BBEWWBBBBBWWEBB..', '.....BBBBBBBBBBBBBBBB.', '.....BBBSSSSSSSSBBBB..', '......BBBBBBBBBBBBB...', '.......SSSBBBBSSS.....', '......BBBBBBBBBBBBB...', '.....BBBBBBBBBBBBBBB..', '....SSBBBBBBBBBBBBBSS.', '....BBBBBSSSSSSSBBBB..', '....BBBSSSSSSSSSSSBB..', '....TTTBBBBBBBBBBTTT..', '....TTTSSSSSSSSSSTTT..', '.....TTTTTTTTTTTTTTT..', '......TTTTTTTTTTTTT...', '.......SSSSSSSSSSS....', '...................... ']),
-			frameB: _List_fromArray(
-				['........BBBBBBBB......', '.......BBBBBBBBBBB....', '......BBBSSBBBSSBBB...', '......BBBSSBBBSSBBB...', '.....BBBBBBBBBBBBBBBB.', '.....BBEWWBBBBBWWEBBB.', '.....BBWSSWBBBWSSWBBB.', '.....BBWSSWBBBWSSWBBB.', '.....BBEWWBBBBBWWEBB..', '.....BBBBBBBBBBBBBBBB.', '.....BBBSSSSSSSSBBBB..', '......BBBBBBBBBBBBB...', '.......SSSBBBBSSS.....', '......BBBBBBBBBBBBB...', '.....BBBBBBBBBBBBBBB..', '....SSBBBBBBBBBBBBBSS.', '....BBBBBSSSSSSSBBBB..', '....BBBSSSSSSSSSSSBB..', '....TTTBBBBBBBBBBTTT..', '....TTTSSSSSSSSSSTTT..', '.....TTTTTTTTTTTTTTT..', '......TTTTTTTTTTTTT...', '.......SSSSSSSSSSS....', '...................... ']),
-			name: name,
-			palette: palette,
-			pixelSize: 8
-		};
-	});
-var $author$project$Sprite$Act1$act1MegaBoss = A2(
-	$author$project$Sprite$Act1$genericBoss,
-	'Chaos Wyrm',
-	_List_fromArray(
+var $author$project$Sprite$Quest$questSprite = {
+	frameA: _List_fromArray(
+		['........PPPPP.........', '......PPPPPPPPPPP.....', '.....PPPPPPPPPPPPP....', '....PPPPPPPPPPPPPPP...', '....PPLDDDPPPDDLLPP...', '....PPLDDPPPPPDDLPP...', '....PPPPPPPPPPPPPPP...', '....PPWWPPPPPPWWPPP...', '....PPWEPPPPPPPEPPP...', '....PPWKWPPPPWKWPPP...', '....PPWEPPPPPPPEPPP...', '....PPWWPPPPPPWWPPP...', '....PPPPPPPPPPPPPPP...', '....PPPPPPPPPPPPPPP...', '....PBBBBBBBBBBBBPP...', '....PBNGGGGGGGGNNPP...', '....PBNGGGGGGGGNNPP...', '....PBBBBBBBBBBBBPP...', '....PPPPPPPPPPPPPPP...', '.....TPPPPPPPPPPT.....', '......TPPPPPPPT.......', '.......TPPPPPPT.......', '........TTTTTT........', '......................  ']),
+	frameB: _List_fromArray(
+		['........PPPPP.........', '......PPPPPPPPPPP.....', '.....PPPPPPPPPPPPP....', '....PPPPPPPPPPPPPPP...', '....PPLDDDPPPDDLLPP...', '....PPLDDPPPPPDDLPP...', '....PPPPPPPPPPPPPPP...', '....PPWWPPPPPPWWPPP...', '....PPWEPPPPPPPEPPP...', '....PPWKWPPPPWKWPPP...', '....PPWEPPPPPPPEPPP...', '....PPWWPPPPPPWWPPP...', '....PPPPPPPPPPPPPPP...', '....PPPPPPPPPPPPPPP...', '....PBBBBBBBBBBBBPP...', '....PBNGGGGGGGGNNPP...', '....PBNGGGGGGGGNNPP...', '....PBBBBBBBBBBBBPP...', '....PPPPPPPPPPPPPPP...', '......TPPPPPPPT.......', '.......TPPPPPPT.......', '........TTPPTT........', '.........TTTT.........', '......................  ']),
+	name: 'Scroll Wisp',
+	palette: _List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#f0d080'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#c8a040'),
+			_Utils_Tuple2(
+			_Utils_chr('L'),
+			'#fff8d0'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#44aaff'),
+			_Utils_Tuple2(
+			_Utils_chr('K'),
+			'#1166aa'),
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#bb8833'),
+			_Utils_Tuple2(
+			_Utils_chr('N'),
+			'#996622'),
+			_Utils_Tuple2(
+			_Utils_chr('G'),
+			'#e8f4d0'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#ddaa44')
+		]),
+	pixelSize: 7
+};
+var $author$project$Sprite$Lookup$questSpriteFor = function (_v0) {
+	return $author$project$Sprite$Quest$questSprite;
+};
+var $author$project$Sprite$Act1$act1MegaBoss = {
+	frameA: _List_fromArray(
+		['......PPPPPPPPPPP......', '.....PPPPPPPPPPPPP.....', '....PPPPPHHHHHHPPPPP...', '....PPPPHHHHHHHPPPP....', '.....PPHHHHHHHHHPP.....', '.....PPHEEEEEEHPP......', '.....PPHERRRREHPP......', '.....PPHEEEEEEHPP......', '.....PPHHHHHHHHHPP.....', '....BBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '...BBBSSBBBBBBSSBBBB...', '...BBBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '....BBBSSSSSSSSBBBB....', '....BBBBBBBBBBBBBB.....', '....TBBBB.....BBBBT....', '....TBBBB.....BBBBT....', '....TSSBB.....BSSST....', '....TTTBB.....BBBTT....', '.....TTTT.....TTTT.....', '.......................']),
+	frameB: _List_fromArray(
+		['......PPPPPPPPPPP......', '.....PPPPPPPPPPPPP.....', '....PPPPPHHHHHHPPPPP...', '....PPPPHHHHHHHPPPP....', '.....PPHHHHHHHHHPP.....', '.....PPHEEEEEEHPP......', '.....PPHEDDDDEHPP......', '.....PPHEEEEEEHPP......', '.....PPHHHHHHHHHPP.....', '....BBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '...BBBSSBBBBBBSSBBBB...', '...BBBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '....BBBSSSSSSSSBBBB....', '....BBBBBBBBBBBBBB.....', '....TBBBB.....BBBBT....', '....TBBBB.....BBBBT....', '....TSSBB.....BSSST....', '....TTTBB.....BBBTT....', '.....TTTT.....TTTT.....', '.......................']),
+	name: 'Chaos Wyrm',
+	palette: _List_fromArray(
 		[
 			_Utils_Tuple2(
 			_Utils_chr('B'),
-			'#c8a000'),
+			'#b89000'),
 			_Utils_Tuple2(
 			_Utils_chr('S'),
 			'#664400'),
@@ -22408,130 +24243,141 @@ var $author$project$Sprite$Act1$act1MegaBoss = A2(
 			'#ff6600'),
 			_Utils_Tuple2(
 			_Utils_chr('T'),
-			'#882200')
-		]));
-var $author$project$Sprite$Act1$dataDigger = A2(
-	$author$project$Sprite$Act1$genericBoss,
-	'Data Digger',
+			'#332200'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#aa7700'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#553300'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#997700')
+		]),
+	pixelSize: 8
+};
+var $author$project$Sprite$Act1$knight = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['......PPPPPPPPPPP......', '.....PPPPPPPPPPPPP.....', '....PPPPPHHHHHHPPPPP...', '....PPPPHHHHHHHPPPP....', '.....PPHHHHHHHHHPP.....', '.....PPHEEEEEEEHPP.....', '.....PPHERRRREHPP......', '.....PPHEEEEEEEHPP.....', '.....PPHHHHHHHHHPP.....', '....BBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '...BBBSSBBBBBBSSBBBB...', '...BBBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '....BBBSSSSSSSSBBBB....', '....BBBBBBBBBBBBBB.....', '....TBBBB.....BBBBT....', '....TBBBB.....BBBBT....', '....TSSBB.....BSSST....', '....TTTBB.....BBBTT....', '.....TTTT.....TTTT.....', '.......................']),
+			frameB: _List_fromArray(
+				['......PPPPPPPPPPP......', '.....PPPPPPPPPPPPP.....', '....PPPPPHHHHHHPPPPP...', '....PPPPHHHHHHHPPPP....', '.....PPHHHHHHHHHPP.....', '.....PPHEEEEEEEHPP.....', '.....PPHEBBBBEHPP......', '.....PPHEEEEEEEHPP.....', '.....PPHHHHHHHHHPP.....', '....BBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '...BBBSSBBBBBBSSBBBB...', '...BBBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '....BBBSSSSSSSSBBBB....', '....BBBBBBBBBBBBBB.....', '....TBBBB.....BBBBT....', '....TBBBB.....BBBBT....', '....TSSBB.....BSSST....', '....TTTBB.....BBBTT....', '.....TTTT.....TTTT.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act1$equationKnight = A2(
+	$author$project$Sprite$Act1$knight,
+	'Equation Knight',
 	_List_fromArray(
 		[
 			_Utils_Tuple2(
 			_Utils_chr('B'),
-			'#885533'),
+			'#aabbcc'),
 			_Utils_Tuple2(
 			_Utils_chr('S'),
-			'#553311'),
+			'#667788'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#889aaa'),
 			_Utils_Tuple2(
 			_Utils_chr('E'),
-			'#ffddbb'),
-			_Utils_Tuple2(
-			_Utils_chr('W'),
-			'#ffffff'),
+			'#cce0ff'),
 			_Utils_Tuple2(
 			_Utils_chr('R'),
-			'#ff8844'),
+			'#4499ff'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#99aabb'),
 			_Utils_Tuple2(
 			_Utils_chr('T'),
-			'#442211')
+			'#334455')
 		]));
-var $author$project$Sprite$Act1$decimalDrake = A2(
-	$author$project$Sprite$Act1$genericBoss,
-	'Decimal Drake',
+var $author$project$Sprite$Act1$elemental = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['..........W............', '.........WWW...........', '......WWWWWWWWWW.......', '.....WWWWBBBBWWWWW.....', '....WWWWBBBBBBWWWWW....', '....WWWBBBCCCBBBWWW....', '...WWWBBBCCGCCBBBWWWW..', '...WWWBBBCCGCCBBBWWW...', '...WWWWBBBCCCBBBWWWWW..', '....WWWWBBBBBBBWWWWW...', '.....WWWWWWWWWWWWWW....', '......WWWWWWWWWWWWWW...', '.....SWWWWWWWWWWWWS....', '....SWWWWWWWWWWWWWSS...', '....SWWWWWWWWWWWWSS....', '.....SWWWWWWWWWWSS.....', '......SWWWWWWWWSS......', '.....SSSWWWWWWSSS......', '....SSWWW...WWWSS......', '...SSW.........WSS.....', '..SS............SS.....', '...SS..........SS......', '....SSS......SSS.......', '.......................']),
+			frameB: _List_fromArray(
+				['............W..........', '...........WWW.........', '......WWWWWWWWWWW......', '.....WWWWBBBBWWWWW.....', '....WWWWBBBBBBWWWWWW...', '....WWWBBBCCCBBBWWWW...', '...WWWWBBBCCGCCBBBWWW..', '...WWWBBBCCGCCBBBWWWWW.', '...WWWWBBBCCCBBBWWWWW..', '....WWWWBBBBBBBWWWWW...', '.....WWWWWWWWWWWWWWW...', '......WWWWWWWWWWWWWWW..', '.....SWWWWWWWWWWWWSS...', '....SWWWWWWWWWWWWSS....', '....SWWWWWWWWWWWSS.....', '.....SWWWWWWWWSS.......', '......SWWWWWWSS........', '.....SSWWWWWWSS........', '....SSWWW...WWSS.......', '...SSW.........WSS.....', '..SS............SS.....', '...SS..........SS......', '....SSS......SSS.......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act1$expressionElemental = A2(
+	$author$project$Sprite$Act1$elemental,
+	'Expression Elemental',
 	_List_fromArray(
 		[
 			_Utils_Tuple2(
-			_Utils_chr('B'),
-			'#228877'),
-			_Utils_Tuple2(
-			_Utils_chr('S'),
-			'#115544'),
-			_Utils_Tuple2(
-			_Utils_chr('E'),
-			'#aaffee'),
-			_Utils_Tuple2(
-			_Utils_chr('W'),
+			_Utils_chr('C'),
 			'#ffffff'),
 			_Utils_Tuple2(
-			_Utils_chr('R'),
-			'#00ffcc'),
-			_Utils_Tuple2(
-			_Utils_chr('T'),
-			'#664400')
-		]));
-var $author$project$Sprite$Act1$equationEttin = A2(
-	$author$project$Sprite$Act1$genericBoss,
-	'Equation Ettin',
-	_List_fromArray(
-		[
+			_Utils_chr('G'),
+			'#aaffff'),
 			_Utils_Tuple2(
 			_Utils_chr('B'),
-			'#aa2222'),
-			_Utils_Tuple2(
-			_Utils_chr('S'),
-			'#661111'),
-			_Utils_Tuple2(
-			_Utils_chr('E'),
-			'#ffbbbb'),
+			'#44bbff'),
 			_Utils_Tuple2(
 			_Utils_chr('W'),
-			'#ffffff'),
-			_Utils_Tuple2(
-			_Utils_chr('R'),
-			'#ff4444'),
-			_Utils_Tuple2(
-			_Utils_chr('T'),
-			'#883311')
-		]));
-var $author$project$Sprite$Act1$expressionEel = A2(
-	$author$project$Sprite$Act1$genericBoss,
-	'Expression Eel',
-	_List_fromArray(
-		[
-			_Utils_Tuple2(
-			_Utils_chr('B'),
-			'#2244aa'),
+			'#0077cc'),
 			_Utils_Tuple2(
 			_Utils_chr('S'),
-			'#112266'),
-			_Utils_Tuple2(
-			_Utils_chr('E'),
-			'#aabbff'),
-			_Utils_Tuple2(
-			_Utils_chr('W'),
-			'#ffffff'),
-			_Utils_Tuple2(
-			_Utils_chr('R'),
-			'#4488ff'),
-			_Utils_Tuple2(
-			_Utils_chr('T'),
-			'#334488')
+			'#003366')
 		]));
+var $author$project$Sprite$Act1$ghost = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '...BBBB.....BBBB.......', '..TBBBB.......BBBBT....', '..TBBB.........BBBT....', '...TBB..........BT.....', '....TB..........BT.....', '.....TT.........TT.....', '......TT.......TT......', '.......................']),
+			frameB: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '....BBBB.....BBBB......', '...TBBBB.......BBBBT...', '...TBBB.........BBBT...', '....TBB..........BT....', '.....TB..........BT....', '......TT........TT.....', '.......TT......TT......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
 var $author$project$Sprite$Act1$fractionPhantom = A2(
-	$author$project$Sprite$Act1$genericBoss,
+	$author$project$Sprite$Act1$ghost,
 	'Fraction Phantom',
 	_List_fromArray(
 		[
 			_Utils_Tuple2(
 			_Utils_chr('B'),
-			'#8844cc'),
+			'#9966cc'),
 			_Utils_Tuple2(
 			_Utils_chr('S'),
 			'#553388'),
 			_Utils_Tuple2(
 			_Utils_chr('E'),
-			'#ddbbff'),
+			'#eeccff'),
 			_Utils_Tuple2(
 			_Utils_chr('W'),
 			'#ffffff'),
 			_Utils_Tuple2(
-			_Utils_chr('R'),
-			'#ff44ff'),
+			_Utils_chr('P'),
+			'#ff88ff'),
 			_Utils_Tuple2(
 			_Utils_chr('T'),
-			'#553388')
+			'#331166')
 		]));
+var $author$project$Sprite$Act1$gargoyle = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['W.....HBBBBBH.....W....', 'WW....BBBBBBBB....WW...', 'WWW..BBBBBBBBBBB..WWW..', 'WWWWBBBBBBBBBBBBWWWWW..', 'WWWWBBBDDBBBDDBBWWWW...', 'WWWWBBBDDBBBDDBBWWWWW..', 'WWWBBBBBBBBBBBBBBBWWW..', 'WWWBBEGBBBBBBGEBWWWW...', 'WWWBBGGGBBBBBGGGBWWWW..', 'WWWBBEGBBBBBBGEBWWWW...', 'WWWBBBBBBBBBBBBBBBWWW..', 'WWWWBBBBBBBBBBBBWWWW...', 'WWWWWBBBBBBBBBBWWWWWW..', '.WWWWWBBBBBBBBBWWWWW...', '..WWWWBBBBBBBBWWWWW....', '...WWWBBBBBBBWWWWW.....', '.....CBBBBBBBBC........', '.....CBBDDDBBBC........', '....CCBBDDDBBBBCC......', '....CCBBDBBDBBCC.......', '....CCCBBBBBBBCCC......', '.....CCCBBBBBCCC.......', '......CCCDDDDCCC.......', '.......................']),
+			frameB: _List_fromArray(
+				['W.....HBBBBBH.....W....', 'WW....BBBBBBBB....WW...', 'WWW..BBBBBBBBBBB..WWW..', 'WWWWBBBBBBBBBBBBWWWWW..', 'WWWWBBBDDBBBDDBBWWWW...', 'WWWWBBBDDBBBDDBBWWWWW..', 'WWWBBBBBBBBBBBBBBBWWW..', 'WWWBBEGBBBBBBGEBWWWW...', 'WWWBBGBBBBBBBBGBBWWWW..', 'WWWBBEGBBBBBBGEBWWWW...', 'WWWBBBBBBBBBBBBBBBWWW..', 'WWWWBBBBBBBBBBBBWWWWW..', 'WWWWWBBBBBBBBBBWWWWWWW.', '.WWWWWBBBBBBBBBWWWWWW..', '..WWWWBBBBBBBBWWWWWW...', '...WWWBBBBBBBWWWWWW....', '.....CBBBBBBBBC........', '.....CBBDDDBBBC........', '....CCBBDDDBBBBCC......', '....CCBBDBBDBBCC.......', '....CCCBBBBBBBCCC......', '.....CCCBBBBBCCC.......', '......CCCDDDDCCC.......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
 var $author$project$Sprite$Act1$geometryGargoyle = A2(
-	$author$project$Sprite$Act1$genericBoss,
+	$author$project$Sprite$Act1$gargoyle,
 	'Geometry Gargoyle',
 	_List_fromArray(
 		[
@@ -22539,20 +24385,65 @@ var $author$project$Sprite$Act1$geometryGargoyle = A2(
 			_Utils_chr('B'),
 			'#778899'),
 			_Utils_Tuple2(
-			_Utils_chr('S'),
+			_Utils_chr('D'),
 			'#445566'),
 			_Utils_Tuple2(
-			_Utils_chr('E'),
-			'#ddeeff'),
-			_Utils_Tuple2(
 			_Utils_chr('W'),
-			'#ffffff'),
+			'#aabbcc'),
 			_Utils_Tuple2(
-			_Utils_chr('R'),
-			'#44aaff'),
+			_Utils_chr('E'),
+			'#cceeff'),
 			_Utils_Tuple2(
-			_Utils_chr('T'),
-			'#556677')
+			_Utils_chr('G'),
+			'#55ccff'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#334455'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#223344')
+		]));
+var $author$project$Sprite$Act1$imp = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['..H...........H........', '..HH.........HH........', '...HH.......HH.........', '...HBBBBBBBBH..........', '...BBBBBBBBBBB.........', '..BBBBBBBBBBBBB........', '..BBEPPEBBBEPPED.......', '..BBPSSPBBBPSSPB.......', '..BBEPPEBBBEPPED.......', '..BBBBBBBBBBBBB........', '..BBBBBBBBBBBBBB.......', '...SSBBBBBBBBSS........', '...BBBBFBBBBBB.........', '....BBBBBBBBB..........', '....BBBBBBBBB.......C..', '....BBBBBBBBBBBBBBCC...', '...CBBBB....BBBBBBBC...', '..CCBB........BBCC.....', '..CCBB........BBCC.....', '..CBBB........BBBC.....', '..CCBB........BBCC.....', '..CSBB........BBSC.....', '..CCCC........CCCC.....', '.......................']),
+			frameB: _List_fromArray(
+				['..H...........H........', '..HH.........HH........', '...HH.......HH.........', '...HBBBBBBBBH..........', '...BBBBBBBBBBB.........', '..BBBBBBBBBBBBB........', '..BBEPPEBBBEPPED.......', '..BBPBBPBBBPBBPB.......', '..BBEPPEBBBEPPED.......', '..BBBBBBBBBBBBB........', '..BBBBBBBBBBBBBB.......', '...SSBBBBBBBBSS........', '...BBBBFBBBBBB.........', '....BBBBBBBBB..........', '.....BBBBBBBBB......C..', '....BBBBBBBBBBBBBBCC...', '...CBBBB....BBBBBBBC...', '..CCBB........BBCC.....', '..CCBB........BBCC.....', '..CBBB........BBBC.....', '..CCBB........BBCC.....', '..CSBB........BBSC.....', '..CCCC........CCCC.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act1$integerImp = A2(
+	$author$project$Sprite$Act1$imp,
+	'Integer Imp',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#cc3322'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#881100'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#332200'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffee88'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#ddaa00'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#881100'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#ff6655'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#882200')
 		]));
 var $author$project$Sprite$Act1$numberGolem = {
 	frameA: _List_fromArray(
@@ -22583,29 +24474,80 @@ var $author$project$Sprite$Act1$numberGolem = {
 		]),
 	pixelSize: 8
 };
-var $author$project$Sprite$Act1$ratioRaven = A2(
-	$author$project$Sprite$Act1$genericBoss,
-	'Ratio Raven',
+var $author$project$Sprite$Act1$serpent = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['.....HHHHHHH...........', '....HHHHHHHHHH.........', '...HHHEHHHHHHHHH.......', '...HHHEHHHHHHHHHH......', '...HHHHHHHHHHHHHH......', '....HHHHHHHHHHHHH......', '....HHHTTHHHHHHH.......', '.....HHTTHHHHHH........', '......BDBDBBBB.........', '.....BDBDBDBDBBB.......', '....BDBDBDBDBDBBB......', '....BDBDBDBDBDBDBB.....', '...BDBDBDBDBDBDBDBB....', '...BDBDBDBDBDBDBDBB....', '....BDBDBDBDBDBDBB.....', '.....BDBDBDBDBBB.......', '......BDBDBDBB.........', '.......BDBDBB..........', '.......SSBDB...........', '........SSSBD..........', '.........SSBD..........', '..........SSD..........', '...........SS..........', '.......................']),
+			frameB: _List_fromArray(
+				['.....HHHHHHH...........', '....HHHHHHHHHH.........', '...HHHEHHHHHHHHH.......', '...HHHEHHHHHHHHHH......', '...HHHHHHHHHHHHHH......', '....HHHHHHHHHHHHH......', '....HHHTTHHHHHHH.......', '.....HTTHHHHHH.........', '......BDBDBBBB.........', '.....BDBDBDBDBBB.......', '....BDBDBDBDBDBBB......', '....BDBDBDBDBDBDBB.....', '...BDBDBDBDBDBDBDBB....', '...BDBDBDBDBDBDBDBB....', '....BDBDBDBDBDBDBB.....', '.....BDBDBDBDBBB.......', '......BDBDBDBB.........', '......SBDBDBB..........', '.......SSSBD...........', '........SSSB...........', '.........SSBD..........', '..........SSD..........', '...........SS..........', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act1$ratioSerpent = A2(
+	$author$project$Sprite$Act1$serpent,
+	'Ratio Serpent',
 	_List_fromArray(
 		[
 			_Utils_Tuple2(
 			_Utils_chr('B'),
-			'#222233'),
+			'#226633'),
 			_Utils_Tuple2(
-			_Utils_chr('S'),
-			'#111122'),
+			_Utils_chr('D'),
+			'#115522'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#338844'),
 			_Utils_Tuple2(
 			_Utils_chr('E'),
-			'#aaaacc'),
-			_Utils_Tuple2(
-			_Utils_chr('W'),
-			'#ffffff'),
-			_Utils_Tuple2(
-			_Utils_chr('R'),
-			'#8844ff'),
+			'#ffee00'),
 			_Utils_Tuple2(
 			_Utils_chr('T'),
-			'#444455')
+			'#ff4444'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#113322')
+		]));
+var $author$project$Sprite$Act1$sphinx = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['.........HHH...........', '........HHHHH..........', '........HEHEH..........', '........HPPHH..........', '........HHHHH..........', '.......BHHHHHHB........', '......BBBHHHHBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBBB..', '...BBBBDBBBBBBBDBBBBB..', '...BBBBDBBBBBBBDBBBBB..', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBBB.', '..BBBBBBBBBBBBBBBBBBBB.', '..BBBBDDDBBBBBBDDDBBBB.', '..BBBBBBBBBBBBBBBBBBBB.', '..BBBBBBBBBBBBBBBBBBBB.', '.PBBBB...........BBBBP.', '.PBBBBB.........BBBBBP.', '.PBBBBBB.......BBBBBBP.', '.PPBBBBBB.....BBBBBBPP.', '..PPPPBBBB...BBBBPPPP..', '.......................']),
+			frameB: _List_fromArray(
+				['.........HHH...........', '........HHHHH..........', '........HEHEH..........', '........HHHPH..........', '........HHHHH..........', '.......BHHHHHHB........', '......BBBHHHHBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBBB..', '...BBBBDBBBBBBBDBBBBB..', '...BBBBDBBBBBBBDBBBBB..', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBBB.', '..BBBBBBBBBBBBBBBBBBBB.', '..BBBBDDDBBBBBBDDDBBBB.', '..BBBBBBBBBBBBBBBBBBBB.', '..BBBBBBBBBBBBBBBBBBBB.', '.PBBBB...........BBBBP.', '.PBBBBB.........BBBBBP.', '.PBBBBBB.......BBBBBBP.', '.PPBBBBBB.....BBBBBBPP.', '..PPPPBBBB...BBBBPPPP..', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act1$statsSphinx = A2(
+	$author$project$Sprite$Act1$sphinx,
+	'Stats Sphinx',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#cc9944'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#885522'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#ffcc88'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffddaa'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#884400'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ddbb66'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#aa6600')
 		]));
 var $author$project$Sprite$Act1$spriteFor = function (uid) {
 	var _v0 = _Utils_Tuple2(uid.course, uid.unit);
@@ -22619,25 +24561,25 @@ var $author$project$Sprite$Act1$spriteFor = function (uid) {
 						return $author$project$Sprite$Act1$numberGolem;
 					case 2:
 						var _v2 = _v0.a;
-						return $author$project$Sprite$Act1$fractionPhantom;
+						return $author$project$Sprite$Act1$integerImp;
 					case 3:
 						var _v3 = _v0.a;
-						return $author$project$Sprite$Act1$decimalDrake;
+						return $author$project$Sprite$Act1$fractionPhantom;
 					case 4:
 						var _v4 = _v0.a;
-						return $author$project$Sprite$Act1$expressionEel;
+						return $author$project$Sprite$Act1$expressionElemental;
 					case 5:
 						var _v5 = _v0.a;
-						return $author$project$Sprite$Act1$equationEttin;
+						return $author$project$Sprite$Act1$equationKnight;
 					case 6:
 						var _v6 = _v0.a;
-						return $author$project$Sprite$Act1$ratioRaven;
+						return $author$project$Sprite$Act1$ratioSerpent;
 					case 7:
 						var _v7 = _v0.a;
 						return $author$project$Sprite$Act1$geometryGargoyle;
 					case 8:
 						var _v8 = _v0.a;
-						return $author$project$Sprite$Act1$dataDigger;
+						return $author$project$Sprite$Act1$statsSphinx;
 					default:
 						break _v0$9;
 				}
@@ -22652,14 +24594,1228 @@ var $author$project$Sprite$Act1$spriteFor = function (uid) {
 	}
 	return $author$project$Sprite$Act1$numberGolem;
 };
-var $author$project$Sprite$Act2$spriteFor = function (_v0) {
-	return $author$project$Sprite$Act1$numberGolem;
+var $author$project$Sprite$Act2$fiend = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['....H.........H........', '....HH.......HH........', '...HHHBBBBBHHH.........', '...BBBBBBBBBBBB........', '..WBBBBBBBBBBBBBW......', '..WBBEPPEBBBEPPED......', '..WBBPRRPBBBPRRPD......', '..WBBEPPEBBBEPPED......', '..WBBBBBBBBBBBBBW......', '..WWBBBBBBBBBBBWW......', '..WWWBBBBBBBBBWWWW.....', '...WWWBBBBBBBBWWW......', '...CBBBBBBBBBBBBC......', '...CBBSBBBBBBSBC.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '...CBBBB.....BBBBC.....', '..CCBBBB.....BBBBCC....', '..CCSSBB.....BBSSCC....', '..CCBBBB.....BBBBCC....', '..CCCBB.......BBCCC....', '...CCCC.......CCCC.....', '.......................']),
+			frameB: _List_fromArray(
+				['....H.........H........', '....HH.......HH........', '...HHHBBBBBHHH.........', '...BBBBBBBBBBBB........', '..WBBBBBBBBBBBBBW......', '..WBBEPPEBBBEPPED......', '..WBBPBBPBBBPBBPD......', '..WBBEPPEBBBEPPED......', '..WBBBBBBBBBBBBBW......', '..WWBBBBBBBBBBBWW......', '..WWWWBBBBBBBWWWWW.....', '...WWWWBBBBBBWWWW......', '...CBBBBBBBBBBBBC......', '...CBBSBBBBBBSBC.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '...CBBBB.....BBBBC.....', '..CCBBBB.....BBBBCC....', '..CCSSBB.....BBSSCC....', '..CCBBBB.....BBBBCC....', '..CCCBB.......BBCCC....', '...CCCC.......CCCC.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act2$angleFiend = A2(
+	$author$project$Sprite$Act2$fiend,
+	'Angle Fiend',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#881111'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#440000'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#661100'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#330000'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffddaa'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#ff6600'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#220000'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#550000'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#ff4400')
+		]));
+var $author$project$Sprite$Act2$ghost = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '...BBBB.....BBBB.......', '..TBBBB.......BBBBT....', '..TBBB.........BBBT....', '...TBB..........BT.....', '....TB..........BT.....', '.....TT.........TT.....', '......TT.......TT......', '.......................']),
+			frameB: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '....BBBB.....BBBB......', '...TBBBB.......BBBBT...', '...TBBB.........BBBT...', '....TBB..........BT....', '.....TB..........BT....', '......TT........TT.....', '.......TT......TT......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act2$equationShade = A2(
+	$author$project$Sprite$Act2$ghost,
+	'Equation Shade',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#445544'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#223322'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#aaccaa'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#eeffee'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#44ff88'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#112211')
+		]));
+var $author$project$Sprite$Act2$beast = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['....BBBBB..............', '...BBBBBBBBB...........', '..BBBBBDDBBB...........', '..BBBBDDDBBB...........', '..BBBBBBBBBBB..........', '.BBBEPPEBBBBBB.........', '.BBBPSSPBBBBDBB........', '.BBBEPPEBBBBDBB........', '.BBBBBBBBBBBBBB........', '.BBBBBBBBBBBBBBB.......', 'CBBBBBBBBBBBBBBBBB.....', 'CBBBBBBBBBBBBBBBBBB....', 'CBBDDBBBBBBBBBBBBBB....', '.BBDDBBBBBBBBBBBBBC....', '.BBBBBBBBBBBBBBBBC.....', '.CBBBBBBBBBBBBBBC......', '..BBBBBBBBBBBBBBB......', '..SBBBB.....BBBBS......', '..SBBBB.....BBBBS......', '..CSBBB.....BBBSC......', '..CCBB.......BBCC......', '..CCSS.......SSCC......', '...FFF.......FFF.......', '.......................']),
+			frameB: _List_fromArray(
+				['......BBBBB............', '.....BBBBBBBBB.........', '....BBBBBDDBBB.........', '....BBBBDDDBBB.........', '....BBBBBBBBBBB........', '...BBBEPPEBBBBBB.......', '...BBBPSSPBBBBDBB......', '...BBBEPPEBBBBDBB......', '...BBBBBBBBBBBBBB......', '...BBBBBBBBBBBBBBB.....', '..CBBBBBBBBBBBBBBBBB...', '..CBBBBBBBBBBBBBBBBBB..', '..CBBDDBBBBBBBBBBBBBB..', '...BBDDBBBBBBBBBBBBBC..', '...BBBBBBBBBBBBBBBBC...', '...CBBBBBBBBBBBBBBC....', '....BBBBBBBBBBBBBBB....', '....SBBBB.....BBBBS....', '....SBBBB.....BBBBS....', '....CSBBB.....BBBSC....', '....CCBB.......BBCC....', '....CCSS.......SSCC....', '.....FFF.......FFF.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act2$monomialBeast = A2(
+	$author$project$Sprite$Act2$beast,
+	'Monomial Beast',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#553322'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#332211'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffcccc'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#cc2200'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#221100'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#eebbaa'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#442211')
+		]));
+var $author$project$Sprite$Act2$lich = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['..........HHH..........', '.........HHHHH.........', '........HHHHHHH........', '.......HHHHHHHHH.......', '......HHHHHHHHHHH......', '.......HHHFFHHHH.......', '......HHFFFFFFF........', '......HFFERREFFE.......', '......HFFRRRRFFE.......', '......HFFERREFFE.......', '.......HFFFFFFF........', '......BBBBBBBBBB.......', '.....BBBBBBBBBBBB......', '.....BBSBBBBBBBSBB.....', '....BBBSBBBBBBBBSBB....', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBB..', '..TBBBBBBBBBBBBBBBBBT..', '.TTBBBBBBBBBBBBBBBBBTT.', '.TTTTTTTTTTTTTTTTTTTTT.', '.......................']),
+			frameB: _List_fromArray(
+				['..........HHH..........', '.........HHHHH.........', '........HHHHHHH........', '.......HHHHHHHHH.......', '......HHHHHHHHHHH......', '.......HHHFFHHHH.......', '......HHFFFFFFF........', '......HFFESFEFE........', '......HFFSSSSFE........', '......HFFESFEFE........', '.......HFFFFFFF........', '......BBBBBBBBBB.......', '.....BBBBBBBBBBBB......', '.....BBSBBBBBBBSBB.....', '....BBBSBBBBBBBBSBB....', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBB..', '..TBBBBBBBBBBBBBBBBBT..', '.TTBBBBBBBBBBBBBBBBBTT.', '.TTTTTTTTTTTTTTTTTTTTT.', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act2$probabilityLich = A2(
+	$author$project$Sprite$Act2$lich,
+	'Probability Lich',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#3a1a55'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#1a0a2a'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#2a0a44'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#ccbbdd'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#eeddff'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#bb44ff'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#100820')
+		]));
+var $author$project$Sprite$Act2$proportionHydra = {
+	frameA: _List_fromArray(
+		['..H....HHHHH....H......', '.HHH..HHHHHHH..HHH.....', '.HEHN.HHHEHHHH.NHEH....', '.HHHNN.HHHHHH.NNHHH....', '..HNNN.BHHHHB.NNNHH....', '..BNNNBBHHHBBBNNNB.....', '...BNNNBBDBBBNNNB......', '..DBBNNNNBBBNNNNBBD....', '.DDBBBNNNNBNNNNBBBD....', 'DDDBBBBBNNBNNBBBBBDDD..', 'DBBBBBBBBBBBBBBBBBBBD..', '.BDBDBDBDBBBDBDBDBDB...', '..BDBDBDBBBBDBDBDB.....', '...BDBDBBBBBDBDB.......', '....BDBBBBBBBDB........', '....DBBBBBBBBD.........', '....DBBBBBBBD..........', '....TBBBBBBBBT.........', '....TBBDDBBBBT.........', '....TBBDDBBBBT.........', '.....TBBBBBBT..........', '.....TTBBBBTT..........', '......TTSSTT...........', '.......................']),
+	frameB: _List_fromArray(
+		['..H....HHHHH....H......', '.HHH..HHHHHHH..HHH.....', '.HENHN.HHHEHH.NHENH....', '.HHHNN.HHHHHH.NNHHH....', '..HNNNN.HHHHB.NNHHH....', '..BNNNNBHHHBBBNNNNB....', '...BNNNNBBDBBNNNNB.....', '..DBBNNNNNBBNNNNNBBD...', '.DDBBBNNNNBNNNNBBBD....', 'DDDBBBBBNNBNNBBBBBDDD..', 'DBBBBBBBBBBBBBBBBBBBD..', '.BDBDBDBDBBBDBDBDBDB...', '..BDBDBDBBBBDBDBDB.....', '...BDBDBBBBBDBDB.......', '....BDBBBBBBBDB........', '....DBBBBBBBBD.........', '....DBBBBBBBD..........', '....TBBBBBBBBT.........', '....TBBDDBBBBT.........', '....TBBDDBBBBT.........', '.....TBBBBBBT..........', '.....TTBBBBTT..........', '......TTSSTT...........', '.......................']),
+	name: 'Proportion Hydra',
+	palette: _List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#116655'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#0a3d33'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#228866'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffee00'),
+			_Utils_Tuple2(
+			_Utils_chr('N'),
+			'#1a5544'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#062820'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#083828')
+		]),
+	pixelSize: 9
 };
-var $author$project$Sprite$Act3$spriteFor = function (_v0) {
-	return $author$project$Sprite$Act1$numberGolem;
+var $author$project$Sprite$Act2$ratioWraith = A2(
+	$author$project$Sprite$Act2$ghost,
+	'Ratio Wraith',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#1a1a44'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#0a0a22'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#6688bb'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#aabbdd'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#cc2222'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#050510')
+		]));
+var $author$project$Sprite$Act2$senseGolem = {
+	frameA: _List_fromArray(
+		['.......GGGGGGGG........', '......GGGGGGGGGGG......', '.....GGGDDGGGDDGGG.....', '.....GGGDDGGGDDGGG.....', '....GGGGGGGGGGGGGGGG...', '....GGYWWGGGGGWWYGGG...', '....GGWRRWGGGGWRRWGG...', '....GGWRRWGGGGWRRWGG...', '....GGYWWGGGGGWWYGG....', '....GGGGGGGGGGGGGGGG...', '....GGGDDDDDDDDGGGGG...', '.....GGGGGGGGGGGGG.....', '......DDDGGGGGDDD......', '.....GGGGGGGGGGGGG.....', '....GGGGGGGGGGGGGGG....', '...DDGGGGGGGGGGGGGDD...', '...GGGGGDDDDDDDGGGGG...', '...GGGDDDDDDDDDDDGG....', '...BBBGGGGGGGGGGGBBB...', '...BBBDDDDDDDDDDDBB....', '....BBBBBBBBBBBBBBB....', '.....BBBBBBBBBBBBB.....', '......DDDDDDDDDDD......', '......................  ']),
+	frameB: _List_fromArray(
+		['.......GGGGGGGG........', '......GGGGGGGGGGG......', '.....GGGDDGGGDDGGG.....', '.....GGGDDGGGDDGGG.....', '....GGGGGGGGGGGGGGGG...', '....GGYWWGGGGGWWYGGG...', '....GGWDDWGGGGWDDWGG...', '....GGWDDWGGGGWDDWGG...', '....GGYWWGGGGGWWYGG....', '....GGGGGGGGGGGGGGGG...', '....GGGDDDDDDDDGGGGG...', '.....GGGGGGGGGGGGG.....', '......DDDGGGGGDDD......', '.....GGGGGGGGGGGGG.....', '....GGGGGGGGGGGGGGG....', '...DDGGGGGGGGGGGGGDD...', '...GGGGGDDDDDDDGGGGG...', '...GGGDDDDDDDDDDDGG....', '...BBBGGGGGGGGGGGBBB...', '...BBBDDDDDDDDDDDBB....', '....BBBBBBBBBBBBBBB....', '.....BBBBBBBBBBBBB.....', '......DDDDDDDDDDD......', '......................  ']),
+	name: 'Sense Golem',
+	palette: _List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('G'),
+			'#5577aa'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#334466'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ddeeff'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#2244cc'),
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#334455'),
+			_Utils_Tuple2(
+			_Utils_chr('Y'),
+			'#6699cc')
+		]),
+	pixelSize: 8
 };
-var $author$project$Sprite$Act4$spriteFor = function (_v0) {
-	return $author$project$Sprite$Act1$numberGolem;
+var $author$project$Sprite$Act2$slopeSpecter = A2(
+	$author$project$Sprite$Act2$ghost,
+	'Slope Specter',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#88aacc'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#446688'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ddeeff'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#aaddff'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#224466')
+		]));
+var $author$project$Sprite$Act2$titan = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['......BBBBBBBBB........', '.....BBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '....BBBMMBBBBBMMBB.....', '....BBBMMBBBBBMMBB.....', '...BBBBBBBBBBBBBBBBB...', '..BBBBBBBBBBBBBBBBBBB..', '..BBBBBEPPEBBBEPPED....', '..BBBBBPSSPBBBPSSPB....', '..BBBBBEPPEBBBEPPED....', '..BBBBBBBBBBBBBBBBBBB..', '.BBBBBBBBBBBBBBBBBBBB..', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBC..', '.CBBBBBBBBBBBBBBBBBBC..', '..BBBBBBBBBBBBBBBBBBB..', '..SBBBBBBBBBBBBBBBBBS..', '..SBBBB.....SBBBBSS....', '..TBBBB.....BBBBT......', '..TSBBB.....BBBST......', '..TTSBB.....BBSTT......', '...TTTT.....TTTT.......', '.......................']),
+			frameB: _List_fromArray(
+				['......BBBBBBBBB........', '.....BBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '....BBBMMBBBBBMMBB.....', '....BBBMMBBBBBMMBB.....', '...BBBBBBBBBBBBBBBBB...', '..BBBBBBBBBBBBBBBBBBB..', '..BBBBBEPPEBBBEPPED....', '..BBBBBPBBPBBBPBBPB....', '..BBBBBEPPEBBBEPPED....', '..BBBBBBBBBBBBBBBBBBB..', '.BBBBBBBBBBBBBBBBBBBB..', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBC..', '.CBBBBBBBBBBBBBBBBBBC..', '..BBBBBBBBBBBBBBBBBBB..', '..SBBBBBBBBBBBBBBBBBS..', '..SBBBB.....SBBBBSS....', '..TBBBB.....BBBBT......', '..TSBBB.....BBBST......', '..TTSBB.....BBSTT......', '...TTTT.....TTTT.......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act2$volumeTitan = A2(
+	$author$project$Sprite$Act2$titan,
+	'Volume Titan',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#446633'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#223311'),
+			_Utils_Tuple2(
+			_Utils_chr('M'),
+			'#558844'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ccffcc'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#33aa44'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#112200'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#111100')
+		]));
+var $author$project$Sprite$Act2$spriteFor = function (uid) {
+	var _v0 = _Utils_Tuple2(uid.course, uid.unit);
+	_v0$9:
+	while (true) {
+		if (_v0.a.$ === 'Course2') {
+			if (_v0.b.$ === 'Unit') {
+				switch (_v0.b.a) {
+					case 1:
+						var _v1 = _v0.a;
+						return $author$project$Sprite$Act2$senseGolem;
+					case 2:
+						var _v2 = _v0.a;
+						return $author$project$Sprite$Act2$monomialBeast;
+					case 3:
+						var _v3 = _v0.a;
+						return $author$project$Sprite$Act2$equationShade;
+					case 4:
+						var _v4 = _v0.a;
+						return $author$project$Sprite$Act2$ratioWraith;
+					case 5:
+						var _v5 = _v0.a;
+						return $author$project$Sprite$Act2$slopeSpecter;
+					case 6:
+						var _v6 = _v0.a;
+						return $author$project$Sprite$Act2$angleFiend;
+					case 7:
+						var _v7 = _v0.a;
+						return $author$project$Sprite$Act2$volumeTitan;
+					case 8:
+						var _v8 = _v0.a;
+						return $author$project$Sprite$Act2$probabilityLich;
+					default:
+						break _v0$9;
+				}
+			} else {
+				var _v9 = _v0.a;
+				var _v10 = _v0.b;
+				return $author$project$Sprite$Act2$proportionHydra;
+			}
+		} else {
+			break _v0$9;
+		}
+	}
+	return $author$project$Sprite$Act2$senseGolem;
+};
+var $author$project$Sprite$Act3$lich = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['..........HHH..........', '.........HHHHH.........', '........HHHHHHH........', '.......HHHHHHHHH.......', '......HHHHHHHHHHH......', '.......HHHFFHHHH.......', '......HHFFFFFFF........', '......HFFERREFFE.......', '......HFFRRRRFFE.......', '......HFFERREFFE.......', '.......HFFFFFFF........', '......BBBBBBBBBB.......', '.....BBBBBBBBBBBB......', '.....BBSBBBBBBBSBB.....', '....BBBSBBBBBBBBSBB....', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBB..', '..TBBBBBBBBBBBBBBBBBT..', '.TTBBBBBBBBBBBBBBBBBTT.', '.TTTTTTTTTTTTTTTTTTTTT.', '.......................']),
+			frameB: _List_fromArray(
+				['..........HHH..........', '.........HHHHH.........', '........HHHHHHH........', '.......HHHHHHHHH.......', '......HHHHHHHHHHH......', '.......HHHFFHHHH.......', '......HHFFFFFFF........', '......HFFESFEFE........', '......HFFSSSSFE........', '......HFFESFEFE........', '.......HFFFFFFF........', '......BBBBBBBBBB.......', '.....BBBBBBBBBBBB......', '.....BBSBBBBBBBSBB.....', '....BBBSBBBBBBBBSBB....', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBB..', '..TBBBBBBBBBBBBBBBBBT..', '.TTBBBBBBBBBBBBBBBBBTT.', '.TTTTTTTTTTTTTTTTTTTTT.', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act3$multiStepMage = A2(
+	$author$project$Sprite$Act3$lich,
+	'Multi-Step Mage',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#223388'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#111155'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#1a2266'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#ffeecc'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#fff5dd'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#ffcc00'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#660022')
+		]));
+var $author$project$Sprite$Act3$beast = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['....BBBBB..............', '...BBBBBBBBB...........', '..BBBBBDDBBB...........', '..BBBBDDDBBB...........', '..BBBBBBBBBBB..........', '.BBBEPPEBBBBBB.........', '.BBBPSSPBBBBDBB........', '.BBBEPPEBBBBDBB........', '.BBBBBBBBBBBBBB........', '.BBBBBBBBBBBBBBB.......', 'CBBBBBBBBBBBBBBBBB.....', 'CBBBBBBBBBBBBBBBBBB....', 'CBBDDBBBBBBBBBBBBBB....', '.BBDDBBBBBBBBBBBBBC....', '.BBBBBBBBBBBBBBBBC.....', '.CBBBBBBBBBBBBBBC......', '..BBBBBBBBBBBBBBB......', '..SBBBB.....BBBBS......', '..SBBBB.....BBBBS......', '..CSBBB.....BBBSC......', '..CCBB.......BBCC......', '..CCSS.......SSCC......', '...FFF.......FFF.......', '.......................']),
+			frameB: _List_fromArray(
+				['......BBBBB............', '.....BBBBBBBBB.........', '....BBBBBDDBBB.........', '....BBBBDDDBBB.........', '....BBBBBBBBBBB........', '...BBBEPPEBBBBBB.......', '...BBBPSSPBBBBDBB......', '...BBBEPPEBBBBDBB......', '...BBBBBBBBBBBBBB......', '...BBBBBBBBBBBBBBB.....', '..CBBBBBBBBBBBBBBBBB...', '..CBBBBBBBBBBBBBBBBBB..', '..CBBDDBBBBBBBBBBBBBB..', '...BBDDBBBBBBBBBBBBBC..', '...BBBBBBBBBBBBBBBBC...', '...CBBBBBBBBBBBBBBC....', '....BBBBBBBBBBBBBBB....', '....SBBBB.....BBBBS....', '....SBBBB.....BBBBS....', '....CSBBB.....BBBSC....', '....CCBB.......BBCC....', '....CCSS.......SSCC....', '.....FFF.......FFF.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act3$percentPredator = A2(
+	$author$project$Sprite$Act3$beast,
+	'Percent Predator',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#aa6622'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#663311'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffeeaa'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#cc8800'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#331100'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#ffddbb'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#773300')
+		]));
+var $author$project$Sprite$Act3$ghost = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '...BBBB.....BBBB.......', '..TBBBB.......BBBBT....', '..TBBB.........BBBT....', '...TBB..........BT.....', '....TB..........BT.....', '.....TT.........TT.....', '......TT.......TT......', '.......................']),
+			frameB: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '....BBBB.....BBBB......', '...TBBBB.......BBBBT...', '...TBBB.........BBBT...', '....TBB..........BT....', '.....TB..........BT....', '......TT........TT.....', '.......TT......TT......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act3$polyPhantom = A2(
+	$author$project$Sprite$Act3$ghost,
+	'Poly Phantom',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#7755aa'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#442266'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ddbbee'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#eeddff'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#220044')
+		]));
+var $author$project$Sprite$Act3$preAlgebraLich = {
+	frameA: _List_fromArray(
+		['...........HHH.........', '..........HHHHH........', '.........HHHHHHH.......', '........HHHHHHHHH......', '.......HHHHHHHHHHH.....', '........HHHFFHHH.......', '.......HHFFFFFFFF......', '..M....HFFEERREFFE.....', '..MA...HFFRRRRRRFE.....', '..MA...HFFEERREFFE.....', '..M....HFFFFFFFF.......', '..AAA..BBBBBBBBBBB.....', '..AAA.BBBBBBBBBBBBB....', '.....BBBSBBBBBBBSBB....', '....BBBSBBBBBBBBSBB....', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBB..', '..TBBBBBBBBBBBBBBBBBT..', '.TTBBBBBBBBBBBBBBBBBTT.', '.TTTTTTTTTTTTTTTTTTTTT.', '......................  ']),
+	frameB: _List_fromArray(
+		['...........HHH.........', '..........HHHHH........', '.........HHHHHHH.......', '........HHHHHHHHH......', '.......HHHHHHHHHHH.....', '........HHHFFHHH.......', '.......HHFFFFFFFF......', '..M....HFFEESFEFE....', '..MA...HFFSSSSFFE....', '..MA...HFFEESFEFE....', '..M....HFFFFFFFF.......', '..AAA..BBBBBBBBBBB.....', '..AAA.BBBBBBBBBBBBB....', '.....BBBSBBBBBBBSBB....', '....BBBSBBBBBBBBSBB....', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '..BBBBBBBBBBBBBBBBBBB..', '..TBBBBBBBBBBBBBBBBBT..', '.TTBBBBBBBBBBBBBBBBBTT.', '.TTTTTTTTTTTTTTTTTTTTT.', '......................  ']),
+	name: 'Pre-Algebra Lich',
+	palette: _List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#331155'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#110033'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#220044'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#ddc8ee'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#cc44ff'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#110022'),
+			_Utils_Tuple2(
+			_Utils_chr('M'),
+			'#9955dd'),
+			_Utils_Tuple2(
+			_Utils_chr('A'),
+			'#663399')
+		]),
+	pixelSize: 8
+};
+var $author$project$Sprite$Act3$rootRevenant = A2(
+	$author$project$Sprite$Act3$ghost,
+	'Root Revenant',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#1a3322'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#0a1a0a'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#886655'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#cc9977'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#ff3300'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#050a05')
+		]));
+var $author$project$Sprite$Act3$scatterShade = A2(
+	$author$project$Sprite$Act3$ghost,
+	'Scatter Shade',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#778899'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#445566'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#aaffff'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#eeffff'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#00ddff'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#223344')
+		]));
+var $author$project$Sprite$Act3$slopeStalker = A2(
+	$author$project$Sprite$Act3$beast,
+	'Slope Stalker',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#444455'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#222233'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ccdde0'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#99bbcc'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#111122'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#aabbcc'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#333344')
+		]));
+var $author$project$Sprite$Act3$serpent = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['.....HHHHHHH...........', '....HHHHHHHHHH.........', '...HHHEHHHHHHHHH.......', '...HHHEHHHHHHHHHH......', '...HHHHHHHHHHHHHH......', '....HHHHHHHHHHHHH......', '....HHHTTHHHHHHH.......', '.....HHTTHHHHHH........', '......BDBDBBBB.........', '.....BDBDBDBDBBB.......', '....BDBDBDBDBDBBB......', '....BDBDBDBDBDBDBB.....', '...BDBDBDBDBDBDBDBB....', '...BDBDBDBDBDBDBDBB....', '....BDBDBDBDBDBDBB.....', '.....BDBDBDBDBBB.......', '......BDBDBDBB.........', '.......BDBDBB..........', '.......SSBDB...........', '........SSSBD..........', '.........SSBD..........', '..........SSD..........', '...........SS..........', '.......................']),
+			frameB: _List_fromArray(
+				['.....HHHHHHH...........', '....HHHHHHHHHH.........', '...HHHEHHHHHHHHH.......', '...HHHEHHHHHHHHHH......', '...HHHHHHHHHHHHHH......', '....HHHHHHHHHHHHH......', '....HHHTTHHHHHHH.......', '.....HTTHHHHHH.........', '......BDBDBBBB.........', '.....BDBDBDBDBBB.......', '....BDBDBDBDBDBBB......', '....BDBDBDBDBDBDBB.....', '...BDBDBDBDBDBDBDBB....', '...BDBDBDBDBDBDBDBB....', '....BDBDBDBDBDBDBB.....', '.....BDBDBDBDBBB.......', '......BDBDBDBB.........', '......SBDBDBB..........', '.......SSSBD...........', '........SSSB...........', '.........SSBD..........', '..........SSD..........', '...........SS..........', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act3$systemSerpent = A2(
+	$author$project$Sprite$Act3$serpent,
+	'System Serpent',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#bb6611'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#883300'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#cc7722'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffcc44'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#dd2200'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#441100')
+		]));
+var $author$project$Sprite$Act3$titan = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['......BBBBBBBBB........', '.....BBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '....BBBMMBBBBBMMBB.....', '....BBBMMBBBBBMMBB.....', '...BBBBBBBBBBBBBBBBB...', '..BBBBBBBBBBBBBBBBBBB..', '..BBBBBEPPEBBBEPPED....', '..BBBBBPSSPBBBPSSPB....', '..BBBBBEPPEBBBEPPED....', '..BBBBBBBBBBBBBBBBBBB..', '.BBBBBBBBBBBBBBBBBBBB..', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBC..', '.CBBBBBBBBBBBBBBBBBBC..', '..BBBBBBBBBBBBBBBBBBB..', '..SBBBBBBBBBBBBBBBBBS..', '..SBBBB.....SBBBBSS....', '..TBBBB.....BBBBT......', '..TSBBB.....BBBST......', '..TTSBB.....BBSTT......', '...TTTT.....TTTT.......', '.......................']),
+			frameB: _List_fromArray(
+				['......BBBBBBBBB........', '.....BBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '....BBBMMBBBBBMMBB.....', '....BBBMMBBBBBMMBB.....', '...BBBBBBBBBBBBBBBBB...', '..BBBBBBBBBBBBBBBBBBB..', '..BBBBBEPPEBBBEPPED....', '..BBBBBPBBPBBBPBBPB....', '..BBBBBEPPEBBBEPPED....', '..BBBBBBBBBBBBBBBBBBB..', '.BBBBBBBBBBBBBBBBBBBB..', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBC..', '.CBBBBBBBBBBBBBBBBBBC..', '..BBBBBBBBBBBBBBBBBBB..', '..SBBBBBBBBBBBBBBBBBS..', '..SBBBB.....SBBBBSS....', '..TBBBB.....BBBBT......', '..TSBBB.....BBBST......', '..TTSBB.....BBSTT......', '...TTTT.....TTTT.......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act3$theoremTroll = A2(
+	$author$project$Sprite$Act3$titan,
+	'Theorem Troll',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#446633'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#223311'),
+			_Utils_Tuple2(
+			_Utils_chr('M'),
+			'#668844'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffeecc'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#996622'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#331100'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#221100')
+		]));
+var $author$project$Sprite$Act3$volumeViper = A2(
+	$author$project$Sprite$Act3$serpent,
+	'Volume Viper',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#551188'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#330066'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#7722aa'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ff8800'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#ff4400'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#220044')
+		]));
+var $author$project$Sprite$Act3$spriteFor = function (uid) {
+	var _v0 = _Utils_Tuple2(uid.course, uid.unit);
+	_v0$10:
+	while (true) {
+		if (_v0.a.$ === 'PreAlgebra') {
+			if (_v0.b.$ === 'Unit') {
+				switch (_v0.b.a) {
+					case 1:
+						var _v1 = _v0.a;
+						return $author$project$Sprite$Act3$rootRevenant;
+					case 2:
+						var _v2 = _v0.a;
+						return $author$project$Sprite$Act3$polyPhantom;
+					case 3:
+						var _v3 = _v0.a;
+						return $author$project$Sprite$Act3$multiStepMage;
+					case 4:
+						var _v4 = _v0.a;
+						return $author$project$Sprite$Act3$percentPredator;
+					case 5:
+						var _v5 = _v0.a;
+						return $author$project$Sprite$Act3$slopeStalker;
+					case 6:
+						var _v6 = _v0.a;
+						return $author$project$Sprite$Act3$systemSerpent;
+					case 7:
+						var _v7 = _v0.a;
+						return $author$project$Sprite$Act3$theoremTroll;
+					case 8:
+						var _v8 = _v0.a;
+						return $author$project$Sprite$Act3$volumeViper;
+					case 9:
+						var _v9 = _v0.a;
+						return $author$project$Sprite$Act3$scatterShade;
+					default:
+						break _v0$10;
+				}
+			} else {
+				var _v10 = _v0.a;
+				var _v11 = _v0.b;
+				return $author$project$Sprite$Act3$preAlgebraLich;
+			}
+		} else {
+			break _v0$10;
+		}
+	}
+	return $author$project$Sprite$Act3$preAlgebraLich;
+};
+var $author$project$Sprite$Act4$titan = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['......BBBBBBBBB........', '.....BBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '....BBBMMBBBBBMMBB.....', '....BBBMMBBBBBMMBB.....', '...BBBBBBBBBBBBBBBBB...', '..BBBBBBBBBBBBBBBBBBB..', '..BBBBBEPPEBBBEPPED....', '..BBBBBPSSPBBBPSSPB....', '..BBBBBEPPEBBBEPPED....', '..BBBBBBBBBBBBBBBBBBB..', '.BBBBBBBBBBBBBBBBBBBB..', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBC..', '.CBBBBBBBBBBBBBBBBBBC..', '..BBBBBBBBBBBBBBBBBBB..', '..SBBBBBBBBBBBBBBBBBS..', '..SBBBB.....SBBBBSS....', '..TBBBB.....BBBBT......', '..TSBBB.....BBBST......', '..TTSBB.....BBSTT......', '...TTTT.....TTTT.......', '.......................']),
+			frameB: _List_fromArray(
+				['......BBBBBBBBB........', '.....BBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '....BBBMMBBBBBMMBB.....', '....BBBMMBBBBBMMBB.....', '...BBBBBBBBBBBBBBBBB...', '..BBBBBBBBBBBBBBBBBBB..', '..BBBBBEPPEBBBEPPED....', '..BBBBBPBBPBBBPBBPB....', '..BBBBBEPPEBBBEPPED....', '..BBBBBBBBBBBBBBBBBBB..', '.BBBBBBBBBBBBBBBBBBBB..', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBBC.', 'CBBBBBBBBBBBBBBBBBBBC..', '.CBBBBBBBBBBBBBBBBBBC..', '..BBBBBBBBBBBBBBBBBBB..', '..SBBBBBBBBBBBBBBBBBS..', '..SBBBB.....SBBBBSS....', '..TBBBB.....BBBBT......', '..TSBBB.....BBBST......', '..TTSBB.....BBSTT......', '...TTTT.....TTTT.......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$algebraOgre = A2(
+	$author$project$Sprite$Act4$titan,
+	'Algebra Ogre',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#778833'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#445511'),
+			_Utils_Tuple2(
+			_Utils_chr('M'),
+			'#99bb44'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffeecc'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#aacc00'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#223300'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#112200')
+		]));
+var $author$project$Sprite$Act4$algebraTitan = {
+	frameA: _List_fromArray(
+		['..PPPP..BBBB..PPPP....', '.PPPPPPBBBBBBPPPPPP...', '.PPPPPPBBBBBBPPPPPP...', '.PPPPPPBBBBBBPPPPPP...', '..PPPSSBBBBBBSSPPP....', '...SSSBHHHHHHBSSS.....', '....BBHHHHHHHHHBB.....', '....BHEEEEEEEEHB......', '....BHERRRRRREHB......', '....BHEEEEEEEEHB......', '....BBHHHHHHHHHBB.....', '....BBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBB...', '...BBBGXBBBBBXGBBB....', '...BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBB....', '...BBBBGGGGGGGBBBB....', '....BBBBBBBBBBBBBB....', '....XBBB......BBBX....', '...XXBBB......BBBXX...', '...XXBBB......BBBXX...', '...XXSSS......SSSXX...', '....XXXX......XXXX....', '......................  ']),
+	frameB: _List_fromArray(
+		['..PPPP..BBBB..PPPP....', '.PPPPPPBBBBBBPPPPPP...', '.PPPPPPBBBBBBPPPPPP...', '.PPPPPPBBBBBBPPPPPP...', '..PPPSSBBBBBBSSPPP....', '...SSSBHHHHHHBSSS.....', '....BBHHHHHHHHHBB.....', '....BHEEEEEEEEHB......', '....BHESSSSSEHB.......', '....BHEEEEEEEEHB......', '....BBHHHHHHHHHBB.....', '....BBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBB...', '...BBBGXBBBBBXGBBB....', '...BBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBB....', '...BBBBGGGGGGGBBBB....', '....BBBBBBBBBBBBBB....', '....XBBB......BBBX....', '...XXBBB......BBBXX...', '...XXBBB......BBBXX...', '...XXSSS......SSSXX...', '....XXXX......XXXX....', '......................  ']),
+	name: 'Algebra Titan',
+	palette: _List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#333344'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#111122'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#445566'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#222233'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffaaaa'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#ff2222'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#000011'),
+			_Utils_Tuple2(
+			_Utils_chr('G'),
+			'#cc3300'),
+			_Utils_Tuple2(
+			_Utils_chr('X'),
+			'#551100')
+		]),
+	pixelSize: 8
+};
+var $author$project$Sprite$Act4$ghost = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBWPPWBBBBWPPWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '...BBBB.....BBBB.......', '..TBBBB.......BBBBT....', '..TBBB.........BBBT....', '...TBB..........BT.....', '....TB..........BT.....', '.....TT.........TT.....', '......TT.......TT......', '.......................']),
+			frameB: _List_fromArray(
+				['........BBBBB..........', '......BBBBBBBBBBB......', '.....BBBBBBBBBBBBB.....', '....BBBBBBBBBBBBBBB....', '....BBBBSSBBBBBSSBBBB..', '....BBBBSSBBBBBSSBBBB..', '...BBBBBBBBBBBBBBBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBWBBWBBBBWBBWBBB...', '...BBEWWBBBBBBWWEBBB...', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBSSSSSSBBBB.....', '....BBBBBBBBBBBBB......', '.....BBBBBBBBBBB.......', '....BBBB.....BBBB......', '...TBBBB.......BBBBT...', '...TBBB.........BBBT...', '....TBB..........BT....', '.....TB..........BT....', '......TT........TT.....', '.......TT......TT......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$equationWraith = A2(
+	$author$project$Sprite$Act4$ghost,
+	'Equation Wraith',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#881122'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#440011'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffcccc'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ffeeee'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#ddcccc'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#220000')
+		]));
+var $author$project$Sprite$Act4$elemental = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['..........W............', '.........WWW...........', '......WWWWWWWWWW.......', '.....WWWWBBBBWWWWW.....', '....WWWWBBBBBBWWWWW....', '....WWWBBBCCCBBBWWW....', '...WWWBBBCCGCCBBBWWWW..', '...WWWBBBCCGCCBBBWWW...', '...WWWWBBBCCCBBBWWWWW..', '....WWWWBBBBBBBWWWWW...', '.....WWWWWWWWWWWWWW....', '......WWWWWWWWWWWWWW...', '.....SWWWWWWWWWWWWS....', '....SWWWWWWWWWWWWWSS...', '....SWWWWWWWWWWWWSS....', '.....SWWWWWWWWWWSS.....', '......SWWWWWWWWSS......', '.....SSSWWWWWWSSS......', '....SSWWW...WWWSS......', '...SSW.........WSS.....', '..SS............SS.....', '...SS..........SS......', '....SSS......SSS.......', '.......................']),
+			frameB: _List_fromArray(
+				['............W..........', '...........WWW.........', '......WWWWWWWWWWW......', '.....WWWWBBBBWWWWW.....', '....WWWWBBBBBBWWWWWW...', '....WWWBBBCCCBBBWWWW...', '...WWWWBBBCCGCCBBBWWW..', '...WWWBBBCCGCCBBBWWWWW.', '...WWWWBBBCCCBBBWWWWW..', '....WWWWBBBBBBBWWWWW...', '.....WWWWWWWWWWWWWWW...', '......WWWWWWWWWWWWWWW..', '.....SWWWWWWWWWWWWSS...', '....SWWWWWWWWWWWWSS....', '....SWWWWWWWWWWWSS.....', '.....SWWWWWWWWSS.......', '......SWWWWWWSS........', '.....SSWWWWWWSS........', '....SSWWW...WWSS.......', '...SSW.........WSS.....', '..SS............SS.....', '...SS..........SS......', '....SSS......SSS.......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$exponentElemental = A2(
+	$author$project$Sprite$Act4$elemental,
+	'Exponent Elemental',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('G'),
+			'#ffff88'),
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#ffaa00'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#cc5500'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#662200')
+		]));
+var $author$project$Sprite$Act4$fiend = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['....H.........H........', '....HH.......HH........', '...HHHBBBBBHHH.........', '...BBBBBBBBBBBB........', '..WBBBBBBBBBBBBBW......', '..WBBEPPEBBBEPPED......', '..WBBPRRPBBBPRRPD......', '..WBBEPPEBBBEPPED......', '..WBBBBBBBBBBBBBW......', '..WWBBBBBBBBBBBWW......', '..WWWBBBBBBBBBWWWW.....', '...WWWBBBBBBBBWWW......', '...CBBBBBBBBBBBBC......', '...CBBSBBBBBBSBC.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '...CBBBB.....BBBBC.....', '..CCBBBB.....BBBBCC....', '..CCSSBB.....BBSSCC....', '..CCBBBB.....BBBBCC....', '..CCCBB.......BBCCC....', '...CCCC.......CCCC.....', '.......................']),
+			frameB: _List_fromArray(
+				['....H.........H........', '....HH.......HH........', '...HHHBBBBBHHH.........', '...BBBBBBBBBBBB........', '..WBBBBBBBBBBBBBW......', '..WBBEPPEBBBEPPED......', '..WBBPBBPBBBPBBPD......', '..WBBEPPEBBBEPPED......', '..WBBBBBBBBBBBBBW......', '..WWBBBBBBBBBBBWW......', '..WWWWBBBBBBBWWWWW.....', '...WWWWBBBBBBWWWW......', '...CBBBBBBBBBBBBC......', '...CBBSBBBBBBSBC.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBB.......', '....BBBBBBBBBBBBB......', '...CBBBB.....BBBBC.....', '..CCBBBB.....BBBBCC....', '..CCSSBB.....BBSSCC....', '..CCBBBB.....BBBBCC....', '..CCCBB.......BBCCC....', '...CCCC.......CCCC.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$functionFiend = A2(
+	$author$project$Sprite$Act4$fiend,
+	'Function Fiend',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#115522'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#002211'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#002200'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#001100'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#eeffee'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#001100'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#003311'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#aaffaa')
+		]));
+var $author$project$Sprite$Act4$serpent = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['.....HHHHHHH...........', '....HHHHHHHHHH.........', '...HHHEHHHHHHHHH.......', '...HHHEHHHHHHHHHH......', '...HHHHHHHHHHHHHH......', '....HHHHHHHHHHHHH......', '....HHHTTHHHHHHH.......', '.....HHTTHHHHHH........', '......BDBDBBBB.........', '.....BDBDBDBDBBB.......', '....BDBDBDBDBDBBB......', '....BDBDBDBDBDBDBB.....', '...BDBDBDBDBDBDBDBB....', '...BDBDBDBDBDBDBDBB....', '....BDBDBDBDBDBDBB.....', '.....BDBDBDBDBBB.......', '......BDBDBDBB.........', '.......BDBDBB..........', '.......SSBDB...........', '........SSSBD..........', '.........SSBD..........', '..........SSD..........', '...........SS..........', '.......................']),
+			frameB: _List_fromArray(
+				['.....HHHHHHH...........', '....HHHHHHHHHH.........', '...HHHEHHHHHHHHH.......', '...HHHEHHHHHHHHHH......', '...HHHHHHHHHHHHHH......', '....HHHHHHHHHHHHH......', '....HHHTTHHHHHHH.......', '.....HTTHHHHHH.........', '......BDBDBBBB.........', '.....BDBDBDBDBBB.......', '....BDBDBDBDBDBBB......', '....BDBDBDBDBDBDBB.....', '...BDBDBDBDBDBDBDBB....', '...BDBDBDBDBDBDBDBB....', '....BDBDBDBDBDBDBB.....', '.....BDBDBDBDBBB.......', '......BDBDBDBB.........', '......SBDBDBB..........', '.......SSSBD...........', '........SSSB...........', '.........SSBD..........', '..........SSD..........', '...........SS..........', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$linearLeviathan = A2(
+	$author$project$Sprite$Act4$serpent,
+	'Linear Leviathan',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#112266'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#0a1144'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#1a3388'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#00eeff'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#0088cc'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#050a22')
+		]));
+var $author$project$Sprite$Act4$beast = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['....BBBBB..............', '...BBBBBBBBB...........', '..BBBBBDDBBB...........', '..BBBBDDDBBB...........', '..BBBBBBBBBBB..........', '.BBBEPPEBBBBBB.........', '.BBBPSSPBBBBDBB........', '.BBBEPPEBBBBDBB........', '.BBBBBBBBBBBBBB........', '.BBBBBBBBBBBBBBB.......', 'CBBBBBBBBBBBBBBBBB.....', 'CBBBBBBBBBBBBBBBBBB....', 'CBBDDBBBBBBBBBBBBBB....', '.BBDDBBBBBBBBBBBBBC....', '.BBBBBBBBBBBBBBBBC.....', '.CBBBBBBBBBBBBBBC......', '..BBBBBBBBBBBBBBB......', '..SBBBB.....BBBBS......', '..SBBBB.....BBBBS......', '..CSBBB.....BBBSC......', '..CCBB.......BBCC......', '..CCSS.......SSCC......', '...FFF.......FFF.......', '.......................']),
+			frameB: _List_fromArray(
+				['......BBBBB............', '.....BBBBBBBBB.........', '....BBBBBDDBBB.........', '....BBBBDDDBBB.........', '....BBBBBBBBBBB........', '...BBBEPPEBBBBBB.......', '...BBBPSSPBBBBDBB......', '...BBBEPPEBBBBDBB......', '...BBBBBBBBBBBBBB......', '...BBBBBBBBBBBBBBB.....', '..CBBBBBBBBBBBBBBBBB...', '..CBBBBBBBBBBBBBBBBBB..', '..CBBDDBBBBBBBBBBBBBB..', '...BBDDBBBBBBBBBBBBBC..', '...BBBBBBBBBBBBBBBBC...', '...CBBBBBBBBBBBBBBC....', '....BBBBBBBBBBBBBBB....', '....SBBBB.....BBBBS....', '....SBBBB.....BBBBS....', '....CSBBB.....BBBSC....', '....CCBB.......BBCC....', '....CCSS.......SSCC....', '.....FFF.......FFF.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$polyPredator = A2(
+	$author$project$Sprite$Act4$beast,
+	'Poly Predator',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#442266'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#220044'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffeeaa'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#ffcc00'),
+			_Utils_Tuple2(
+			_Utils_chr('C'),
+			'#110022'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#ccbbee'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#331155')
+		]));
+var $author$project$Sprite$Act4$quadraShade = A2(
+	$author$project$Sprite$Act4$ghost,
+	'Quadra Shade',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#111111'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#050505'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#440000'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#880000'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#ff0000'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#020202')
+		]));
+var $author$project$Sprite$Act4$knight = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['......PPPPPPPPPPP......', '.....PPPPPPPPPPPPP.....', '....PPPPPHHHHHHPPPPP...', '....PPPPHHHHHHHPPPP....', '.....PPHHHHHHHHHPP.....', '.....PPHEEEEEEEHPP.....', '.....PPHERRRREHPP......', '.....PPHEEEEEEEHPP.....', '.....PPHHHHHHHHHPP.....', '....BBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '...BBBSSBBBBBBSSBBBB...', '...BBBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '....BBBSSSSSSSSBBBB....', '....BBBBBBBBBBBBBB.....', '....TBBBB.....BBBBT....', '....TBBBB.....BBBBT....', '....TSSBB.....BSSST....', '....TTTBB.....BBBTT....', '.....TTTT.....TTTT.....', '.......................']),
+			frameB: _List_fromArray(
+				['......PPPPPPPPPPP......', '.....PPPPPPPPPPPPP.....', '....PPPPPHHHHHHPPPPP...', '....PPPPHHHHHHHPPPP....', '.....PPHHHHHHHHHPP.....', '.....PPHEEEEEEEHPP.....', '.....PPHEBBBBEHPP......', '.....PPHEEEEEEEHPP.....', '.....PPHHHHHHHHHPP.....', '....BBBBBBBBBBBBBBBB...', '...BBBBBBBBBBBBBBBBBB..', '...BBBSSBBBBBBSSBBBB...', '...BBBBBBBBBBBBBBBB....', '...BBBBBBBBBBBBBBBBB...', '....BBBBBBBBBBBBBBB....', '....BBBBBBBBBBBBBBB....', '....BBBSSSSSSSSBBBB....', '....BBBBBBBBBBBBBB.....', '....TBBBB.....BBBBT....', '....TBBBB.....BBBBT....', '....TSSBB.....BSSST....', '....TTTBB.....BBBTT....', '.....TTTT.....TTTT.....', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$radicalRider = A2(
+	$author$project$Sprite$Act4$knight,
+	'Radical Rider',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#222233'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#111122'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#333344'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ddbbff'),
+			_Utils_Tuple2(
+			_Utils_chr('R'),
+			'#aa44ff'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#444455'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#000011')
+		]));
+var $author$project$Sprite$Act4$reaper = F2(
+	function (name, palette) {
+		return {
+			frameA: _List_fromArray(
+				['.....HHHHHHHH..........', '....HHHHHHHHHH.........', '....HHHFFFHHHH.........', '....HHFFFFFFF..........', '....HHFFEEFFF..........', '....HHFFEEFFF..........', '.....HHFFFFFF..........', '.....HHHHHHHHH.........', '.K...BBBBBBBBBB........', 'KK...BBBBBBBBBBB.......', 'KKKK.BBBBBBBBBBB.......', '.LKKKBBBSBBBBBBB.......', '..LLL.BBBSBBBBBB.......', '...LLL.BBBBBBBBBB......', '....LL..BBBBBBBBB......', '....LL..BBBBBBBBB......', '....LL..BBBBBBBBB......', '.....L..BBBSBBBB.......', '.....L.BBBBBBBBB.......', '......BBBBBBBBBB.......', '......SBBBBBBBBB.......', '.....SSBBBBBBBBBB......', '....SSSSSSSSSSSSS......', '.......................']),
+			frameB: _List_fromArray(
+				['.....HHHHHHHH..........', '....HHHHHHHHHH.........', '....HHHFFFHHHH.........', '....HHFFFFFFF..........', '....HHFFBBFFF..........', '....HHFFBBFFF..........', '.....HHFFFFFF..........', '.....HHHHHHHHH.........', '.K...BBBBBBBBBB........', 'KK...BBBBBBBBBBB.......', 'KKKK.BBBBBBBBBBB.......', '.LKKKBBBSBBBBBBB.......', '..LLL.BBBSBBBBBB.......', '...LLL.BBBBBBBBBB......', '....LL..BBBBBBBBB......', '....LL..BBBBBBBBB......', '....LL..BBBBBBBBB......', '.....L..BBBSBBBB.......', '.....L.BBBBBBBBB.......', '......BBBBBBBBBB.......', '......SBBBBBBBBB.......', '.....SSBBBBBBBBBB......', '....SSSSSSSSSSSSS......', '.......................']),
+			name: name,
+			palette: palette,
+			pixelSize: 8
+		};
+	});
+var $author$project$Sprite$Act4$rationalReaper = A2(
+	$author$project$Sprite$Act4$reaper,
+	'Rational Reaper',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#333322'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#1a1a11'),
+			_Utils_Tuple2(
+			_Utils_chr('F'),
+			'#ccbb99'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#00ff88'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#221100'),
+			_Utils_Tuple2(
+			_Utils_chr('K'),
+			'#ccccaa'),
+			_Utils_Tuple2(
+			_Utils_chr('L'),
+			'#886644')
+		]));
+var $author$project$Sprite$Act4$regressionRevenant = A2(
+	$author$project$Sprite$Act4$ghost,
+	'Regression Revenant',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#115544'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#082a22'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#88ddcc'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ccffee'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#aaddcc'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#041510')
+		]));
+var $author$project$Sprite$Act4$systemSpecter = A2(
+	$author$project$Sprite$Act4$ghost,
+	'System Specter',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#ddddcc'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#aaaaaa'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('W'),
+			'#ffffff'),
+			_Utils_Tuple2(
+			_Utils_chr('P'),
+			'#999999'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#888888')
+		]));
+var $author$project$Sprite$Act4$varianceViper = A2(
+	$author$project$Sprite$Act4$serpent,
+	'Variance Viper',
+	_List_fromArray(
+		[
+			_Utils_Tuple2(
+			_Utils_chr('B'),
+			'#881122'),
+			_Utils_Tuple2(
+			_Utils_chr('D'),
+			'#550011'),
+			_Utils_Tuple2(
+			_Utils_chr('H'),
+			'#aa1133'),
+			_Utils_Tuple2(
+			_Utils_chr('E'),
+			'#ff8800'),
+			_Utils_Tuple2(
+			_Utils_chr('T'),
+			'#ff4400'),
+			_Utils_Tuple2(
+			_Utils_chr('S'),
+			'#330000')
+		]));
+var $author$project$Sprite$Act4$spriteFor = function (uid) {
+	var _v0 = _Utils_Tuple2(uid.course, uid.unit);
+	_v0$13:
+	while (true) {
+		if (_v0.a.$ === 'Algebra1') {
+			if (_v0.b.$ === 'Unit') {
+				switch (_v0.b.a) {
+					case 1:
+						var _v1 = _v0.a;
+						return $author$project$Sprite$Act4$algebraOgre;
+					case 2:
+						var _v2 = _v0.a;
+						return $author$project$Sprite$Act4$equationWraith;
+					case 3:
+						var _v3 = _v0.a;
+						return $author$project$Sprite$Act4$functionFiend;
+					case 4:
+						var _v4 = _v0.a;
+						return $author$project$Sprite$Act4$linearLeviathan;
+					case 5:
+						var _v5 = _v0.a;
+						return $author$project$Sprite$Act4$systemSpecter;
+					case 6:
+						var _v6 = _v0.a;
+						return $author$project$Sprite$Act4$exponentElemental;
+					case 7:
+						var _v7 = _v0.a;
+						return $author$project$Sprite$Act4$polyPredator;
+					case 8:
+						var _v8 = _v0.a;
+						return $author$project$Sprite$Act4$quadraShade;
+					case 9:
+						var _v9 = _v0.a;
+						return $author$project$Sprite$Act4$regressionRevenant;
+					case 10:
+						var _v10 = _v0.a;
+						return $author$project$Sprite$Act4$rationalReaper;
+					case 11:
+						var _v11 = _v0.a;
+						return $author$project$Sprite$Act4$radicalRider;
+					case 12:
+						var _v12 = _v0.a;
+						return $author$project$Sprite$Act4$varianceViper;
+					default:
+						break _v0$13;
+				}
+			} else {
+				var _v13 = _v0.a;
+				var _v14 = _v0.b;
+				return $author$project$Sprite$Act4$algebraTitan;
+			}
+		} else {
+			break _v0$13;
+		}
+	}
+	return $author$project$Sprite$Act4$algebraTitan;
 };
 var $author$project$Sprite$Lookup$spriteFor = function (uid) {
 	var _v0 = uid.course;
@@ -22676,7 +25832,14 @@ var $author$project$Sprite$Lookup$spriteFor = function (uid) {
 };
 var $author$project$View$Battle$viewFightScreen = F2(
 	function (playerName, state) {
-		var sprite = $author$project$Sprite$Lookup$spriteFor(state.unit);
+		var sprite = function () {
+			var _v3 = state.mode;
+			if (_v3.$ === 'BossMode') {
+				return $author$project$Sprite$Lookup$spriteFor(state.unit);
+			} else {
+				return $author$project$Sprite$Lookup$questSpriteFor(state.unit);
+			}
+		}();
 		var spriteH = sprite.pixelSize * 24;
 		var spriteW = sprite.pixelSize * 20;
 		var flashOverlay = function () {
@@ -22737,7 +25900,6 @@ var $author$project$View$Battle$viewFightScreen = F2(
 						$author$project$View$Battle$problemArea(state)
 					])));
 	});
-var $author$project$Types$NextQuest = {$: 'NextQuest'};
 var $author$project$View$Battle$viewNormalQuestComplete = function (state) {
 	var quests = $author$project$Game$Curriculum$questsFor(state.unit);
 	var total = $elm$core$List$length(quests);
@@ -22952,7 +26114,6 @@ var $author$project$View$Battle$viewPracticeComplete = function (state) {
 var $author$project$View$Battle$viewQuestComplete = function (state) {
 	return state.practice ? $author$project$View$Battle$viewPracticeComplete(state) : $author$project$View$Battle$viewNormalQuestComplete(state);
 };
-var $author$project$Types$BeginQuest = {$: 'BeginQuest'};
 var $author$project$View$Battle$viewQuestIntro = function (state) {
 	var quests = $author$project$Game$Curriculum$questsFor(state.unit);
 	var total = $elm$core$List$length(quests);
@@ -23183,13 +26344,14 @@ var $author$project$View$Battle$viewTutorial = F2(
 									A2(
 									$elm$html$Html$Attributes$style,
 									'font-size',
-									$elm$core$String$fromInt($author$project$View$Theme$fontSizeNormal) + 'px'),
+									$elm$core$String$fromInt($author$project$View$Theme$fontSizeLarge) + 'px'),
 									A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream),
-									A2($elm$html$Html$Attributes$style, 'line-height', '1.8')
+									A2($elm$html$Html$Attributes$style, 'line-height', '2'),
+									A2($elm$html$Html$Attributes$style, 'word-break', 'break-word')
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text(problem.prompt)
+									$author$project$View$Math$renderMath(problem.prompt)
 								])),
 							A2(
 							$elm$html$Html$p,
@@ -23267,7 +26429,7 @@ var $author$project$View$Battle$viewTutorial = F2(
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(step)
+															$author$project$View$Math$renderMath(step)
 														]))
 												]));
 									}),
@@ -23798,7 +26960,7 @@ var $author$project$View$Help$hintSection = function (helpState) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text(helpState.hint.prompt)
+						$author$project$View$Math$renderMath(helpState.hint.prompt)
 					])),
 				A2(
 				$elm$html$Html$p,
@@ -23879,7 +27041,7 @@ var $author$project$View$Help$stepSection = function (helpState) {
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text(step)
+												$author$project$View$Math$renderMath(step)
 											]))
 									]));
 						}),
@@ -23907,63 +27069,9 @@ var $author$project$View$Help$viewHelp = F2(
 					$author$project$View$Help$buttons(helpState)
 				]));
 	});
-var $author$project$View$Map$courseLabel = function (course) {
-	switch (course.$) {
-		case 'Course1':
-			return 'ACT I';
-		case 'Course2':
-			return 'ACT II';
-		case 'PreAlgebra':
-			return 'ACT III';
-		default:
-			return 'ACT IV';
-	}
+var $author$project$Types$GoToAct = function (a) {
+	return {$: 'GoToAct', a: a};
 };
-var $author$project$View$Map$header = F2(
-	function (playerName, course) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-					A2($elm$html$Html$Attributes$style, 'justify-content', 'space-between'),
-					A2($elm$html$Html$Attributes$style, 'align-items', 'center')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
-							A2(
-							$elm$html$Html$Attributes$style,
-							'font-size',
-							$elm$core$String$fromInt($author$project$View$Theme$fontSizeLarge) + 'px'),
-							A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$gold)
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(
-							$author$project$View$Map$courseLabel(course))
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
-							A2(
-							$elm$html$Html$Attributes$style,
-							'font-size',
-							$elm$core$String$fromInt($author$project$View$Theme$fontSizeSmall) + 'px'),
-							A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream)
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(playerName)
-						]))
-				]));
-	});
 var $author$project$View$Map$compareUnits = F2(
 	function (a, b) {
 		var slotRank = function (s) {
@@ -23999,6 +27107,155 @@ var $author$project$View$Map$compareUnits = F2(
 			var other = _v0;
 			return other;
 		}
+	});
+var $author$project$View$Map$courseLabel = function (course) {
+	switch (course.$) {
+		case 'Course1':
+			return 'ACT I';
+		case 'Course2':
+			return 'ACT II';
+		case 'PreAlgebra':
+			return 'ACT III';
+		default:
+			return 'ACT IV';
+	}
+};
+var $author$project$Game$Curriculum$firstUnit = function (c) {
+	return {
+		course: c,
+		unit: $author$project$Types$Unit(1)
+	};
+};
+var $author$project$View$Map$header = F3(
+	function (playerName, course, highestUnlocked) {
+		var prevCourse = function () {
+			switch (course.$) {
+				case 'Course1':
+					return $elm$core$Maybe$Nothing;
+				case 'Course2':
+					return $elm$core$Maybe$Just($author$project$Types$Course1);
+				case 'PreAlgebra':
+					return $elm$core$Maybe$Just($author$project$Types$Course2);
+				default:
+					return $elm$core$Maybe$Just($author$project$Types$PreAlgebra);
+			}
+		}();
+		var nextCourse = function () {
+			switch (course.$) {
+				case 'Course1':
+					return $elm$core$Maybe$Just($author$project$Types$Course2);
+				case 'Course2':
+					return $elm$core$Maybe$Just($author$project$Types$PreAlgebra);
+				case 'PreAlgebra':
+					return $elm$core$Maybe$Just($author$project$Types$Algebra1);
+				default:
+					return $elm$core$Maybe$Nothing;
+			}
+		}();
+		var actUnlocked = function (c) {
+			return !_Utils_eq(
+				A2(
+					$author$project$View$Map$compareUnits,
+					$author$project$Game$Curriculum$firstUnit(c),
+					highestUnlocked),
+				$elm$core$Basics$GT);
+		};
+		var navBtn = F2(
+			function (label, maybeCourse) {
+				if (maybeCourse.$ === 'Nothing') {
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'width', '48px')
+							]),
+						_List_Nil);
+				} else {
+					var c = maybeCourse.a;
+					return actUnlocked(c) ? A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Types$GoToAct(c)),
+								A2($elm$html$Html$Attributes$style, 'background', 'transparent'),
+								A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$gold),
+								A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
+								A2(
+								$elm$html$Html$Attributes$style,
+								'font-size',
+								$elm$core$String$fromInt($author$project$View$Theme$fontSizeLarge) + 'px'),
+								A2($elm$html$Html$Attributes$style, 'border', 'none'),
+								A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+								A2($elm$html$Html$Attributes$style, 'padding', '0 4px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(label)
+							])) : A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'width', '48px')
+							]),
+						_List_Nil);
+				}
+			});
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+					A2($elm$html$Html$Attributes$style, 'justify-content', 'space-between'),
+					A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+							A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+							A2($elm$html$Html$Attributes$style, 'gap', '8px')
+						]),
+					_List_fromArray(
+						[
+							A2(navBtn, '◀', prevCourse),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
+									A2(
+									$elm$html$Html$Attributes$style,
+									'font-size',
+									$elm$core$String$fromInt($author$project$View$Theme$fontSizeLarge) + 'px'),
+									A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$gold)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$author$project$View$Map$courseLabel(course))
+								])),
+							A2(navBtn, '▶', nextCourse)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'font-family', $author$project$View$Theme$fontFamily),
+							A2(
+							$elm$html$Html$Attributes$style,
+							'font-size',
+							$elm$core$String$fromInt($author$project$View$Theme$fontSizeSmall) + 'px'),
+							A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(playerName)
+						]))
+				]));
 	});
 var $author$project$Types$ViewChapter = function (a) {
 	return {$: 'ViewChapter', a: a};
@@ -24135,7 +27392,7 @@ var $author$project$View$Map$viewMap = F3(
 				]),
 			_List_fromArray(
 				[
-					A2($author$project$View$Map$header, playerName, course),
+					A3($author$project$View$Map$header, playerName, course, highestUnlocked),
 					A2($author$project$View$Map$unitList, course, highestUnlocked),
 					A2(
 					$elm$html$Html$div,
@@ -24243,6 +27500,7 @@ var $author$project$View$Title$viewNameEntry = function (draft) {
 										$elm$html$Html$Attributes$type_('text'),
 										$elm$html$Html$Attributes$value(draft),
 										$elm$html$Html$Events$onInput($author$project$Types$SetNameDraft),
+										$author$project$View$Input$onEnter($author$project$Types$SubmitName),
 										$elm$html$Html$Attributes$placeholder('HERO'),
 										A2($elm$html$Html$Attributes$style, 'background', $author$project$View$Theme$bgBlack),
 										A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream),
@@ -24309,6 +27567,7 @@ var $author$project$View$Title$viewPasscode = F2(
 											$elm$html$Html$Attributes$type_('text'),
 											$elm$html$Html$Attributes$value(draft),
 											$elm$html$Html$Events$onInput($author$project$Types$SetPasscodeDraft),
+											$author$project$View$Input$onEnter($author$project$Types$SubmitPasscode),
 											$elm$html$Html$Attributes$placeholder('word word word word'),
 											A2($elm$html$Html$Attributes$style, 'background', $author$project$View$Theme$bgBlack),
 											A2($elm$html$Html$Attributes$style, 'color', $author$project$View$Theme$cream),
