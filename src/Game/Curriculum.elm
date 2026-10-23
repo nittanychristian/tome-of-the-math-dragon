@@ -4,8 +4,10 @@ module Game.Curriculum exposing
     , allCourses
     , bossHpFor
     , bossName
+    , compareUnits
     , courseName
     , firstUnit
+    , isUnlocked
     , nextUnit
     , questsFor
     , unitMeta
@@ -13,6 +15,7 @@ module Game.Curriculum exposing
     , unitsForCourse
     )
 
+import Game.Elementary as Elementary
 import Types exposing (..)
 
 
@@ -25,12 +28,16 @@ type alias UnitMeta =
     }
 
 
+
 -- COURSE INFO
 
 
 courseName : Course -> String
 courseName c =
     case c of
+        Elementary grade ->
+            "Grade " ++ String.fromInt grade
+
         Course1 ->
             "Course 1"
 
@@ -46,12 +53,62 @@ courseName c =
 
 allCourses : List Course
 allCourses =
-    [ Course1, Course2, PreAlgebra, Algebra1 ]
+    List.map Elementary (List.range 1 5) ++ [ Course1, Course2, PreAlgebra, Algebra1 ]
+
+
+compareUnits : UnitId -> UnitId -> Order
+compareUnits a b =
+    let
+        rank course =
+            case course of
+                Elementary grade ->
+                    grade - 6
+
+                Course1 ->
+                    0
+
+                Course2 ->
+                    1
+
+                PreAlgebra ->
+                    2
+
+                Algebra1 ->
+                    3
+
+        slotRank slot =
+            case slot of
+                Unit n ->
+                    n
+
+                MegaBoss ->
+                    99
+    in
+    case compare (rank a.course) (rank b.course) of
+        EQ ->
+            compare (slotRank a.unit) (slotRank b.unit)
+
+        other ->
+            other
+
+
+isUnlocked : UnitId -> UnitId -> Bool
+isUnlocked uid highest =
+    case ( uid.course, uid.unit ) of
+        ( Elementary _, Unit 1 ) ->
+            True
+
+        ( Course1, Unit 1 ) ->
+            True
+
+        _ ->
+            compareUnits uid highest /= GT
 
 
 firstUnit : Course -> UnitId
 firstUnit c =
     { course = c, unit = Unit 1 }
+
 
 
 -- UNIT COUNTS PER COURSE
@@ -60,6 +117,9 @@ firstUnit c =
 regularUnitCount : Course -> Int
 regularUnitCount c =
     case c of
+        Elementary _ ->
+            1
+
         Course1 ->
             8
 
@@ -75,9 +135,15 @@ regularUnitCount c =
 
 unitsForCourse : Course -> List UnitId
 unitsForCourse c =
-    List.map (\n -> { course = c, unit = Unit n })
-        (List.range 1 (regularUnitCount c))
-        ++ [ { course = c, unit = MegaBoss } ]
+    case c of
+        Elementary _ ->
+            [ firstUnit c ]
+
+        _ ->
+            List.map (\n -> { course = c, unit = Unit n })
+                (List.range 1 (regularUnitCount c))
+                ++ [ { course = c, unit = MegaBoss } ]
+
 
 
 -- NEXT UNIT (returns Nothing at end of game)
@@ -85,16 +151,30 @@ unitsForCourse c =
 
 nextUnit : UnitId -> Maybe UnitId
 nextUnit uid =
-    case uid.unit of
-        Unit n ->
+    case ( uid.course, uid.unit ) of
+        ( Elementary grade, _ ) ->
+            Just
+                (firstUnit
+                    (if grade < 5 then
+                        Elementary (grade + 1)
+
+                     else
+                        Course1
+                    )
+                )
+
+        ( _, Unit n ) ->
             if n < regularUnitCount uid.course then
                 Just { uid | unit = Unit (n + 1) }
 
             else
                 Just { uid | unit = MegaBoss }
 
-        MegaBoss ->
+        ( _, MegaBoss ) ->
             case uid.course of
+                Elementary _ ->
+                    Nothing
+
                 Course1 ->
                     Just { course = Course2, unit = Unit 1 }
 
@@ -108,12 +188,16 @@ nextUnit uid =
                     Nothing
 
 
+
 -- UNIT METADATA
 
 
 unitName : UnitId -> String
 unitName uid =
     case ( uid.course, uid.unit ) of
+        ( Elementary grade, _ ) ->
+            Elementary.title grade
+
         -- Course 1
         ( Course1, Unit 1 ) ->
             "Whole Numbers"
@@ -248,53 +332,142 @@ unitName uid =
 bossName : UnitId -> String
 bossName uid =
     case ( uid.course, uid.unit ) of
-        ( Course1, Unit 1 ) ->  "Number Golem"
-        ( Course1, Unit 2 ) ->  "Integer Imp"
-        ( Course1, Unit 3 ) ->  "Fraction Phantom"
-        ( Course1, Unit 4 ) ->  "Expression Elemental"
-        ( Course1, Unit 5 ) ->  "Equation Knight"
-        ( Course1, Unit 6 ) ->  "Ratio Serpent"
-        ( Course1, Unit 7 ) ->  "Geometry Gargoyle"
-        ( Course1, Unit 8 ) ->  "Stats Sphinx"
-        ( Course1, MegaBoss ) -> "Decimal Drake"
-        ( Course2, Unit 1 ) ->  "Sense Golem"
-        ( Course2, Unit 2 ) ->  "Monomial Beast"
-        ( Course2, Unit 3 ) ->  "Equation Shade"
-        ( Course2, Unit 4 ) ->  "Ratio Wraith"
-        ( Course2, Unit 5 ) ->  "Slope Specter"
-        ( Course2, Unit 6 ) ->  "Angle Fiend"
-        ( Course2, Unit 7 ) ->  "Volume Titan"
-        ( Course2, Unit 8 ) ->  "Probability Lich"
-        ( Course2, MegaBoss ) -> "Proportion Hydra"
-        ( PreAlgebra, Unit 1 ) ->  "Root Revenant"
-        ( PreAlgebra, Unit 2 ) ->  "Poly Phantom"
-        ( PreAlgebra, Unit 3 ) ->  "Multi-Step Mage"
-        ( PreAlgebra, Unit 4 ) ->  "Percent Predator"
-        ( PreAlgebra, Unit 5 ) ->  "Slope Stalker"
-        ( PreAlgebra, Unit 6 ) ->  "System Serpent"
-        ( PreAlgebra, Unit 7 ) ->  "Theorem Troll"
-        ( PreAlgebra, Unit 8 ) ->  "Volume Viper"
-        ( PreAlgebra, Unit 9 ) ->  "Scatter Shade"
-        ( PreAlgebra, MegaBoss ) -> "Linear Lich"
-        ( Algebra1, Unit 1 ) ->  "Algebra Ogre"
-        ( Algebra1, Unit 2 ) ->  "Equation Wraith"
-        ( Algebra1, Unit 3 ) ->  "Function Fiend"
-        ( Algebra1, Unit 4 ) ->  "Linear Leviathan"
-        ( Algebra1, Unit 5 ) ->  "System Specter"
-        ( Algebra1, Unit 6 ) ->  "Exponent Elemental"
-        ( Algebra1, Unit 7 ) ->  "Poly Predator"
-        ( Algebra1, Unit 8 ) ->  "Quadra Shade"
-        ( Algebra1, Unit 9 ) ->  "Regression Revenant"
-        ( Algebra1, Unit 10 ) -> "Rational Reaper"
-        ( Algebra1, Unit 11 ) -> "Radical Rider"
-        ( Algebra1, Unit 12 ) -> "Variance Viper"
-        ( Algebra1, MegaBoss ) -> "Quadratic Dragon"
-        _ -> "Unknown"
+        ( Elementary grade, _ ) ->
+            Elementary.bossName grade
+
+        ( Course1, Unit 1 ) ->
+            "Number Golem"
+
+        ( Course1, Unit 2 ) ->
+            "Integer Imp"
+
+        ( Course1, Unit 3 ) ->
+            "Fraction Phantom"
+
+        ( Course1, Unit 4 ) ->
+            "Expression Elemental"
+
+        ( Course1, Unit 5 ) ->
+            "Equation Knight"
+
+        ( Course1, Unit 6 ) ->
+            "Ratio Serpent"
+
+        ( Course1, Unit 7 ) ->
+            "Geometry Gargoyle"
+
+        ( Course1, Unit 8 ) ->
+            "Stats Sphinx"
+
+        ( Course1, MegaBoss ) ->
+            "Decimal Drake"
+
+        ( Course2, Unit 1 ) ->
+            "Sense Golem"
+
+        ( Course2, Unit 2 ) ->
+            "Monomial Beast"
+
+        ( Course2, Unit 3 ) ->
+            "Equation Shade"
+
+        ( Course2, Unit 4 ) ->
+            "Ratio Wraith"
+
+        ( Course2, Unit 5 ) ->
+            "Slope Specter"
+
+        ( Course2, Unit 6 ) ->
+            "Angle Fiend"
+
+        ( Course2, Unit 7 ) ->
+            "Volume Titan"
+
+        ( Course2, Unit 8 ) ->
+            "Probability Lich"
+
+        ( Course2, MegaBoss ) ->
+            "Proportion Hydra"
+
+        ( PreAlgebra, Unit 1 ) ->
+            "Root Revenant"
+
+        ( PreAlgebra, Unit 2 ) ->
+            "Poly Phantom"
+
+        ( PreAlgebra, Unit 3 ) ->
+            "Multi-Step Mage"
+
+        ( PreAlgebra, Unit 4 ) ->
+            "Percent Predator"
+
+        ( PreAlgebra, Unit 5 ) ->
+            "Slope Stalker"
+
+        ( PreAlgebra, Unit 6 ) ->
+            "System Serpent"
+
+        ( PreAlgebra, Unit 7 ) ->
+            "Theorem Troll"
+
+        ( PreAlgebra, Unit 8 ) ->
+            "Volume Viper"
+
+        ( PreAlgebra, Unit 9 ) ->
+            "Scatter Shade"
+
+        ( PreAlgebra, MegaBoss ) ->
+            "Linear Lich"
+
+        ( Algebra1, Unit 1 ) ->
+            "Algebra Ogre"
+
+        ( Algebra1, Unit 2 ) ->
+            "Equation Wraith"
+
+        ( Algebra1, Unit 3 ) ->
+            "Function Fiend"
+
+        ( Algebra1, Unit 4 ) ->
+            "Linear Leviathan"
+
+        ( Algebra1, Unit 5 ) ->
+            "System Specter"
+
+        ( Algebra1, Unit 6 ) ->
+            "Exponent Elemental"
+
+        ( Algebra1, Unit 7 ) ->
+            "Poly Predator"
+
+        ( Algebra1, Unit 8 ) ->
+            "Quadra Shade"
+
+        ( Algebra1, Unit 9 ) ->
+            "Regression Revenant"
+
+        ( Algebra1, Unit 10 ) ->
+            "Rational Reaper"
+
+        ( Algebra1, Unit 11 ) ->
+            "Radical Rider"
+
+        ( Algebra1, Unit 12 ) ->
+            "Variance Viper"
+
+        ( Algebra1, MegaBoss ) ->
+            "Quadratic Dragon"
+
+        _ ->
+            "Unknown"
 
 
 bossHpFor : UnitId -> Int
 bossHpFor uid =
     case ( uid.course, uid.unit ) of
+        ( Elementary _, _ ) ->
+            140
+
         ( _, MegaBoss ) ->
             350
 
@@ -321,6 +494,7 @@ unitMeta uid =
     }
 
 
+
 -- QUESTS
 
 
@@ -334,8 +508,10 @@ type alias QuestDef =
 questsFor : UnitId -> List QuestDef
 questsFor uid =
     case ( uid.course, uid.unit ) of
-        -- ── Course 1 ──────────────────────────────────────────────────────────
+        ( Elementary grade, Unit 1 ) ->
+            Elementary.questsFor grade
 
+        -- ── Course 1 ──────────────────────────────────────────────────────────
         ( Course1, Unit 1 ) ->
             [ { name = "Place Value & Rounding"
               , story = "The Number Golem guards the Valley of Digits, hurling boulders carved with numerals. Show him you can read the land by rounding and comparing the stones he throws."
@@ -644,7 +820,6 @@ questsFor uid =
             []
 
         -- ── Course 2 (stubs) ──────────────────────────────────────────────────
-
         ( Course2, Unit 1 ) ->
             [ { name = "Adding & Subtracting Positives"
               , story = "The Sense Golem pelts the village gate with numbered boulders, each carved with a sum or difference. Prove your addition and subtraction to hold the gate."
@@ -881,7 +1056,6 @@ questsFor uid =
             []
 
         -- ── Pre-Algebra ───────────────────────────────────────────────────────
-
         ( PreAlgebra, Unit 1 ) ->
             [ { name = "Absolute Value"
               , story = "The Root Revenant dwells at zero on the number line, casting curses of equal strength in both directions. Master absolute value to measure the true distance of each curse and turn it back on the beast."
@@ -1149,7 +1323,6 @@ questsFor uid =
             []
 
         -- ── Algebra 1 ─────────────────────────────────────────────────────────
-
         ( Algebra1, Unit 1 ) ->
             [ { name = "Order of Operations"
               , story = "The Algebra Ogre mixes up the order of attacks to batter heroes into submission. Demonstrate perfect order-of-operations discipline to weather the assault."
@@ -1458,6 +1631,5 @@ questsFor uid =
             []
 
         -- ── Fallback ──────────────────────────────────────────────────────────
-
         _ ->
             []

@@ -4,13 +4,13 @@ import Game.Curriculum as Curriculum
 import Html exposing (Html, button, div, p, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Types exposing (Msg(..), QuestDef, UnitId, UnitSlot(..))
+import Types exposing (Course(..), Msg(..), QuestDef, UnitId, UnitSlot(..))
 import View.Theme as T
 import View.Window as W
 
 
-viewChapter : UnitId -> List QuestDef -> Html Msg
-viewChapter uid quests =
+viewChapter : UnitId -> List QuestDef -> Bool -> Html Msg
+viewChapter uid quests continuous =
     let
         chapterNum =
             case uid.unit of
@@ -21,7 +21,12 @@ viewChapter uid quests =
                     "M"
 
         chapterTitle =
-            "Chapter " ++ chapterNum ++ ": " ++ Curriculum.unitName uid
+            case uid.course of
+                Elementary grade ->
+                    "Grade " ++ String.fromInt grade ++ ": " ++ Curriculum.unitName uid
+
+                _ ->
+                    "Chapter " ++ chapterNum ++ ": " ++ Curriculum.unitName uid
     in
     div
         [ style "background" T.bgBlack
@@ -44,6 +49,33 @@ viewChapter uid quests =
             , style "color" T.cream
             ]
             [ text ("Boss: " ++ Curriculum.bossName uid) ]
+        , button
+            [ onClick ToggleContinuousPractice
+            , style "background" T.bgDark
+            , style "color" T.cream
+            , style "font-family" T.fontFamily
+            , style "font-size" "10px"
+            , style "padding" "10px"
+            , style "border" ("1px solid " ++ T.gold)
+            , style "cursor" "pointer"
+            , Html.Attributes.attribute "aria-pressed"
+                (if continuous then
+                    "true"
+
+                 else
+                    "false"
+                )
+            ]
+            [ text
+                ("CONTINUOUS PRACTICE: "
+                    ++ (if continuous then
+                            "ON — stay in the quest"
+
+                        else
+                            "OFF — finish each quest"
+                       )
+                )
+            ]
         , button (primaryBtnAttrs ++ [ onClick (StartUnit uid) ])
             [ text "▶  RUN FULL CHAPTER" ]
         , div

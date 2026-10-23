@@ -1,10 +1,11 @@
 module View.Victory exposing (viewGameOver, viewVictory)
 
 import Game.Curriculum as Curriculum
+import Game.Elementary as Elementary
 import Html exposing (Html, button, div, p, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Types exposing (Msg(..), UnitId, VictoryState)
+import Types exposing (Course(..), Msg(..), UnitId, VictoryState)
 import View.Theme as T
 import View.Window as W
 
@@ -20,6 +21,7 @@ viewVictory playerName vs =
         , style "justify-content" "center"
         , style "padding" "24px"
         , style "gap" "20px"
+        , style "overflow-y" "auto"
         ]
         [ div
             [ style "font-family" T.fontFamily
@@ -32,6 +34,12 @@ viewVictory playerName vs =
         , W.windowTitle "DEFEATED"
             [ p labelStyle [ text (Curriculum.bossName vs.unit) ]
             ]
+        , case vs.unit.course of
+            Elementary grade ->
+                p (style "margin" "0" :: labelStyle) [ text (Elementary.ending grade) ]
+
+            _ ->
+                text ""
         , if vs.isLast then
             W.windowTitle "QUEST COMPLETE"
                 [ p labelStyle [ text ("Well done, " ++ playerName ++ "!") ]

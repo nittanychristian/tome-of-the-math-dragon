@@ -14,6 +14,7 @@
           elmPackages.elm-review
           elm2nix
           elmPackages.elm-live
+          nodejs
           just
           config.treefmt.build.wrapper
         ];

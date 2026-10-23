@@ -1,0 +1,142 @@
+Elementary curriculum — practice scope
+
+Baseline: typical US grade progression using the Common Core mathematics content
+strands (https://www.thecorestandards.org/wp-content/uploads/Math_Standards.pdf).
+These chapters provide generated practice and worked hints. They supplement
+instruction; they do not claim assessment or certification of every standard.
+Each bullet is a reachable quest with one or more implemented generators.
+Grade 2 includes requested early multiplication practice beyond the baseline:
+six fixed-first-factor tables (0–5), with second factors 0–9 and equal-group visuals.
+
+Grade 1 — The Lantern Seed
+- Count and Read to 120
+- Make Ten
+- Add within 20
+- Subtract within 20
+- Missing Numbers and Equals
+- Three Numbers and Number Stories
+- Tens and Ones
+- Compare Numbers
+- Add Tens and Ones
+- Ten More, Ten Less
+- Measure and Compare Lengths
+- Hours and Half Hours
+- Sort and Read Data
+- Flat and Solid Shapes
+- Build Shapes and Equal Shares
+
+Grade 2 — The Wisp's Workshop
+- Count by 2, 5, 10 and 100
+- Hundreds, Tens and Ones
+- Compare to 1000
+- Fluent Facts within 20
+- Add within 100
+- Subtract within 100
+- Add and Subtract within 1000
+- Multiply by 0
+- Multiply by 1
+- Multiply by 2
+- Multiply by 3
+- Multiply by 4
+- Multiply by 5
+- Mental Tens and Hundreds
+- Four Addends
+- One- and Two-Step Stories
+- Odd and Even
+- Arrays and Equal Groups
+- Measure with Standard Units
+- Number Line Lengths
+- Time to Five Minutes
+- Coins, Dollars and Change
+- Picture Graphs, Bars and Line Plots
+- Shapes and Faces
+- Rows of Square Tiles
+- Halves, Thirds and Fourths
+
+Grade 3 — The Bridge of Many Parts
+- Multiplication and Arrays
+- Single-Digit Times Tables
+- Division Facts
+- Division and Missing Factors
+- Properties and Fact Strategies
+- Multiply and Divide Stories
+- Patterns in Facts
+- Add and Subtract within 1000
+- Round to Tens and Hundreds
+- Multiply by Tens
+- Two-Step Problems
+- Fractions as Equal Parts
+- Fractions on a Number Line
+- Equivalent Fractions
+- Compare Fractions
+- Time to the Minute and Elapsed Time
+- Liquid Volume and Mass
+- Scaled Picture and Bar Graphs
+- Measurement Line Plots
+- Area and Unit Squares
+- Perimeter and Missing Sides
+- Shape Families and Equal Areas
+
+Grade 4 — The Keep of Patterns
+- Place Value to a Million
+- Compare and Round Whole Numbers
+- Multi-Digit Addition and Subtraction
+- Multiply Larger Numbers
+- Divide Larger Numbers
+- Remainders in Real Life
+- Multiplicative Comparisons
+- Multi-Step Word Problems
+- Factors and Multiples
+- Prime and Composite Numbers
+- Number and Shape Patterns
+- Equivalent and Compared Fractions
+- Add and Subtract Like Fractions
+- Mixed Numbers
+- Whole Numbers Times Fractions
+- Tenths and Hundredths
+- Compare Decimals
+- Convert Measurement Units
+- Fraction Measurement Data
+- Area and Perimeter Applications
+- Angles and Additive Angles
+- Lines and Triangle Classes
+- Line Symmetry
+
+Grade 5 — The Gate to the Valley
+- Decimal Place Value to Thousandths
+- Powers of Ten
+- Compare and Round Decimals
+- Multi-Digit Whole Number Operations
+- Add and Subtract Decimals
+- Multiply and Divide Decimals
+- Numerical Expressions and Grouping
+- Two Patterns and Tables
+- Equivalent Fractions and Simplifying
+- Add and Subtract Unlike Fractions
+- Mixed Number Operations
+- Fraction Word Problems
+- Multiply Fractions and Mixed Numbers
+- Multiplication as Scaling
+- Divide Unit Fractions and Whole Numbers
+- Convert Units in Problems
+- Line Plots with Fraction Measures
+- Volume with Unit Cubes
+- Add Volumes of Joined Boxes
+- Coordinates in the First Quadrant
+- Classify Shape Families
+- Readiness: Factors, Multiples and Primes
+- Readiness: Divisibility and Powers
+- Readiness: Fractions, Decimals and Percents
+- Readiness: Numbers below Zero
+- Readiness: Expressions and Equations
+- Readiness: Ratios and Fair Shares
+- The Valley Gate Review
+
+Continuous practice
+Choose a grade and chapter, turn CONTINUOUS PRACTICE on, then choose any single
+quest. Questions stay in that quest without completing it. Turn it off to finish
+on the next correct answer after reaching the quest target, or leave via the map.
+For single-digit times tables: Grade 3 -> Single-Digit Times Tables. Both factors
+are 0–9. Continuous mode also works for existing middle school quests. Bosses
+always retain their normal victory conditions. This preference lasts for the
+current session; passcodes record chapter progress, not the practice toggle.

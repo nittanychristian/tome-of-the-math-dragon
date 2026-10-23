@@ -1,0 +1,31 @@
+# Tasks: Elementary prequel chapters
+
+- [x] T001 Specify grade entry, curriculum coverage, story continuity and legacy-code requirements.
+- [x] T002 Inspect existing Elm navigation, quest loop, story setting and passcode contract; write implementation plan.
+- [x] T003 [US1] Add elementary generator helpers and the grade 1 catalog; verify against `elementary.txt`.
+- [x] T004 [US1] Add grade 2 catalog and verify every syllabus topic and generator.
+- [x] T005 [US1] Add grade 3 catalog and verify every syllabus topic and generator.
+- [x] T006 [US1] Add grade 4 catalog and verify every syllabus topic and generator.
+- [x] T007 [US1] Add grade 5 catalog and verify every syllabus topic and generator.
+- [x] T008 [US1] Integrate five chapters, direct grade selection, friendly guardians and quest/boss dispatch.
+- [x] T009 [US2] Preserve legacy codes and add elementary completion codes and shared progression ordering.
+- [x] T010 [US3] Add five visible prequel introductions, quest stories and endings leading to the Valley of Digits.
+- [x] T011 Verify legacy semantics, all new generator variants, answer checking, coverage and progression through Nix.
+- [x] T012 Format edited Elm, compile production application, rebuild tracked browser bundle and review final diff.
+- [x] T013 [US4] Add a continuous quest toggle, same-quest generation and dedicated single-digit facts practice.
+- [x] T014 [US4] Verify extended practice, toggle-off completion, help, wrong answers, retry, exit and unchanged boss behavior.
+- [x] T015 [US5] Add optional typed visual data and preserve legacy constructor defaults.
+- [x] T016 [US5] Implement responsive accessible SVG visuals for objects, ribbons/cubes, arrays, fractions, charts and line plots.
+- [x] T017 [US5] Attach diagrams to elementary generators from their actual sampled values and simplify prompts.
+- [x] T018 [US5] Integrate diagrams into questions, help and actual failed-problem walkthroughs with phone-friendly layout.
+- [x] T019 [US5] Verify visual quantities against answers, browser behavior, legacy compatibility, formatting and production build; rebuild bundle.
+- [x] T020 [US6] Implement strict arithmetic recognition and aligned vertical/long-division layouts in `src/View/Math.elm`.
+- [x] T021 [US6] Verify threshold, place-value/decimal alignment and excluded expression types, including phone-sized browser checks.
+- [x] T022 [US6] Rebuild browser bundle, run regression/format checks and production build; update validation notes.
+- [x] T023 [US7] Separate rule-discovery and given-rule generators and hints in `Game/Problem/Elementary.elm`.
+- [x] T024 [US7] Add typed optional-output table rows and render a semantic table in `View/ProblemVisual.elm`.
+- [x] T025 [US7] Verify unique rule choices against all rows, varied numeric outputs, real browser tables and help; rebuild and validate production.
+- [x] T026 [US8] Add fixed first-factor multiplication generators for 0–5, with second factors 0–9 and useful hints.
+- [x] T027 [US8] Insert six grade 2 quests between existing entries 7 and 8; update syllabus and verify exact positions.
+- [x] T028 [US8] Verify all factors/products and continuous mode; browser-test grade 2 quests and rebuild the production bundle.
+- [x] T029 [US8] Alternate numeric multiplication with equal-group visual variants; verify zero/empty groups and actual rendered counter counts.

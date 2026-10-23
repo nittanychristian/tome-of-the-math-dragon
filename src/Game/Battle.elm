@@ -26,6 +26,7 @@ initialBattleState uid problem =
     , phase = Idle
     , animFrame = FrameA
     , practice = False
+    , continuousPractice = False
     }
 
 
@@ -44,6 +45,7 @@ initialQuestState uid questIndex problem =
     , phase = QuestIntro
     , animFrame = FrameA
     , practice = False
+    , continuousPractice = False
     }
 
 
@@ -62,6 +64,7 @@ initialPracticeState uid questIndex problem =
     , phase = QuestIntro
     , animFrame = FrameA
     , practice = True
+    , continuousPractice = False
     }
 
 

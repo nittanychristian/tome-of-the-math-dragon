@@ -13,6 +13,7 @@ import Types exposing (AnswerInput(..), BattleMode(..), BattlePhase(..), BattleS
 import View.HpBar exposing (hpBar)
 import View.Input exposing (viewChoiceInput, viewInput)
 import View.Math exposing (renderMath)
+import View.ProblemVisual as ProblemVisual
 import View.Theme as T
 import View.Window as W
 
@@ -42,27 +43,51 @@ viewBattle playerName state =
 viewFightScreen : String -> BattleState -> Html Msg
 viewFightScreen playerName state =
     let
-        sprite =
+        fullSprite =
             case state.mode of
                 BossMode ->
                     Sprite.spriteFor state.unit
 
                 QuestMode _ ->
                     Sprite.questSpriteFor state.unit
-        spriteW = sprite.pixelSize * 20
-        spriteH = sprite.pixelSize * 24
+
+        sprite =
+            if state.problem.visual /= Nothing then
+                { fullSprite | pixelSize = min 3 fullSprite.pixelSize }
+
+            else
+                fullSprite
+
+        spriteW =
+            sprite.pixelSize * 20
+
+        spriteH =
+            sprite.pixelSize * 24
 
         flashOverlay =
             case state.phase of
                 ShowResult CorrectHit ->
-                    [ div [ style "position" "absolute", style "inset" "0"
-                          , style "background" "rgba(255,255,255,0.15)"
-                          , style "pointer-events" "none" ] [] ]
+                    [ div
+                        [ style "position" "absolute"
+                        , style "inset" "0"
+                        , style "background" "rgba(255,255,255,0.15)"
+                        , style "pointer-events" "none"
+                        ]
+                        []
+                    ]
+
                 ShowResult WrongHit ->
-                    [ div [ style "position" "absolute", style "inset" "0"
-                          , style "background" "rgba(204,34,0,0.15)"
-                          , style "pointer-events" "none" ] [] ]
-                _ -> []
+                    [ div
+                        [ style "position" "absolute"
+                        , style "inset" "0"
+                        , style "background" "rgba(204,34,0,0.15)"
+                        , style "pointer-events" "none"
+                        ]
+                        []
+                    ]
+
+                _ ->
+                    []
     in
     div
         [ style "background" T.bgBlack
@@ -92,7 +117,11 @@ questHeader state =
                     "MEGA"
 
         practiceTag =
-            if state.practice then " [PRACTICE]" else ""
+            if state.practice then
+                " [PRACTICE]"
+
+            else
+                ""
 
         ( label, color ) =
             case state.mode of
@@ -101,8 +130,12 @@ questHeader state =
 
                 QuestMode qi ->
                     let
-                        quests = Curriculum.questsFor state.unit
-                        total = List.length quests
+                        quests =
+                            Curriculum.questsFor state.unit
+
+                        total =
+                            List.length quests
+
                         questName =
                             quests
                                 |> List.drop qi
@@ -110,8 +143,13 @@ questHeader state =
                                 |> Maybe.map .name
                                 |> Maybe.withDefault "Quest"
                     in
-                    ( "Quest " ++ String.fromInt (qi + 1) ++ "/" ++ String.fromInt total
-                        ++ " — " ++ questName ++ practiceTag
+                    ( "Quest "
+                        ++ String.fromInt (qi + 1)
+                        ++ "/"
+                        ++ String.fromInt total
+                        ++ " — "
+                        ++ questName
+                        ++ practiceTag
                     , T.cream
                     )
     in
@@ -124,7 +162,42 @@ questHeader state =
         , style "color" color
         , style "letter-spacing" "1px"
         ]
-        [ text (chapterLabel ++ " | " ++ label) ]
+        [ text (chapterLabel ++ " | " ++ label)
+        , case state.mode of
+            QuestMode _ ->
+                button
+                    [ onClick ToggleContinuousPractice
+                    , style "display" "block"
+                    , style "margin-top" "6px"
+                    , style "background" T.bgBlack
+                    , style "color" T.gold
+                    , style "border" ("1px solid " ++ T.gold)
+                    , style "font-family" T.fontFamily
+                    , style "font-size" "9px"
+                    , style "padding" "8px"
+                    , style "cursor" "pointer"
+                    , Html.Attributes.attribute "aria-pressed"
+                        (if state.continuousPractice then
+                            "true"
+
+                         else
+                            "false"
+                        )
+                    ]
+                    [ text
+                        ("CONTINUOUS: "
+                            ++ (if state.continuousPractice then
+                                    "ON"
+
+                                else
+                                    "OFF"
+                               )
+                        )
+                    ]
+
+            BossMode ->
+                text ""
+        ]
 
 
 enemyArea : BossSprite -> Int -> Int -> BattleState -> Html Msg
@@ -137,17 +210,32 @@ enemyArea sprite spriteW spriteH state =
 
                 QuestMode qi ->
                     let
-                        quests = Curriculum.questsFor state.unit
+                        quests =
+                            Curriculum.questsFor state.unit
+
                         qName =
-                            quests |> List.drop qi |> List.head
+                            quests
+                                |> List.drop qi
+                                |> List.head
                                 |> Maybe.map .name
                                 |> Maybe.withDefault "Challenge"
+
                         minCorrect =
-                            quests |> List.drop qi |> List.head
+                            quests
+                                |> List.drop qi
+                                |> List.head
                                 |> Maybe.map .minCorrect
                                 |> Maybe.withDefault 3
                     in
-                    ( qName ++ " (" ++ String.fromInt state.correctInQuest ++ "/" ++ String.fromInt minCorrect ++ " correct)"
+                    ( qName
+                        ++ " ("
+                        ++ String.fromInt state.correctInQuest
+                        ++ (if state.continuousPractice then
+                                " correct — keep going!)"
+
+                            else
+                                "/" ++ String.fromInt minCorrect ++ " correct)"
+                           )
                     , False
                     )
     in
@@ -168,7 +256,12 @@ enemyArea sprite spriteW spriteH state =
             ]
             [ text enemyName ]
          ]
-            ++ (if showHp then [ hpBar "HP" state.bossHp state.bossMaxHp ] else [])
+            ++ (if showHp then
+                    [ hpBar "HP" state.bossHp state.bossMaxHp ]
+
+                else
+                    []
+               )
             ++ [ svg
                     [ SA.width (String.fromInt spriteW)
                     , SA.height (String.fromInt spriteH)
@@ -182,7 +275,8 @@ enemyArea sprite spriteW spriteH state =
 playerStatusBar : String -> BattleState -> Html Msg
 playerStatusBar playerName state =
     let
-        isBoss = state.mode == BossMode
+        isBoss =
+            state.mode == BossMode
     in
     div
         [ style "padding" "6px 12px"
@@ -201,6 +295,7 @@ playerStatusBar playerName state =
                 [ text playerName ]
             , if isBoss then
                 hpBar "HP" state.playerHp Config.playerMaxHp
+
               else
                 text ""
             ]
@@ -218,6 +313,7 @@ playerStatusBar playerName state =
                     , style "color" T.gold
                     ]
                     [ text ("ATK " ++ Config.multiplierLabel state.streak) ]
+
               else
                 text ""
             ]
@@ -244,12 +340,17 @@ problemArea state =
                 , style "word-break" "break-word"
                 ]
                 [ renderMath state.problem.prompt ]
+            , ProblemVisual.view state.problem.visual
             ]
         , case state.problem.inputType of
             TChoice choices ->
                 case state.input of
-                    IChoice selected -> viewChoiceInput choices selected
-                    _ -> text ""
+                    IChoice selected ->
+                        viewChoiceInput choices selected
+
+                    _ ->
+                        text ""
+
             _ ->
                 viewInput state.input
         , resultMessage state
@@ -261,26 +362,34 @@ resultMessage : BattleState -> Html Msg
 resultMessage state =
     case state.phase of
         ShowResult CorrectHit ->
-            div [ style "font-family" T.fontFamily
+            div
+                [ style "font-family" T.fontFamily
                 , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
                 , style "color" T.hpGreen
                 ]
                 [ text
                     (case state.mode of
-                        BossMode -> "CORRECT! -" ++ String.fromInt (Config.applyMultiplier state.streak Config.baseDamage) ++ " to boss!"
-                        QuestMode _ -> "CORRECT!"
+                        BossMode ->
+                            "CORRECT! -" ++ String.fromInt (Config.applyMultiplier state.streak Config.baseDamage) ++ " to boss!"
+
+                        QuestMode _ ->
+                            "CORRECT!"
                     )
                 ]
 
         ShowResult WrongHit ->
-            div [ style "font-family" T.fontFamily
+            div
+                [ style "font-family" T.fontFamily
                 , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
                 , style "color" T.hpLow
                 ]
                 [ text
                     (case state.mode of
-                        BossMode -> "WRONG! -" ++ String.fromInt Config.bossCounterDamage ++ " HP!"
-                        QuestMode _ -> "Not quite — try the next one!"
+                        BossMode ->
+                            "WRONG! -" ++ String.fromInt Config.bossCounterDamage ++ " HP!"
+
+                        QuestMode _ ->
+                            "Not quite — try the next one!"
                     )
                 ]
 
@@ -359,10 +468,17 @@ formatAnswer problem =
             let
                 dirStr =
                     case dir of
-                        ILt -> "x < "
-                        ILte -> "x ≤ "
-                        IGt -> "x > "
-                        IGte -> "x ≥ "
+                        ILt ->
+                            "x < "
+
+                        ILte ->
+                            "x ≤ "
+
+                        IGt ->
+                            "x > "
+
+                        IGte ->
+                            "x ≥ "
             in
             dirStr ++ String.fromFloat v
 
@@ -379,9 +495,14 @@ formatAnswer problem =
 viewTutorial : Problem -> Int -> Html Msg
 viewTutorial problem stepsShown =
     let
-        hint = problem.hint
-        visibleSteps = List.take stepsShown hint.steps
-        allShown = stepsShown >= List.length hint.steps
+        hint =
+            problem.hint
+
+        visibleSteps =
+            List.take stepsShown hint.steps
+
+        allShown =
+            stepsShown >= List.length hint.steps
     in
     div
         [ style "background" T.bgBlack
@@ -400,14 +521,17 @@ viewTutorial problem stepsShown =
             ]
             [ text "NOT QUITE — HERE'S HOW" ]
         , W.windowTitle "THE PROBLEM"
-            [ p [ style "font-family" T.fontFamily
+            [ p
+                [ style "font-family" T.fontFamily
                 , style "font-size" (String.fromInt T.fontSizeLarge ++ "px")
                 , style "color" T.cream
                 , style "line-height" "2"
                 , style "word-break" "break-word"
                 ]
                 [ renderMath problem.prompt ]
-            , p [ style "font-family" T.fontFamily
+            , ProblemVisual.view problem.visual
+            , p
+                [ style "font-family" T.fontFamily
                 , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
                 , style "color" T.gold
                 , style "margin-top" "6px"
@@ -452,11 +576,13 @@ viewTutorial problem stepsShown =
                         , style "cursor" "pointer"
                         ]
                         [ text "NEXT STEP" ]
+
                   else
                     text ""
                 , if allShown then
                     button (primaryBtnAttrs ++ [ onClick DismissTutorial ])
                         [ text "GOT IT — NEXT PROBLEM" ]
+
                   else
                     text ""
                 ]
@@ -470,14 +596,26 @@ viewQuestIntro state =
     let
         qi =
             case state.mode of
-                QuestMode i -> i
-                BossMode -> 0
+                QuestMode i ->
+                    i
 
-        quests = Curriculum.questsFor state.unit
-        quest = quests |> List.drop qi |> List.head
-        questName = quest |> Maybe.map .name |> Maybe.withDefault "Quest"
-        story = quest |> Maybe.map .story |> Maybe.withDefault ""
-        total = List.length quests
+                BossMode ->
+                    0
+
+        quests =
+            Curriculum.questsFor state.unit
+
+        quest =
+            quests |> List.drop qi |> List.head
+
+        questName =
+            quest |> Maybe.map .name |> Maybe.withDefault "Quest"
+
+        story =
+            quest |> Maybe.map .story |> Maybe.withDefault ""
+
+        total =
+            List.length quests
     in
     div
         [ style "background" T.bgBlack
@@ -521,6 +659,7 @@ viewQuestComplete : BattleState -> Html Msg
 viewQuestComplete state =
     if state.practice then
         viewPracticeComplete state
+
     else
         viewNormalQuestComplete state
 
@@ -530,19 +669,32 @@ viewNormalQuestComplete state =
     let
         qi =
             case state.mode of
-                QuestMode i -> i
-                BossMode -> 0
+                QuestMode i ->
+                    i
 
-        quests = Curriculum.questsFor state.unit
-        total = List.length quests
-        nextQi = qi + 1
-        isLast = nextQi >= total
+                BossMode ->
+                    0
+
+        quests =
+            Curriculum.questsFor state.unit
+
+        total =
+            List.length quests
+
+        nextQi =
+            qi + 1
+
+        isLast =
+            nextQi >= total
 
         nextLabel =
             if isLast then
                 "FACE THE BOSS"
+
             else
-                quests |> List.drop nextQi |> List.head
+                quests
+                    |> List.drop nextQi
+                    |> List.head
                     |> Maybe.map (\q -> "NEXT: " ++ q.name)
                     |> Maybe.withDefault "CONTINUE"
     in
@@ -584,10 +736,15 @@ viewPracticeComplete state =
     let
         qi =
             case state.mode of
-                QuestMode i -> i
-                BossMode -> 0
+                QuestMode i ->
+                    i
 
-        quests = Curriculum.questsFor state.unit
+                BossMode ->
+                    0
+
+        quests =
+            Curriculum.questsFor state.unit
+
         questName =
             quests |> List.drop qi |> List.head |> Maybe.map .name |> Maybe.withDefault "Quest"
     in
@@ -656,7 +813,8 @@ viewBossVictory playerName state =
             ]
             [ text "VICTORY!" ]
         , W.windowTitle (Curriculum.bossName state.unit ++ " DEFEATED")
-            [ p [ style "font-family" T.fontFamily
+            [ p
+                [ style "font-family" T.fontFamily
                 , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")
                 , style "color" T.cream
                 , style "line-height" "1.8"
@@ -689,7 +847,8 @@ viewBossDefeat _ state =
             ]
             [ text "DEFEATED..." ]
         , W.windowTitle (Curriculum.bossName state.unit)
-            [ p [ style "font-family" T.fontFamily
+            [ p
+                [ style "font-family" T.fontFamily
                 , style "font-size" (String.fromInt T.fontSizeSmall ++ "px")
                 , style "color" T.cream
                 , style "line-height" "1.8"

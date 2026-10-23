@@ -1,6 +1,5 @@
 module Types exposing (..)
 
-
 -- MESSAGES
 
 
@@ -32,6 +31,8 @@ type Msg
     | RequestExit
     | CancelExit
     | GoToAct Course
+    | ToggleContinuousPractice
+
 
 
 -- SCREENS
@@ -47,6 +48,7 @@ type Screen
     | HelpScreen HelpState BattleState
     | VictoryScreen VictoryState
     | GameOverScreen UnitId
+
 
 
 -- BATTLE
@@ -66,6 +68,7 @@ type alias BattleState =
     , phase : BattlePhase
     , animFrame : AnimFrame
     , practice : Bool
+    , continuousPractice : Bool
     }
 
 
@@ -97,6 +100,7 @@ type AnimFrame
     | FrameB
 
 
+
 -- PROBLEMS
 
 
@@ -105,7 +109,20 @@ type alias Problem =
     , inputType : InputType
     , answer : CorrectAnswer
     , hint : HintData
+    , visual : Maybe ProblemVisual
     }
+
+
+type ProblemVisual
+    = CountingObjects String Int
+    | RibbonLengths (List ( String, Int ))
+    | ObjectArray Int Int
+    | FractionStrip Int Int
+    | BarChart String String Int (List ( String, Int ))
+    | PictureGraph String Int (List ( String, Int ))
+    | MeasurementPlot String Int (List ( Int, Int ))
+    | InputOutputTable (List ( Int, Maybe Int ))
+    | EqualGroups Int Int
 
 
 type InputType
@@ -130,7 +147,10 @@ type CorrectAnswer
     | ASystem Float Float
       -- ^ x, y (both must match)
     | ARoots Float Float
-      -- ^ unordered pair
+
+
+
+-- ^ unordered pair
 
 
 type InequalityDir
@@ -150,6 +170,7 @@ type AnswerInput
     | IRoots { r1 : String, r2 : String }
 
 
+
 -- HINTS
 
 
@@ -166,6 +187,7 @@ type alias HelpState =
     }
 
 
+
 -- NAVIGATION
 
 
@@ -176,7 +198,8 @@ type alias UnitId =
 
 
 type Course
-    = Course1
+    = Elementary Int
+    | Course1
     | Course2
     | PreAlgebra
     | Algebra1
@@ -185,6 +208,7 @@ type Course
 type UnitSlot
     = Unit Int
     | MegaBoss
+
 
 
 -- QUESTS
@@ -197,6 +221,7 @@ type alias QuestDef =
     }
 
 
+
 -- SPRITES
 
 
@@ -207,6 +232,7 @@ type alias BossSprite =
     , frameB : List String
     , pixelSize : Int
     }
+
 
 
 -- VICTORY

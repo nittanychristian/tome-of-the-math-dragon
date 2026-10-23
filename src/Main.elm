@@ -1,4 +1,4 @@
-port module Main exposing (main)
+port module Main exposing (Model, init, main, update)
 
 import Browser
 import Browser.Events
@@ -31,7 +31,10 @@ port saveName : String -> Cmd msg
 port focusFirstInput : () -> Cmd msg
 
 
+
 -- Flags: "playerName\tseedInt" from localStorage + Date.now()
+
+
 main : Program String Model Msg
 main =
     Browser.element
@@ -48,6 +51,7 @@ type alias Model =
     , highestUnlocked : UnitId
     , seed : Random.Seed
     , confirmingExit : Bool
+    , continuousPractice : Bool
     }
 
 
@@ -68,17 +72,19 @@ init flags =
                 |> Maybe.withDefault 0
 
         startUnit =
-            { course = Course1, unit = Unit 1 }
+            Curriculum.firstUnit (Elementary 1)
     in
     ( { screen =
             if String.isEmpty savedName then
                 TitleScreen
+
             else
-                MapScreen { course = Course1 }  -- TODO: persist course from last session
+                MapScreen { course = Elementary 1 }
       , playerName = savedName
       , highestUnlocked = startUnit
       , seed = Random.initialSeed seedInt
       , confirmingExit = False
+      , continuousPractice = False
       }
     , Cmd.none
     )
@@ -94,7 +100,7 @@ update msg model =
             ( { model
                 | screen = TitleScreen
                 , playerName = ""
-                , highestUnlocked = { course = Course1, unit = Unit 1 }
+                , highestUnlocked = Curriculum.firstUnit (Elementary 1)
                 , confirmingExit = False
               }
             , saveName ""
@@ -106,8 +112,46 @@ update msg model =
         CancelExit ->
             ( { model | confirmingExit = False }, Cmd.none )
 
+        ToggleContinuousPractice ->
+            let
+                enabled =
+                    not model.continuousPractice
+
+                change state =
+                    case state.mode of
+                        QuestMode _ ->
+                            { state
+                                | continuousPractice = enabled
+                                , phase =
+                                    if enabled && state.phase == QuestComplete then
+                                        Idle
+
+                                    else
+                                        state.phase
+                            }
+
+                        BossMode ->
+                            state
+
+                screen =
+                    case model.screen of
+                        BattleScreen state ->
+                            BattleScreen (change state)
+
+                        HelpScreen help state ->
+                            HelpScreen help (change state)
+
+                        _ ->
+                            model.screen
+            in
+            ( { model | continuousPractice = enabled, screen = screen }, Cmd.none )
+
         GoToAct course ->
-            ( { model | screen = MapScreen { course = course } }, Cmd.none )
+            if Curriculum.isUnlocked (Curriculum.firstUnit course) model.highestUnlocked then
+                ( { model | screen = MapScreen { course = course } }, Cmd.none )
+
+            else
+                ( model, Cmd.none )
 
         SetNameDraft draft ->
             case model.screen of
@@ -130,6 +174,7 @@ update msg model =
                         name =
                             if String.isEmpty (String.trim draft) then
                                 "HERO"
+
                             else
                                 String.trim draft
 
@@ -139,7 +184,7 @@ update msg model =
                                     MapScreen { course = uid.course }
 
                                 Nothing ->
-                                    MapScreen { course = Course1 }
+                                    MapScreen { course = Elementary 1 }
                     in
                     ( { model | playerName = name, screen = nextScreen }
                     , saveName name
@@ -168,6 +213,7 @@ update msg model =
                                 newHighest =
                                     if compareUnits uid model.highestUnlocked == GT then
                                         uid
+
                                     else
                                         model.highestUnlocked
                             in
@@ -178,6 +224,7 @@ update msg model =
                                   }
                                 , Cmd.none
                                 )
+
                             else
                                 ( { model
                                     | highestUnlocked = newHighest
@@ -194,7 +241,8 @@ update msg model =
 
         StartUnit uid ->
             let
-                quests = Curriculum.questsFor uid
+                quests =
+                    Curriculum.questsFor uid
             in
             case quests of
                 [] ->
@@ -213,8 +261,11 @@ update msg model =
             let
                 ( problem, newSeed ) =
                     Random.step (Problem.generatorFor uid qi 0) model.seed
+
+                state =
+                    Battle.initialPracticeState uid qi problem
             in
-            ( { model | screen = BattleScreen (Battle.initialPracticeState uid qi problem), seed = newSeed }
+            ( { model | screen = BattleScreen { state | continuousPractice = model.continuousPractice }, seed = newSeed }
             , Cmd.none
             )
 
@@ -242,6 +293,7 @@ update msg model =
                 BattleScreen state ->
                     if state.phase /= Idle then
                         ( model, Cmd.none )
+
                     else
                         handleAnswer state model
 
@@ -254,8 +306,11 @@ update msg model =
                     let
                         newFrame =
                             case state.animFrame of
-                                FrameA -> FrameB
-                                FrameB -> FrameA
+                                FrameA ->
+                                    FrameB
+
+                                FrameB ->
+                                    FrameA
                     in
                     ( { model | screen = BattleScreen { state | animFrame = newFrame } }, Cmd.none )
 
@@ -309,8 +364,11 @@ update msg model =
                     let
                         questIndex =
                             case battleState.mode of
-                                QuestMode qi -> qi
-                                BossMode -> -1
+                                QuestMode qi ->
+                                    qi
+
+                                BossMode ->
+                                    -1
 
                         ( nextProblem, newSeed ) =
                             Random.step (Problem.generatorFor battleState.unit questIndex battleState.correctInQuest) model.seed
@@ -357,11 +415,15 @@ update msg model =
 
                             else
                                 let
-                                    nextQi = qi + 1
-                                    quests = Curriculum.questsFor state.unit
+                                    nextQi =
+                                        qi + 1
+
+                                    quests =
+                                        Curriculum.questsFor state.unit
                                 in
                                 if nextQi >= List.length quests then
                                     startBoss state.unit model
+
                                 else
                                     startQuest state.unit nextQi model
 
@@ -392,8 +454,11 @@ update msg model =
                     let
                         qi =
                             case state.mode of
-                                QuestMode i -> i
-                                BossMode -> -1
+                                QuestMode i ->
+                                    i
+
+                                BossMode ->
+                                    -1
 
                         ( nextProblem, newSeed ) =
                             Random.step (Problem.generatorFor state.unit qi state.correctInQuest) model.seed
@@ -419,13 +484,15 @@ update msg model =
                 BattleScreen state ->
                     if state.phase == BattleWon then
                         let
-                            nextUid = Curriculum.nextUnit state.unit
+                            nextUid =
+                                Curriculum.nextUnit state.unit
 
                             newHighest =
                                 case nextUid of
                                     Just nuid ->
                                         if compareUnits nuid model.highestUnlocked == GT then
                                             nuid
+
                                         else
                                             model.highestUnlocked
 
@@ -456,7 +523,16 @@ update msg model =
                     ( { model | screen = MapScreen { course = uid.course } }, Cmd.none )
 
                 VictoryScreen vs ->
-                    ( { model | screen = MapScreen { course = vs.unit.course } }, Cmd.none )
+                    let
+                        destination =
+                            case vs.unit.course of
+                                Elementary _ ->
+                                    Curriculum.nextUnit vs.unit |> Maybe.withDefault vs.unit
+
+                                _ ->
+                                    vs.unit
+                    in
+                    ( { model | screen = MapScreen { course = destination.course } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -476,7 +552,8 @@ update msg model =
 handleAnswer : BattleState -> Model -> ( Model, Cmd Msg )
 handleAnswer state model =
     let
-        isCorrect = Battle.checkAnswer state.input state.problem.answer
+        isCorrect =
+            Battle.checkAnswer state.input state.problem.answer
     in
     case state.mode of
         QuestMode qi ->
@@ -489,7 +566,8 @@ handleAnswer state model =
 handleQuestAnswer : Int -> Bool -> BattleState -> Model -> ( Model, Cmd Msg )
 handleQuestAnswer qi isCorrect state model =
     let
-        quests = Curriculum.questsFor state.unit
+        quests =
+            Curriculum.questsFor state.unit
 
         minCorrect =
             quests
@@ -499,13 +577,21 @@ handleQuestAnswer qi isCorrect state model =
                 |> Maybe.withDefault 3
 
         newCorrect =
-            if isCorrect then state.correctInQuest + 1 else state.correctInQuest
+            if isCorrect then
+                state.correctInQuest + 1
+
+            else
+                state.correctInQuest
 
         newStreak =
-            if isCorrect then state.streak + 1 else 0
+            if isCorrect then
+                state.streak + 1
+
+            else
+                0
 
         questDone =
-            isCorrect && newCorrect >= minCorrect
+            isCorrect && newCorrect >= minCorrect && not state.continuousPractice
     in
     if isCorrect then
         let
@@ -519,12 +605,22 @@ handleQuestAnswer qi isCorrect state model =
                     , problemsDone = state.problemsDone + 1
                     , problem = nextProblem
                     , input = Battle.defaultInput nextProblem.inputType
-                    , phase = if questDone then QuestComplete else ShowResult CorrectHit
+                    , phase =
+                        if questDone then
+                            QuestComplete
+
+                        else
+                            ShowResult CorrectHit
                 }
         in
         ( { model | screen = BattleScreen newState, seed = newSeed }
-        , if questDone then Cmd.none else flashCmd
+        , if questDone then
+            Cmd.none
+
+          else
+            flashCmd
         )
+
     else
         -- Wrong answer: show the ACTUAL failed problem's hint walkthrough
         let
@@ -542,11 +638,20 @@ handleBossAnswer : Bool -> BattleState -> Model -> ( Model, Cmd Msg )
 handleBossAnswer isCorrect state model =
     if isCorrect then
         let
-            damage = Config.applyMultiplier state.streak Config.baseDamage
-            newBossHp = max 0 (state.bossHp - damage)
-            newStreak = state.streak + 1
-            newDone = state.problemsDone + 1
-            wonBattle = newBossHp == 0 && newDone >= Config.minProblems
+            damage =
+                Config.applyMultiplier state.streak Config.baseDamage
+
+            newBossHp =
+                max 0 (state.bossHp - damage)
+
+            newStreak =
+                state.streak + 1
+
+            newDone =
+                state.problemsDone + 1
+
+            wonBattle =
+                newBossHp == 0 && newDone >= Config.minProblems
         in
         if wonBattle then
             ( { model
@@ -561,6 +666,7 @@ handleBossAnswer isCorrect state model =
               }
             , Cmd.none
             )
+
         else
             let
                 ( nextProblem, newSeed ) =
@@ -584,8 +690,11 @@ handleBossAnswer isCorrect state model =
 
     else
         let
-            newHp = max 0 (state.playerHp - Config.bossCounterDamage)
-            lostBattle = newHp == 0
+            newHp =
+                max 0 (state.playerHp - Config.bossCounterDamage)
+
+            lostBattle =
+                newHp == 0
         in
         if lostBattle then
             ( { model
@@ -594,9 +703,11 @@ handleBossAnswer isCorrect state model =
               }
             , Cmd.none
             )
+
         else
             let
-                newDoneWrong = state.problemsDone + 1
+                newDoneWrong =
+                    state.problemsDone + 1
 
                 ( nextProblem, newSeed ) =
                     Random.step (Problem.generatorFor state.unit -1 newDoneWrong) model.seed
@@ -623,9 +734,12 @@ startQuest uid questIndex model =
     let
         ( problem, newSeed ) =
             Random.step (Problem.generatorFor uid questIndex 0) model.seed
+
+        state =
+            Battle.initialQuestState uid questIndex problem
     in
     ( { model
-        | screen = BattleScreen (Battle.initialQuestState uid questIndex problem)
+        | screen = BattleScreen { state | continuousPractice = model.continuousPractice }
         , seed = newSeed
       }
     , Cmd.none
@@ -729,7 +843,7 @@ view model =
                 MapView.viewMap model.playerName course model.highestUnlocked
 
             ChapterScreen uid ->
-                ChapterView.viewChapter uid (Curriculum.questsFor uid)
+                ChapterView.viewChapter uid (Curriculum.questsFor uid) model.continuousPractice
 
             BattleScreen state ->
                 BattleView.viewBattle model.playerName state
@@ -744,6 +858,7 @@ view model =
                 VictoryView.viewGameOver model.playerName uid
         , if model.confirmingExit then
             confirmExitOverlay model.playerName
+
           else
             Html.text ""
         ]
@@ -814,23 +929,5 @@ confirmExitOverlay playerName =
 
 
 compareUnits : UnitId -> UnitId -> Order
-compareUnits a b =
-    let
-        courseRank c =
-            case c of
-                Course1 -> 0
-                Course2 -> 1
-                PreAlgebra -> 2
-                Algebra1 -> 3
-
-        slotRank s =
-            case s of
-                Unit n -> n
-                MegaBoss -> 99
-    in
-    case compare (courseRank a.course) (courseRank b.course) of
-        EQ ->
-            compare (slotRank a.unit) (slotRank b.unit)
-
-        other ->
-            other
+compareUnits =
+    Curriculum.compareUnits

@@ -1,0 +1,307 @@
+// Run against a headless Chromium with --remote-debugging-port=19323.
+// Uses Node's built-in HTTP, fetch and WebSocket APIs; no npm dependencies.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+
+(async () => {
+  const root = path.resolve(__dirname, '../src');
+  const bundle = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, 'elm.js');
+  const server = http.createServer((req, res) => {
+    const entry = { '/': ['index.html', 'text/html'], '/elm.js': [bundle, 'text/javascript'], '/PressStart2P-Regular.ttf': ['PressStart2P-Regular.ttf', 'font/ttf'] }[req.url];
+    if (!entry) { res.writeHead(404).end(); return; }
+    res.setHeader('Content-Type', entry[1]);
+    res.end(fs.readFileSync(path.isAbsolute(entry[0]) ? entry[0] : path.join(root, entry[0])));
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const debug = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:19323';
+  let ws;
+  let target;
+  let diagnose = async () => null;
+  try {
+    target = await (await fetch(`${debug}/json/new?about:blank`, { method: 'PUT' })).json();
+    ws = new WebSocket(target.webSocketDebuggerUrl);
+    await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+    let sequence = 0;
+    const pending = new Map();
+    ws.onmessage = ({ data }) => {
+      const message = JSON.parse(data);
+      if (!message.id) return;
+      const request = pending.get(message.id);
+      if (!request) return;
+      pending.delete(message.id);
+      clearTimeout(request.timeout);
+      if (message.error) request.reject(new Error(JSON.stringify(message.error)));
+      else request.resolve(message.result);
+    };
+    const call = (method, params = {}) => new Promise((resolve, reject) => {
+      const id = ++sequence;
+      const timeout = setTimeout(() => reject(new Error(`Timed out: ${method}`)), 10000);
+      pending.set(id, { resolve, reject, timeout });
+      ws.send(JSON.stringify({ id, method, params }));
+    });
+    const evaluate = async expression => {
+      const response = await call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+      assert(!response.exceptionDetails, JSON.stringify(response.exceptionDetails));
+      return response.result.value;
+    };
+    const wait = async predicate => {
+      for (let attempt = 0; attempt < 100; attempt++) {
+        if (await evaluate(predicate)) return;
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+      throw new Error(`DOM did not reach expected state: ${predicate}`);
+    };
+    const body = () => evaluate('document.body.innerText');
+    diagnose = () => evaluate('({url:location.href, body:document.body.innerText, html:document.body.innerHTML.slice(0, 1200)})');
+    const click = async label => {
+      const found = await evaluate(`(() => { const el = [...document.querySelectorAll('button')].find(el => el.innerText.includes(${JSON.stringify(label)})); if (!el) return false; el.click(); return true; })()`);
+      assert(found, `Missing button ${label}`);
+      await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+    };
+    const input = async value => {
+      await wait("document.querySelector('input') !== null");
+      await evaluate(`(() => { const el = document.querySelector('input'); el.value = ${JSON.stringify(value)}; el.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+    };
+    const select = async index => {
+      await evaluate(`(() => { const el = document.querySelector('select'); el.value = ${JSON.stringify(String(index))}; el.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+      await wait(`document.body.innerText.includes('GRADE ${index + 1}')`);
+    };
+    const practice = async name => {
+      await click(name);
+      await click('BEGIN QUEST');
+    };
+    const description = () => evaluate("document.querySelector('[data-visual-kind] desc').textContent");
+    const diagram = async (kind, screenshot = kind) => {
+      await wait(`document.querySelector('[data-visual-kind="${kind}"]') !== null`);
+      const dimensions = await evaluate("(() => { const svg = document.querySelector('[data-visual-kind]'); const r = svg.getBoundingClientRect(); return { width: r.width, height: r.height, right: r.right, limit: innerWidth, accessible: !!svg.querySelector('title') && !!svg.querySelector('desc') }; })()");
+      assert(dimensions.accessible && dimensions.width > 100 && dimensions.height > 20 && dimensions.right <= dimensions.limit + 1, JSON.stringify(dimensions));
+      await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync(`/tmp/mathdragon-visual-${screenshot.replaceAll(' ', '-')}.png`, Buffer.from(result.data, 'base64')));
+    };
+    const leavePractice = async () => {
+      await click('MAP');
+    };
+    await call('Emulation.setDeviceMetricsOverride', { width: 480, height: 640, deviceScaleFactor: 1, mobile: false });
+    const clearStorage = await call('Page.addScriptToEvaluateOnNewDocument', { source: 'localStorage.clear()' });
+    await call('Page.navigate', { url: origin });
+    await wait("document.body.innerText.includes('NEW GAME')");
+    await call('Page.removeScriptToEvaluateOnNewDocument', { identifier: clearStorage.identifier });
+    await click('NEW GAME');
+    await input('YOUNG HERO');
+    await click('BEGIN');
+    await wait("document.body.innerText.includes('GRADE 1')");
+    const options = await evaluate("[...document.querySelectorAll('select option')].map(el => el.textContent)");
+    assert.deepEqual(options.slice(0, 6), ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Course 1']);
+    await click('The Lantern Seed');
+    await practice('Count and Read to 120');
+    await diagram('counting objects');
+    await leavePractice();
+    await practice('Measure and Compare Lengths');
+    await call('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 1, mobile: true });
+    await diagram('ribbon lengths');
+    const ribbonDescription = await description();
+    await click('ASK THE TOME');
+    assert.equal(await description(), ribbonDescription, 'Help must retain the same drawing');
+    await click('BACK TO BATTLE');
+    const failedDescription = await description();
+    await input('9999');
+    await click('ATTACK!');
+    await wait("document.body.innerText.includes('NOT QUITE')");
+    assert.equal(await description(), failedDescription, 'Wrong-answer walkthrough must retain the failed drawing');
+    while (await evaluate("[...document.querySelectorAll('button')].some(el => el.innerText.includes('NEXT STEP'))")) await click('NEXT STEP');
+    await click('GOT IT');
+    const ribbonValues = (await description()).match(/Blue: (\d+); Red: (\d+)/);
+    assert(ribbonValues, 'Ribbon diagram must describe both lengths');
+    await input(String(Number(ribbonValues[1]) - Number(ribbonValues[2])));
+    await click('ATTACK!');
+    await wait("!document.body.innerText.includes('CORRECT!')");
+    await diagram('ribbon lengths', 'counting-cubes');
+    await leavePractice();
+    await practice('Sort and Read Data');
+    await diagram('picture graph');
+    const fruit = (await description()).match(/Apples: (\d+); Pears: (\d+); Plums: (\d+)/);
+    assert(fruit, 'Picture graph must describe its source counts');
+    await input(String(Number(fruit[1]) + Number(fruit[2]) + Number(fruit[3])));
+    await click('ATTACK!');
+    await wait("!document.body.innerText.includes('CORRECT!')");
+    await diagram('bar graph');
+    await leavePractice();
+    await click('BACK TO MAP');
+    await call('Emulation.setDeviceMetricsOverride', { width: 480, height: 640, deviceScaleFactor: 1, mobile: false });
+    await select(1);
+    assert((await body()).includes("workshop"));
+    await call('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 1, mobile: true });
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-grade2-mobile.png', Buffer.from(result.data, 'base64')));
+    await call('Emulation.setDeviceMetricsOverride', { width: 480, height: 640, deviceScaleFactor: 1, mobile: false });
+    await click("The Wisp's Workshop");
+    assert((await body()).includes('Fluent Facts within 20'));
+    await practice('Arrays and Equal Groups');
+    await diagram('array');
+    await leavePractice();
+    const multiplyQuests = await evaluate("[...document.querySelectorAll('button')].map(el => el.textContent).filter(label => /Multiply by [0-5]/.test(label))");
+    assert.equal(multiplyQuests.length, 6);
+    for (let factor = 0; factor <= 5; factor++) assert(multiplyQuests[factor].includes(`Quest ${factor + 8}: Multiply by ${factor}`));
+    await click('CONTINUOUS PRACTICE');
+    await practice('Multiply by 5');
+    await call('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 1, mobile: true });
+    for (let answerIndex = 0; answerIndex < 12; answerIndex++) {
+      const fact = (await body()).match(/5 x (\d) = \?/);
+      assert(fact, 'Multiply by 5 must keep 5 as the first factor');
+      const counters = Number(fact[1]);
+      if (answerIndex % 2 === 1) {
+        await diagram('equal groups', 'multiplication-groups');
+        assert.equal(await evaluate("document.querySelectorAll('[data-counter-group]').length"), 5);
+        assert.equal(await evaluate("document.querySelectorAll('[data-counter]').length"), 5 * counters);
+      } else assert.equal(await evaluate("document.querySelector('[data-visual-kind]')"), null);
+      await input(String(5 * counters));
+      await click('ATTACK!');
+      await wait("!document.body.innerText.includes('CORRECT!')");
+      assert(!(await body()).includes('QUEST COMPLETE'));
+    }
+    await leavePractice();
+    await click('CONTINUOUS PRACTICE');
+    await practice('Multiply by 0');
+    await input('0');
+    await click('ATTACK!');
+    await wait("!document.body.innerText.includes('CORRECT!')");
+    await diagram('equal groups', 'zero-groups');
+    assert.equal(await evaluate("document.querySelectorAll('[data-counter-group]').length"), 0);
+    assert.equal(await evaluate("document.querySelectorAll('[data-counter]').length"), 0);
+    await leavePractice();
+    await call('Emulation.setDeviceMetricsOverride', { width: 480, height: 640, deviceScaleFactor: 1, mobile: false });
+    await click('BACK TO MAP');
+    await select(2);
+    await click('The Bridge of Many Parts');
+    await practice('Fractions as Equal Parts');
+    await diagram('fraction strip');
+    await leavePractice();
+    await practice('Measurement Line Plots');
+    await call('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 1, mobile: true });
+    await diagram('measurement line plot');
+    await leavePractice();
+    await call('Emulation.setDeviceMetricsOverride', { width: 480, height: 640, deviceScaleFactor: 1, mobile: false });
+    await click('CONTINUOUS PRACTICE');
+    assert((await body()).includes('ON — stay in the quest'));
+    await click('Single-Digit Times Tables');
+    // Quest intro uses the existing game's begin control.
+    const introButtons = await evaluate("[...document.querySelectorAll('button')].map(el => el.innerText)");
+    const begin = introButtons.find(label => /BEGIN|START|LET.S GO/i.test(label));
+    assert(begin, `No quest begin button: ${introButtons}`);
+    await click(begin);
+    await wait("document.querySelector('input') !== null");
+    assert.equal(await evaluate("document.querySelector('[data-arithmetic-layout]')"), null, 'Single-digit facts must stay inline');
+    for (let i = 0; i < 12; i++) {
+      const text = await body();
+      assert(text.includes('CONTINUOUS: ON'));
+      const match = text.match(/(\d) x (\d) = \?/);
+      assert(match, `Missing multiplication fact: ${text}`);
+      await input(String(Number(match[1]) * Number(match[2])));
+      const answerButton = (await evaluate("[...document.querySelectorAll('button')].map(el => el.innerText)")).find(label => /ANSWER|ATTACK|SUBMIT/i.test(label));
+      assert(answerButton, 'No answer submission control');
+      await click(answerButton);
+      await wait("!document.body.innerText.includes('CORRECT!')");
+      assert(!(await body()).includes('QUEST COMPLETE'));
+    }
+    assert((await body()).includes('12 correct'));
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-continuous-practice.png', Buffer.from(result.data, 'base64')));
+    await click('CONTINUOUS: ON');
+    const match = (await body()).match(/(\d) x (\d) = \?/);
+    await input(String(Number(match[1]) * Number(match[2])));
+    const answerButton = (await evaluate("[...document.querySelectorAll('button')].map(el => el.innerText)")).find(label => /ANSWER|ATTACK|SUBMIT/i.test(label));
+    await click(answerButton);
+    await wait("document.body.innerText.includes('QUEST COMPLETE')");
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-continuous-complete.png', Buffer.from(result.data, 'base64')));
+    await click('BACK TO CHAPTER');
+    await click('BACK TO MAP');
+    await select(3);
+    await click('The Keep of Patterns');
+    await practice('Multi-Digit Addition and Subtraction');
+    await call('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 1, mobile: true });
+    await wait("document.querySelector('[data-arithmetic-layout=" + '"vertical"' + "]') !== null");
+    const columns = await evaluate("(() => { const grid = document.querySelector('[data-arithmetic-layout]'); const a = grid.children[1].getBoundingClientRect(); const b = grid.children[3].getBoundingClientRect(); const r = grid.getBoundingClientRect(); return { topRight: a.right, bottomRight: b.right, right: r.right, viewport: innerWidth, question: grid.getAttribute('aria-label') }; })()");
+    assert(Math.abs(columns.topRight - columns.bottomRight) < 0.5, 'Place values must align');
+    assert(columns.right <= columns.viewport && columns.right > 0, 'Arithmetic must fit phone width');
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-vertical-addition.png', Buffer.from(result.data, 'base64')));
+    await click('ASK THE TOME');
+    assert.equal(await evaluate("document.querySelector('[data-arithmetic-layout]').getAttribute('aria-label')"), columns.question, 'Help must retain vertical arithmetic');
+    await click('BACK TO BATTLE');
+    await leavePractice();
+    await practice('Divide Larger Numbers');
+    await wait("document.querySelector('[data-arithmetic-layout=" + '"division"' + "]') !== null");
+    const divisionQuestion = await evaluate("document.querySelector('[data-arithmetic-layout]').getAttribute('aria-label')");
+    assert(/\d+ \/ \d+ = \?/.test(divisionQuestion));
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-long-division.png', Buffer.from(result.data, 'base64')));
+    await leavePractice();
+    await click('BACK TO MAP');
+    await select(4);
+    await click('The Gate to the Valley');
+    await practice('Add and Subtract Decimals');
+    await wait("document.querySelector('[data-arithmetic-layout]') !== null");
+    const decimals = await evaluate("(() => { const grid = document.querySelector('[data-arithmetic-layout]'); const cells = [grid.children[1], grid.children[3]]; const points = cells.map(cell => { const index = cell.textContent.indexOf('.'); const range = document.createRange(); range.setStart(cell.firstChild, index); range.setEnd(cell.firstChild, index + 1); return range.getBoundingClientRect().left; }); return { points, values: cells.map(cell => Number(cell.textContent)), layout: grid.dataset.arithmeticLayout }; })()");
+    assert(decimals.values.every(value => value < 10), 'Regression must cover decimals below 10');
+    assert.equal(decimals.layout, 'vertical');
+    assert(Math.abs(decimals.points[0] - decimals.points[1]) < 0.5, 'Decimal points must visually align');
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-vertical-decimals.png', Buffer.from(result.data, 'base64')));
+    await leavePractice();
+    await practice('Two Patterns and Tables');
+    await wait("document.querySelector('table[data-visual-kind]') !== null");
+    const readTable = () => evaluate("[...document.querySelectorAll('table[data-visual-kind] tbody tr')].map(row => [...row.querySelectorAll('td')].map(cell => cell.textContent))");
+    const rule = (await body()).match(/Rule: multiply by (\d+), then add (\d+)\. What is the output for input (\d+)\?/);
+    assert(rule, 'Given-rule question must state the rule');
+    assert.deepEqual(await evaluate("[...document.querySelectorAll('table[data-visual-kind] th')].map(cell => cell.textContent)"), ['Input', 'Output']);
+    const missingRow = [[rule[3], '?']];
+    assert.deepEqual(await readTable(), missingRow);
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-apply-rule.png', Buffer.from(result.data, 'base64')));
+    await click('ASK THE TOME');
+    assert.deepEqual(await readTable(), missingRow, 'Help must preserve the actual table');
+    await click('BACK TO BATTLE');
+    const freshRule = (await body()).match(/Rule: multiply by (\d+), then add (\d+)\. What is the output for input (\d+)\?/);
+    await input(String(Number(freshRule[1]) * Number(freshRule[3]) + Number(freshRule[2])));
+    await click('ATTACK!');
+    await wait("!document.body.innerText.includes('CORRECT!')");
+    const patterns = (await body()).match(/One adds (\d+) each step; the other adds (\d+)/);
+    assert(patterns);
+    await input(String(Number(patterns[2]) / Number(patterns[1])));
+    await click('ATTACK!');
+    await wait("!document.body.innerText.includes('CORRECT!')");
+    await wait("document.querySelector('table[data-visual-kind] tbody tr:nth-child(3)') !== null");
+    const discoveryRows = (await readTable()).map(row => row.map(Number));
+    assert(!(await body()).includes('Same rule:'), 'Discovery prompt must not reveal its rule');
+    const offeredRules = await evaluate("[...document.querySelectorAll('button')].map(el => el.textContent).filter(label => /Multiply by \\d+, then add \\d+/.test(label))");
+    assert.equal(offeredRules.length, 4);
+    const matching = offeredRules.map(text => text.match(/Multiply by (\d+), then add (\d+)/)).filter(match => discoveryRows.every(([x, y]) => x * Number(match[1]) + Number(match[2]) === y));
+    assert.equal(matching.length, 1);
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-find-rule.png', Buffer.from(result.data, 'base64')));
+    await click(matching[0][0]);
+    const attack = await evaluate("[...document.querySelectorAll('button')].some(el => el.innerText.includes('ATTACK!'))");
+    if (attack) await click('ATTACK!');
+    await wait("document.body.innerText.includes('QUEST COMPLETE')");
+    await call('Emulation.setDeviceMetricsOverride', { width: 480, height: 640, deviceScaleFactor: 1, mobile: false });
+    // Reload to test a legacy code as a returning player.
+    await call('Page.navigate', { url: origin });
+    await wait("document.querySelector('select') !== null");
+    await click('EXIT');
+    await click('YES, EXIT');
+    await click('CONTINUE (PASSCODE)');
+    await input('stone wall paper crow');
+    await click('CONTINUE');
+    await wait("document.body.innerText.includes('ENTER YOUR NAME')");
+    await input('OLDER HERO');
+    await click('BEGIN');
+    await wait("document.body.innerText.includes('ACT I')");
+    assert((await body()).includes('Integer Operations'));
+    await call('Page.captureScreenshot', { format: 'png' }).then(result => fs.writeFileSync('/tmp/mathdragon-legacy-map.png', Buffer.from(result.data, 'base64')));
+    console.log('PASS: Chromium UI: grade 2 fixed tables and equal groups, zero groups, given/inferred input-output rules in real tables, phone arithmetic, continuous practice, help and legacy passcodes.');
+  } catch (error) {
+    console.error('Browser verification failed:', error.message);
+    console.error(await diagnose());
+    throw error;
+  } finally {
+    if (ws) ws.close();
+    if (target) await fetch(`${debug}/json/close/${target.id}`).catch(() => {});
+    server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+  }
+})().catch(error => { console.error(error); process.exitCode = 1; });

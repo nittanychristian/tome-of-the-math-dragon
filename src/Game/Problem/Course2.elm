@@ -5,95 +5,235 @@ import Random exposing (Generator)
 import Types exposing (..)
 
 
+
 -- ── TOP-LEVEL DISPATCHERS ──────────────────────────────────────────────────
 
 
 generatorFor : Int -> Generator Problem
 generatorFor unitNum =
     case unitNum of
-        1 -> unit1
-        2 -> unit2
-        3 -> unit3
-        4 -> unit4
-        5 -> unit5
-        6 -> unit6
-        7 -> unit7
-        8 -> unit8
-        _ -> unit1
+        1 ->
+            unit1
+
+        2 ->
+            unit2
+
+        3 ->
+            unit3
+
+        4 ->
+            unit4
+
+        5 ->
+            unit5
+
+        6 ->
+            unit6
+
+        7 ->
+            unit7
+
+        8 ->
+            unit8
+
+        _ ->
+            unit1
 
 
 generatorForQuest : Int -> Int -> Int -> Generator Problem
 generatorForQuest unitNum questIndex _ =
     case ( unitNum, questIndex ) of
         -- Unit 1: Number Sense (8 quests, indices 0-7)
-        ( 1, 0 ) -> genIntAddSubPos
-        ( 1, 1 ) -> genIntAddSubNeg
-        ( 1, 2 ) -> genIntMulDiv
-        ( 1, 3 ) -> genSimplifyFrac
-        ( 1, 4 ) -> genFracAddSub
-        ( 1, 5 ) -> genFracMulDiv
-        ( 1, 6 ) -> genConvertFDP
-        ( 1, 7 ) -> genExpSquareRoot
-        ( 1, _ ) -> unit1
+        ( 1, 0 ) ->
+            genIntAddSubPos
+
+        ( 1, 1 ) ->
+            genIntAddSubNeg
+
+        ( 1, 2 ) ->
+            genIntMulDiv
+
+        ( 1, 3 ) ->
+            genSimplifyFrac
+
+        ( 1, 4 ) ->
+            genFracAddSub
+
+        ( 1, 5 ) ->
+            genFracMulDiv
+
+        ( 1, 6 ) ->
+            genConvertFDP
+
+        ( 1, 7 ) ->
+            genExpSquareRoot
+
+        ( 1, _ ) ->
+            unit1
+
         -- Unit 2: Expressions (7 quests, indices 0-6)
-        ( 2, 0 ) -> genOrderOfOps
-        ( 2, 1 ) -> genTranslateEval
-        ( 2, 2 ) -> genCombineLike
-        ( 2, 3 ) -> genDistributive
-        ( 2, 4 ) -> genSimplifyExpr
-        ( 2, 5 ) -> genFactorExpr
-        ( 2, 6 ) -> genMonomialOps
-        ( 2, _ ) -> unit2
+        ( 2, 0 ) ->
+            genOrderOfOps
+
+        ( 2, 1 ) ->
+            genTranslateEval
+
+        ( 2, 2 ) ->
+            genCombineLike
+
+        ( 2, 3 ) ->
+            genDistributive
+
+        ( 2, 4 ) ->
+            genSimplifyExpr
+
+        ( 2, 5 ) ->
+            genFactorExpr
+
+        ( 2, 6 ) ->
+            genMonomialOps
+
+        ( 2, _ ) ->
+            unit2
+
         -- Unit 3: Equations and Inequalities (5 quests, indices 0-4)
-        ( 3, 0 ) -> genOneStepEq
-        ( 3, 1 ) -> genTwoStepEq
-        ( 3, 2 ) -> genMultiStepEq
-        ( 3, 3 ) -> genOneStepIneq
-        ( 3, 4 ) -> genTwoStepIneq
-        ( 3, _ ) -> unit3
+        ( 3, 0 ) ->
+            genOneStepEq
+
+        ( 3, 1 ) ->
+            genTwoStepEq
+
+        ( 3, 2 ) ->
+            genMultiStepEq
+
+        ( 3, 3 ) ->
+            genOneStepIneq
+
+        ( 3, 4 ) ->
+            genTwoStepIneq
+
+        ( 3, _ ) ->
+            unit3
+
         -- Unit 4: Ratios, Proportions, and Percents (8 quests, indices 0-7)
-        ( 4, 0 ) -> genRatioSimplify
-        ( 4, 1 ) -> genUnitRate
-        ( 4, 2 ) -> genSolveProportion
-        ( 4, 3 ) -> genScaleDrawing
-        ( 4, 4 ) -> genSimilarFigures
-        ( 4, 5 ) -> genPercentProportion
-        ( 4, 6 ) -> genDiscountMarkup
-        ( 4, 7 ) -> genSimpleInterest
-        ( 4, _ ) -> unit4
+        ( 4, 0 ) ->
+            genRatioSimplify
+
+        ( 4, 1 ) ->
+            genUnitRate
+
+        ( 4, 2 ) ->
+            genSolveProportion
+
+        ( 4, 3 ) ->
+            genScaleDrawing
+
+        ( 4, 4 ) ->
+            genSimilarFigures
+
+        ( 4, 5 ) ->
+            genPercentProportion
+
+        ( 4, 6 ) ->
+            genDiscountMarkup
+
+        ( 4, 7 ) ->
+            genSimpleInterest
+
+        ( 4, _ ) ->
+            unit4
+
         -- Unit 5: Functions and Graphing (6 quests, indices 0-5)
-        ( 5, 0 ) -> genQuadrant
-        ( 5, 1 ) -> genIsFunction
-        ( 5, 2 ) -> genSlopeFromPoints
-        ( 5, 3 ) -> genSlopeIntercept
-        ( 5, 4 ) -> genLinearFuncValue
-        ( 5, 5 ) -> genProportionalRelation
-        ( 5, _ ) -> unit5
+        ( 5, 0 ) ->
+            genQuadrant
+
+        ( 5, 1 ) ->
+            genIsFunction
+
+        ( 5, 2 ) ->
+            genSlopeFromPoints
+
+        ( 5, 3 ) ->
+            genSlopeIntercept
+
+        ( 5, 4 ) ->
+            genLinearFuncValue
+
+        ( 5, 5 ) ->
+            genProportionalRelation
+
+        ( 5, _ ) ->
+            unit5
+
         -- Unit 6: Geometry (6 quests, indices 0-5)
-        ( 6, 0 ) -> genAngleClassify
-        ( 6, 1 ) -> genCompSuppl
-        ( 6, 2 ) -> genVerticalAngles
-        ( 6, 3 ) -> genTriangleSum
-        ( 6, 4 ) -> genTriangleClassify
-        ( 6, 5 ) -> genTranslation
-        ( 6, _ ) -> unit6
+        ( 6, 0 ) ->
+            genAngleClassify
+
+        ( 6, 1 ) ->
+            genCompSuppl
+
+        ( 6, 2 ) ->
+            genVerticalAngles
+
+        ( 6, 3 ) ->
+            genTriangleSum
+
+        ( 6, 4 ) ->
+            genTriangleClassify
+
+        ( 6, 5 ) ->
+            genTranslation
+
+        ( 6, _ ) ->
+            unit6
+
         -- Unit 7: Measurement (6 quests, indices 0-5)
-        ( 7, 0 ) -> genPerimArea
-        ( 7, 1 ) -> genCircleCalc
-        ( 7, 2 ) -> genSurfaceAreaRect
-        ( 7, 3 ) -> genSurfaceAreaCylinder
-        ( 7, 4 ) -> genVolumeRect
-        ( 7, 5 ) -> genVolumeCylinder
-        ( 7, _ ) -> unit7
+        ( 7, 0 ) ->
+            genPerimArea
+
+        ( 7, 1 ) ->
+            genCircleCalc
+
+        ( 7, 2 ) ->
+            genSurfaceAreaRect
+
+        ( 7, 3 ) ->
+            genSurfaceAreaCylinder
+
+        ( 7, 4 ) ->
+            genVolumeRect
+
+        ( 7, 5 ) ->
+            genVolumeCylinder
+
+        ( 7, _ ) ->
+            unit7
+
         -- Unit 8: Probability and Statistics (6 quests, indices 0-5)
-        ( 8, 0 ) -> genSimpleProb
-        ( 8, 1 ) -> genCountingPrinciple
-        ( 8, 2 ) -> genCompoundProb
-        ( 8, 3 ) -> genMeanMedianMode
-        ( 8, 4 ) -> genBoxWhisker
-        ( 8, 5 ) -> genStemLeaf
-        ( 8, _ ) -> unit8
-        _ -> generatorFor unitNum
+        ( 8, 0 ) ->
+            genSimpleProb
+
+        ( 8, 1 ) ->
+            genCountingPrinciple
+
+        ( 8, 2 ) ->
+            genCompoundProb
+
+        ( 8, 3 ) ->
+            genMeanMedianMode
+
+        ( 8, 4 ) ->
+            genBoxWhisker
+
+        ( 8, 5 ) ->
+            genStemLeaf
+
+        ( 8, _ ) ->
+            unit8
+
+        _ ->
+            generatorFor unitNum
+
 
 
 -- ── UNIT MIXERS ────────────────────────────────────────────────────────────
@@ -105,14 +245,29 @@ unit1 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genIntAddSubPos
-                    1 -> genIntAddSubNeg
-                    2 -> genIntMulDiv
-                    3 -> genSimplifyFrac
-                    4 -> genFracAddSub
-                    5 -> genFracMulDiv
-                    6 -> genConvertFDP
-                    _ -> genExpSquareRoot
+                    0 ->
+                        genIntAddSubPos
+
+                    1 ->
+                        genIntAddSubNeg
+
+                    2 ->
+                        genIntMulDiv
+
+                    3 ->
+                        genSimplifyFrac
+
+                    4 ->
+                        genFracAddSub
+
+                    5 ->
+                        genFracMulDiv
+
+                    6 ->
+                        genConvertFDP
+
+                    _ ->
+                        genExpSquareRoot
             )
 
 
@@ -122,13 +277,26 @@ unit2 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genOrderOfOps
-                    1 -> genTranslateEval
-                    2 -> genCombineLike
-                    3 -> genDistributive
-                    4 -> genSimplifyExpr
-                    5 -> genFactorExpr
-                    _ -> genMonomialOps
+                    0 ->
+                        genOrderOfOps
+
+                    1 ->
+                        genTranslateEval
+
+                    2 ->
+                        genCombineLike
+
+                    3 ->
+                        genDistributive
+
+                    4 ->
+                        genSimplifyExpr
+
+                    5 ->
+                        genFactorExpr
+
+                    _ ->
+                        genMonomialOps
             )
 
 
@@ -138,11 +306,20 @@ unit3 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genOneStepEq
-                    1 -> genTwoStepEq
-                    2 -> genMultiStepEq
-                    3 -> genOneStepIneq
-                    _ -> genTwoStepIneq
+                    0 ->
+                        genOneStepEq
+
+                    1 ->
+                        genTwoStepEq
+
+                    2 ->
+                        genMultiStepEq
+
+                    3 ->
+                        genOneStepIneq
+
+                    _ ->
+                        genTwoStepIneq
             )
 
 
@@ -152,14 +329,29 @@ unit4 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genRatioSimplify
-                    1 -> genUnitRate
-                    2 -> genSolveProportion
-                    3 -> genScaleDrawing
-                    4 -> genSimilarFigures
-                    5 -> genPercentProportion
-                    6 -> genDiscountMarkup
-                    _ -> genSimpleInterest
+                    0 ->
+                        genRatioSimplify
+
+                    1 ->
+                        genUnitRate
+
+                    2 ->
+                        genSolveProportion
+
+                    3 ->
+                        genScaleDrawing
+
+                    4 ->
+                        genSimilarFigures
+
+                    5 ->
+                        genPercentProportion
+
+                    6 ->
+                        genDiscountMarkup
+
+                    _ ->
+                        genSimpleInterest
             )
 
 
@@ -169,12 +361,23 @@ unit5 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genQuadrant
-                    1 -> genIsFunction
-                    2 -> genSlopeFromPoints
-                    3 -> genSlopeIntercept
-                    4 -> genLinearFuncValue
-                    _ -> genProportionalRelation
+                    0 ->
+                        genQuadrant
+
+                    1 ->
+                        genIsFunction
+
+                    2 ->
+                        genSlopeFromPoints
+
+                    3 ->
+                        genSlopeIntercept
+
+                    4 ->
+                        genLinearFuncValue
+
+                    _ ->
+                        genProportionalRelation
             )
 
 
@@ -184,12 +387,23 @@ unit6 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genAngleClassify
-                    1 -> genCompSuppl
-                    2 -> genVerticalAngles
-                    3 -> genTriangleSum
-                    4 -> genTriangleClassify
-                    _ -> genTranslation
+                    0 ->
+                        genAngleClassify
+
+                    1 ->
+                        genCompSuppl
+
+                    2 ->
+                        genVerticalAngles
+
+                    3 ->
+                        genTriangleSum
+
+                    4 ->
+                        genTriangleClassify
+
+                    _ ->
+                        genTranslation
             )
 
 
@@ -199,12 +413,23 @@ unit7 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genPerimArea
-                    1 -> genCircleCalc
-                    2 -> genSurfaceAreaRect
-                    3 -> genSurfaceAreaCylinder
-                    4 -> genVolumeRect
-                    _ -> genVolumeCylinder
+                    0 ->
+                        genPerimArea
+
+                    1 ->
+                        genCircleCalc
+
+                    2 ->
+                        genSurfaceAreaRect
+
+                    3 ->
+                        genSurfaceAreaCylinder
+
+                    4 ->
+                        genVolumeRect
+
+                    _ ->
+                        genVolumeCylinder
             )
 
 
@@ -214,13 +439,25 @@ unit8 =
         |> Random.andThen
             (\t ->
                 case t of
-                    0 -> genSimpleProb
-                    1 -> genCountingPrinciple
-                    2 -> genCompoundProb
-                    3 -> genMeanMedianMode
-                    4 -> genBoxWhisker
-                    _ -> genStemLeaf
+                    0 ->
+                        genSimpleProb
+
+                    1 ->
+                        genCountingPrinciple
+
+                    2 ->
+                        genCompoundProb
+
+                    3 ->
+                        genMeanMedianMode
+
+                    4 ->
+                        genBoxWhisker
+
+                    _ ->
+                        genStemLeaf
             )
+
 
 
 -- ── UNIT 1: Number Sense ───────────────────────────────────────────────────
@@ -236,6 +473,7 @@ genIntAddSubPos =
                         (\( a, b ) ->
                             if op == 0 then
                                 { prompt = String.fromInt a ++ " + " ++ String.fromInt b ++ " = ?"
+                                , visual = Nothing
                                 , inputType = TInteger
                                 , answer = AInt (a + b)
                                 , hint =
@@ -249,38 +487,81 @@ genIntAddSubPos =
                                         ]
                                     }
                                 }
+
                             else
                                 let
-                                    big = max a b
-                                    small = min a b
-                                    onesB = modBy 10 big
-                                    onesS = modBy 10 small
-                                    borrow1 = if onesB < onesS then 1 else 0
-                                    onesResult = onesB + borrow1 * 10 - onesS
-                                    origTens = modBy 10 (big // 10)
-                                    tensB = origTens - borrow1
-                                    tensS = modBy 10 (small // 10)
-                                    borrow2 = if tensB < tensS then 1 else 0
-                                    tensResult = tensB + borrow2 * 10 - tensS
-                                    hundredsB = big // 100 - borrow2
-                                    hundredsS = small // 100
-                                    str = String.fromInt
+                                    big =
+                                        max a b
+
+                                    small =
+                                        min a b
+
+                                    onesB =
+                                        modBy 10 big
+
+                                    onesS =
+                                        modBy 10 small
+
+                                    borrow1 =
+                                        if onesB < onesS then
+                                            1
+
+                                        else
+                                            0
+
+                                    onesResult =
+                                        onesB + borrow1 * 10 - onesS
+
+                                    origTens =
+                                        modBy 10 (big // 10)
+
+                                    tensB =
+                                        origTens - borrow1
+
+                                    tensS =
+                                        modBy 10 (small // 10)
+
+                                    borrow2 =
+                                        if tensB < tensS then
+                                            1
+
+                                        else
+                                            0
+
+                                    tensResult =
+                                        tensB + borrow2 * 10 - tensS
+
+                                    hundredsB =
+                                        big // 100 - borrow2
+
+                                    hundredsS =
+                                        small // 100
+
+                                    str =
+                                        String.fromInt
+
                                     onesStep =
                                         if borrow1 == 1 then
                                             "Ones: " ++ str onesB ++ " < " ++ str onesS ++ ", borrow 10 → " ++ str (onesB + 10) ++ " − " ++ str onesS ++ " = " ++ str onesResult
+
                                         else
                                             "Ones: " ++ str onesB ++ " − " ++ str onesS ++ " = " ++ str onesResult
+
                                     tensStep =
                                         if borrow1 == 1 && borrow2 == 1 then
                                             "Tens: " ++ str origTens ++ " − 1 (lent) then borrow 10 → " ++ str (origTens + 9) ++ " − " ++ str tensS ++ " = " ++ str tensResult
+
                                         else if borrow1 == 1 then
                                             "Tens: " ++ str origTens ++ " − 1 (lent to ones) − " ++ str tensS ++ " = " ++ str tensResult
+
                                         else if borrow2 == 1 then
                                             "Tens: " ++ str origTens ++ " < " ++ str tensS ++ ", borrow 10 → " ++ str (origTens + 10) ++ " − " ++ str tensS ++ " = " ++ str tensResult
+
                                         else
                                             "Tens: " ++ str origTens ++ " − " ++ str tensS ++ " = " ++ str tensResult
                                 in
                                 { prompt = str big ++ " - " ++ str small ++ " = ?"
+                                , visual = Nothing
                                 , inputType = TInteger
                                 , answer = AInt (big - small)
                                 , hint =
@@ -290,12 +571,13 @@ genIntAddSubPos =
                                         [ onesStep
                                         , tensStep
                                         ]
-                                        ++ (if big >= 100 || hundredsS > 0 then
-                                                [ "Hundreds: " ++ str hundredsB ++ " − " ++ str hundredsS ++ " = " ++ str (hundredsB - hundredsS) ]
-                                            else
-                                                []
-                                           )
-                                        ++ [ "Answer: " ++ str (big - small) ]
+                                            ++ (if big >= 100 || hundredsS > 0 then
+                                                    [ "Hundreds: " ++ str hundredsB ++ " − " ++ str hundredsS ++ " = " ++ str (hundredsB - hundredsS) ]
+
+                                                else
+                                                    []
+                                               )
+                                            ++ [ "Answer: " ++ str (big - small) ]
                                     }
                                 }
                         )
@@ -312,6 +594,7 @@ genIntAddSubNeg =
                         (\( a, b ) ->
                             if op == 0 then
                                 { prompt = showSigned a ++ " + " ++ showSigned b ++ " = ?"
+                                , visual = Nothing
                                 , inputType = TInteger
                                 , answer = AInt (a + b)
                                 , hint =
@@ -323,6 +606,7 @@ genIntAddSubNeg =
                                             , String.fromInt (abs a) ++ " + " ++ String.fromInt (abs b) ++ " = " ++ String.fromInt (abs a + abs b)
                                             , "Keep the sign: " ++ String.fromInt (a + b)
                                             ]
+
                                         else
                                             [ "Different signs: subtract smaller absolute value from larger"
                                             , "abs values: " ++ String.fromInt (abs a) ++ " and " ++ String.fromInt (abs b)
@@ -330,16 +614,18 @@ genIntAddSubNeg =
                                             ]
                                     }
                                 }
+
                             else
                                 { prompt = showSigned a ++ " - " ++ showSigned b ++ " = ?"
+                                , visual = Nothing
                                 , inputType = TInteger
                                 , answer = AInt (a - b)
                                 , hint =
                                     { prompt = showSigned a ++ " - " ++ showSigned b ++ " = ?"
                                     , answer = String.fromInt (a - b)
                                     , steps =
-                                        [ "Subtracting " ++ showSigned b ++ " is the same as adding " ++ showSigned (-b)
-                                        , showSigned a ++ " + " ++ showSigned (-b) ++ " = " ++ String.fromInt (a - b)
+                                        [ "Subtracting " ++ showSigned b ++ " is the same as adding " ++ showSigned -b
+                                        , showSigned a ++ " + " ++ showSigned -b ++ " = " ++ String.fromInt (a - b)
                                         ]
                                     }
                                 }
@@ -360,10 +646,14 @@ genIntMulDiv =
                                     |> Random.map
                                         (\wrong ->
                                             let
-                                                correct = a * b
-                                                choices = shuffleChoices (String.fromInt correct) wrong
+                                                correct =
+                                                    a * b
+
+                                                choices =
+                                                    shuffleChoices (String.fromInt correct) wrong
                                             in
                                             { prompt = showSigned a ++ " × " ++ showSigned b ++ " = ?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -371,23 +661,35 @@ genIntMulDiv =
                                                 , answer = String.fromInt correct
                                                 , steps =
                                                     [ "Multiply absolute values: " ++ String.fromInt (abs a) ++ " × " ++ String.fromInt (abs b) ++ " = " ++ String.fromInt (abs a * abs b)
-                                                    , if (a >= 0 && b >= 0) || (a < 0 && b < 0) then "Same signs → positive" else "Different signs → negative"
+                                                    , if (a >= 0 && b >= 0) || (a < 0 && b < 0) then
+                                                        "Same signs → positive"
+
+                                                      else
+                                                        "Different signs → negative"
                                                     , "Answer: " ++ String.fromInt correct
                                                     ]
                                                 }
                                             }
                                         )
                             )
+
                 else
                     Random.map2 Tuple.pair (randIntNonZero -8 8) (randInt 1 6)
                         |> Random.andThen
                             (\( b, q ) ->
-                                let a = b * q in
+                                let
+                                    a =
+                                        b * q
+                                in
                                 wrongChoicesInt q
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt q) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt q) wrong
+                                            in
                                             { prompt = showSigned a ++ " / " ++ showSigned b ++ " = ?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -395,7 +697,11 @@ genIntMulDiv =
                                                 , answer = String.fromInt q
                                                 , steps =
                                                     [ "Divide absolute values: " ++ String.fromInt (abs a) ++ " / " ++ String.fromInt (abs b) ++ " = " ++ String.fromInt (abs q)
-                                                    , if (a >= 0 && b > 0) || (a < 0 && b < 0) then "Same signs → positive" else "Different signs → negative"
+                                                    , if (a >= 0 && b > 0) || (a < 0 && b < 0) then
+                                                        "Same signs → positive"
+
+                                                      else
+                                                        "Different signs → negative"
                                                     , "Answer: " ++ String.fromInt q
                                                     ]
                                                 }
@@ -414,15 +720,33 @@ genSimplifyFrac =
                     |> Random.map
                         (\d ->
                             let
-                                safeD = if d <= n then n + 1 else d
-                                g = gcd n safeD
-                                rn = n // g
-                                rd = safeD // g
-                                bigN = k * rn
-                                bigD = k * rd
-                                ( ansN, ansD ) = reduceFraction bigN bigD
+                                safeD =
+                                    if d <= n then
+                                        n + 1
+
+                                    else
+                                        d
+
+                                g =
+                                    gcd n safeD
+
+                                rn =
+                                    n // g
+
+                                rd =
+                                    safeD // g
+
+                                bigN =
+                                    k * rn
+
+                                bigD =
+                                    k * rd
+
+                                ( ansN, ansD ) =
+                                    reduceFraction bigN bigD
                             in
                             { prompt = "Simplify: " ++ showFrac bigN bigD
+                            , visual = Nothing
                             , inputType = TFraction
                             , answer = AFraction ansN ansD
                             , hint =
@@ -450,32 +774,108 @@ genFracAddSub =
                             randChoice [ 2, 3, 4, 5, 6 ] 3
                                 |> Random.andThen
                                     (\d2raw ->
-                                        let d2 = if d2raw == d1 then (if d1 == 6 then 2 else d1 + 1) else d2raw
+                                        let
+                                            d2 =
+                                                if d2raw == d1 then
+                                                    if d1 == 6 then
+                                                        2
+
+                                                    else
+                                                        d1 + 1
+
+                                                else
+                                                    d2raw
                                         in
                                         Random.map2 Tuple.pair (randInt 1 (d1 - 1)) (randInt 1 (d2 - 1))
                                             |> Random.map
                                                 (\( n1, n2 ) ->
                                                     let
-                                                        commonD = lcm d1 d2
-                                                        e1 = n1 * (commonD // d1)
-                                                        e2 = n2 * (commonD // d2)
+                                                        commonD =
+                                                            lcm d1 d2
+
+                                                        e1 =
+                                                            n1 * (commonD // d1)
+
+                                                        e2 =
+                                                            n2 * (commonD // d2)
+
                                                         ( rn, rd ) =
                                                             if op == 0 then
                                                                 reduceFraction (e1 + e2) commonD
+
                                                             else
-                                                                let big = max e1 e2
-                                                                    small = min e1 e2
-                                                                    ( bn1, bd1 ) = if e1 >= e2 then ( n1, d1 ) else ( n2, d2 )
-                                                                    ( bn2, bd2 ) = if e1 >= e2 then ( n2, d2 ) else ( n1, d1 )
+                                                                let
+                                                                    big =
+                                                                        max e1 e2
+
+                                                                    small =
+                                                                        min e1 e2
+
+                                                                    ( bn1, bd1 ) =
+                                                                        if e1 >= e2 then
+                                                                            ( n1, d1 )
+
+                                                                        else
+                                                                            ( n2, d2 )
+
+                                                                    ( bn2, bd2 ) =
+                                                                        if e1 >= e2 then
+                                                                            ( n2, d2 )
+
+                                                                        else
+                                                                            ( n1, d1 )
                                                                 in
                                                                 reduceFraction (big - small) commonD
-                                                        opStr = if op == 0 then " + " else " - "
-                                                        pn1 = if op == 0 then n1 else (if e1 >= e2 then n1 else n2)
-                                                        pd1 = if op == 0 then d1 else (if e1 >= e2 then d1 else d2)
-                                                        pn2 = if op == 0 then n2 else (if e1 >= e2 then n2 else n1)
-                                                        pd2 = if op == 0 then d2 else (if e1 >= e2 then d2 else d1)
+
+                                                        opStr =
+                                                            if op == 0 then
+                                                                " + "
+
+                                                            else
+                                                                " - "
+
+                                                        pn1 =
+                                                            if op == 0 then
+                                                                n1
+
+                                                            else if e1 >= e2 then
+                                                                n1
+
+                                                            else
+                                                                n2
+
+                                                        pd1 =
+                                                            if op == 0 then
+                                                                d1
+
+                                                            else if e1 >= e2 then
+                                                                d1
+
+                                                            else
+                                                                d2
+
+                                                        pn2 =
+                                                            if op == 0 then
+                                                                n2
+
+                                                            else if e1 >= e2 then
+                                                                n2
+
+                                                            else
+                                                                n1
+
+                                                        pd2 =
+                                                            if op == 0 then
+                                                                d2
+
+                                                            else if e1 >= e2 then
+                                                                d2
+
+                                                            else
+                                                                d1
                                                     in
                                                     { prompt = showFrac pn1 pd1 ++ opStr ++ showFrac pn2 pd2 ++ " = ?"
+                                                    , visual = Nothing
                                                     , inputType = TFraction
                                                     , answer = AFraction rn rd
                                                     , hint =
@@ -505,8 +905,12 @@ genFracMulDiv =
                     |> Random.map
                         (\( ( n1, d1 ), ( n2, d2 ) ) ->
                             if op == 0 then
-                                let ( rn, rd ) = reduceFraction (n1 * n2) (d1 * d2) in
+                                let
+                                    ( rn, rd ) =
+                                        reduceFraction (n1 * n2) (d1 * d2)
+                                in
                                 { prompt = showFrac n1 d1 ++ " × " ++ showFrac n2 d2 ++ " = ?"
+                                , visual = Nothing
                                 , inputType = TFraction
                                 , answer = AFraction rn rd
                                 , hint =
@@ -519,9 +923,14 @@ genFracMulDiv =
                                         ]
                                     }
                                 }
+
                             else
-                                let ( rn, rd ) = reduceFraction (n1 * d2) (d1 * n2) in
+                                let
+                                    ( rn, rd ) =
+                                        reduceFraction (n1 * d2) (d1 * n2)
+                                in
                                 { prompt = showFrac n1 d1 ++ " / " ++ showFrac n2 d2 ++ " = ?"
+                                , visual = Nothing
                                 , inputType = TFraction
                                 , answer = AFraction rn rd
                                 , hint =
@@ -552,8 +961,12 @@ genConvertFDP =
                                     wrongChoicesInt pct
                                         |> Random.map
                                             (\wrong ->
-                                                let choices = shuffleChoices (String.fromInt pct ++ "%") (List.map (\w -> w ++ "%") wrong) in
+                                                let
+                                                    choices =
+                                                        shuffleChoices (String.fromInt pct ++ "%") (List.map (\w -> w ++ "%") wrong)
+                                                in
                                                 { prompt = "Convert " ++ showFrac n d ++ " to a percent."
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -573,12 +986,19 @@ genConvertFDP =
                         randChoice [ 0.25, 0.5, 0.75, 0.1, 0.2, 0.4, 0.6, 0.8 ] 0.5
                             |> Random.andThen
                                 (\dec ->
-                                    let pct = round (dec * 100) in
+                                    let
+                                        pct =
+                                            round (dec * 100)
+                                    in
                                     wrongChoicesInt pct
                                         |> Random.map
                                             (\wrong ->
-                                                let choices = shuffleChoices (String.fromInt pct ++ "%") (List.map (\w -> w ++ "%") wrong) in
+                                                let
+                                                    choices =
+                                                        shuffleChoices (String.fromInt pct ++ "%") (List.map (\w -> w ++ "%") wrong)
+                                                in
                                                 { prompt = "Convert " ++ String.fromFloat dec ++ " to a percent."
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -598,8 +1018,12 @@ genConvertFDP =
                         randChoice [ 25, 50, 75, 10, 20, 30, 60, 80 ] 50
                             |> Random.map
                                 (\pct ->
-                                    let dec = toFloat pct / 100.0 in
+                                    let
+                                        dec =
+                                            toFloat pct / 100.0
+                                    in
                                     { prompt = "Convert " ++ String.fromInt pct ++ "% to a decimal."
+                                    , visual = Nothing
                                     , inputType = TDecimal
                                     , answer = AFloat dec 0.001
                                     , hint =
@@ -625,12 +1049,19 @@ genExpSquareRoot =
                     Random.map2 Tuple.pair (randInt 2 8) (randInt 2 3)
                         |> Random.andThen
                             (\( base, exp ) ->
-                                let correct = base ^ exp in
+                                let
+                                    correct =
+                                        base ^ exp
+                                in
                                 wrongChoicesInt correct
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt correct) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt correct) wrong
+                                            in
                                             { prompt = String.fromInt base ++ superscript exp ++ " = ?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -644,17 +1075,25 @@ genExpSquareRoot =
                                             }
                                         )
                             )
+
                 else
                     -- Perfect square root
                     randChoice [ 4, 9, 16, 25, 36, 49, 64, 81, 100 ] 25
                         |> Random.andThen
                             (\sq ->
-                                let root = round (sqrt (toFloat sq)) in
+                                let
+                                    root =
+                                        round (sqrt (toFloat sq))
+                                in
                                 wrongChoicesInt root
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt root) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt root) wrong
+                                            in
                                             { prompt = "√" ++ String.fromInt sq ++ " = ?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -671,6 +1110,7 @@ genExpSquareRoot =
             )
 
 
+
 -- ── UNIT 2: Expressions ────────────────────────────────────────────────────
 
 
@@ -685,12 +1125,19 @@ genOrderOfOps =
                         Random.map3 (\a b c -> ( a, b, c )) (randInt 1 9) (randInt 2 8) (randInt 2 6)
                             |> Random.andThen
                                 (\( a, b, c ) ->
-                                    let correct = a + b * c in
+                                    let
+                                        correct =
+                                            a + b * c
+                                    in
                                     wrongChoicesInt correct
                                         |> Random.map
                                             (\wrong ->
-                                                let choices = shuffleChoices (String.fromInt correct) wrong in
+                                                let
+                                                    choices =
+                                                        shuffleChoices (String.fromInt correct) wrong
+                                                in
                                                 { prompt = String.fromInt a ++ " + " ++ String.fromInt b ++ " × " ++ String.fromInt c ++ " = ?"
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -710,12 +1157,19 @@ genOrderOfOps =
                         Random.map3 (\a b c -> ( a, b, c )) (randInt 1 9) (randInt 1 9) (randInt 2 6)
                             |> Random.andThen
                                 (\( a, b, c ) ->
-                                    let correct = (a + b) * c in
+                                    let
+                                        correct =
+                                            (a + b) * c
+                                    in
                                     wrongChoicesInt correct
                                         |> Random.map
                                             (\wrong ->
-                                                let choices = shuffleChoices (String.fromInt correct) wrong in
+                                                let
+                                                    choices =
+                                                        shuffleChoices (String.fromInt correct) wrong
+                                                in
                                                 { prompt = "(" ++ String.fromInt a ++ " + " ++ String.fromInt b ++ ") × " ++ String.fromInt c ++ " = ?"
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -735,12 +1189,19 @@ genOrderOfOps =
                         Random.map3 (\a b c -> ( a, b, c )) (randInt 2 5) (randInt 1 5) (randInt 1 5)
                             |> Random.andThen
                                 (\( a, b, c ) ->
-                                    let correct = a * a + b * c in
+                                    let
+                                        correct =
+                                            a * a + b * c
+                                    in
                                     wrongChoicesInt correct
                                         |> Random.map
                                             (\wrong ->
-                                                let choices = shuffleChoices (String.fromInt correct) wrong in
+                                                let
+                                                    choices =
+                                                        shuffleChoices (String.fromInt correct) wrong
+                                                in
                                                 { prompt = String.fromInt a ++ "² + " ++ String.fromInt b ++ " × " ++ String.fromInt c ++ " = ?"
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -771,6 +1232,7 @@ genTranslateEval =
                                 case n of
                                     0 ->
                                         { prompt = "Translate: 'twice a number n decreased by 5'"
+                                        , visual = Nothing
                                         , inputType = TChoice [ "2n - 5", "2n + 5", "5 - 2n", "2(n - 5)" ]
                                         , answer = AChoice 0
                                         , hint =
@@ -786,6 +1248,7 @@ genTranslateEval =
 
                                     1 ->
                                         { prompt = "Translate: 'the sum of x and 8, divided by 2'"
+                                        , visual = Nothing
                                         , inputType = TChoice [ "(x + 8)/2", "x + 8/2", "x/2 + 8", "2(x + 8)" ]
                                         , answer = AChoice 0
                                         , hint =
@@ -801,6 +1264,7 @@ genTranslateEval =
 
                                     _ ->
                                         { prompt = "Translate: 'three less than four times y'"
+                                        , visual = Nothing
                                         , inputType = TChoice [ "4y - 3", "3 - 4y", "4y + 3", "4(y - 3)" ]
                                         , answer = AChoice 0
                                         , hint =
@@ -814,12 +1278,14 @@ genTranslateEval =
                                             }
                                         }
                             )
+
                 else
                     -- Evaluate expression
                     Random.map3 (\a b x -> ( a, b, x )) (randInt 1 8) (randInt 1 8) (randInt 1 8)
                         |> Random.map
                             (\( a, b, x ) ->
                                 { prompt = "Evaluate " ++ String.fromInt a ++ "x - " ++ String.fromInt b ++ " when x = " ++ String.fromInt x
+                                , visual = Nothing
                                 , inputType = TInteger
                                 , answer = AInt (a * x - b)
                                 , hint =
@@ -846,11 +1312,21 @@ genCombineLike =
                     Random.map2 Tuple.pair (randInt 2 8) (randInt 1 7)
                         |> Random.andThen
                             (\( a, b ) ->
-                                let correct = String.fromInt (a + b) ++ "x" in
-                                let wrong = [ String.fromInt (a - b + 1) ++ "x", String.fromInt (a * b) ++ "x", String.fromInt (a + b + 1) ++ "x" ] in
-                                let choices = shuffleChoices correct wrong in
+                                let
+                                    correct =
+                                        String.fromInt (a + b) ++ "x"
+                                in
+                                let
+                                    wrong =
+                                        [ String.fromInt (a - b + 1) ++ "x", String.fromInt (a * b) ++ "x", String.fromInt (a + b + 1) ++ "x" ]
+                                in
+                                let
+                                    choices =
+                                        shuffleChoices correct wrong
+                                in
                                 Random.constant
                                     { prompt = "Combine: " ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ "x"
+                                    , visual = Nothing
                                     , inputType = TChoice choices
                                     , answer = AChoice 0
                                     , hint =
@@ -864,22 +1340,40 @@ genCombineLike =
                                         }
                                     }
                             )
+
                 else
                     -- Combine with constants: ax + b + cx + d
                     Random.map4 (\a b c d -> { a = a, b = b, c = c, d = d })
-                        (randInt 1 6) (randInt 1 9) (randInt 1 6) (randInt 1 9)
+                        (randInt 1 6)
+                        (randInt 1 9)
+                        (randInt 1 6)
+                        (randInt 1 9)
                         |> Random.map
                             (\r ->
                                 let
-                                    xCoeff = r.a + r.c
-                                    constant = r.b + r.d
-                                    correct = String.fromInt xCoeff ++ "x + " ++ String.fromInt constant
-                                    wrong1 = String.fromInt (xCoeff + 1) ++ "x + " ++ String.fromInt constant
-                                    wrong2 = String.fromInt xCoeff ++ "x + " ++ String.fromInt (constant + 1)
-                                    wrong3 = String.fromInt (xCoeff - 1) ++ "x + " ++ String.fromInt (constant + 2)
-                                    choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                                    xCoeff =
+                                        r.a + r.c
+
+                                    constant =
+                                        r.b + r.d
+
+                                    correct =
+                                        String.fromInt xCoeff ++ "x + " ++ String.fromInt constant
+
+                                    wrong1 =
+                                        String.fromInt (xCoeff + 1) ++ "x + " ++ String.fromInt constant
+
+                                    wrong2 =
+                                        String.fromInt xCoeff ++ "x + " ++ String.fromInt (constant + 1)
+
+                                    wrong3 =
+                                        String.fromInt (xCoeff - 1) ++ "x + " ++ String.fromInt (constant + 2)
+
+                                    choices =
+                                        shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                                 in
                                 { prompt = "Simplify: " ++ String.fromInt r.a ++ "x + " ++ String.fromInt r.b ++ " + " ++ String.fromInt r.c ++ "x + " ++ String.fromInt r.d
+                                , visual = Nothing
                                 , inputType = TChoice choices
                                 , answer = AChoice 0
                                 , hint =
@@ -907,14 +1401,24 @@ genDistributive =
                         |> Random.andThen
                             (\( a, b, c ) ->
                                 let
-                                    correct = String.fromInt (a * b) ++ "x + " ++ String.fromInt (a * c)
-                                    wrong1 = String.fromInt (a * b) ++ "x + " ++ String.fromInt c
-                                    wrong2 = String.fromInt (a + b) ++ "x + " ++ String.fromInt (a * c)
-                                    wrong3 = String.fromInt (a * b) ++ "x + " ++ String.fromInt (a * c + 1)
-                                    choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                                    correct =
+                                        String.fromInt (a * b) ++ "x + " ++ String.fromInt (a * c)
+
+                                    wrong1 =
+                                        String.fromInt (a * b) ++ "x + " ++ String.fromInt c
+
+                                    wrong2 =
+                                        String.fromInt (a + b) ++ "x + " ++ String.fromInt (a * c)
+
+                                    wrong3 =
+                                        String.fromInt (a * b) ++ "x + " ++ String.fromInt (a * c + 1)
+
+                                    choices =
+                                        shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                                 in
                                 Random.constant
                                     { prompt = "Expand: " ++ String.fromInt a ++ "(" ++ String.fromInt b ++ "x + " ++ String.fromInt c ++ ")"
+                                    , visual = Nothing
                                     , inputType = TChoice choices
                                     , answer = AChoice 0
                                     , hint =
@@ -929,17 +1433,25 @@ genDistributive =
                                         }
                                     }
                             )
+
                 else
                     -- Expand a(b + c) and compute numerically
                     Random.map3 (\a b c -> ( a, b, c )) (randInt 2 9) (randInt 1 9) (randInt 1 9)
                         |> Random.andThen
                             (\( a, b, c ) ->
-                                let correct = a * (b + c) in
+                                let
+                                    correct =
+                                        a * (b + c)
+                                in
                                 wrongChoicesInt correct
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt correct) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt correct) wrong
+                                            in
                                             { prompt = "Compute: " ++ String.fromInt a ++ "(" ++ String.fromInt b ++ " + " ++ String.fromInt c ++ ")"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -963,16 +1475,30 @@ genSimplifyExpr =
         |> Random.andThen
             (\( a, b, c ) ->
                 let
-                    coeff = a + c
-                    constant = a * b
-                    correct = String.fromInt coeff ++ "x + " ++ String.fromInt constant
-                    wrong1 = String.fromInt coeff ++ "x + " ++ String.fromInt (constant + 1)
-                    wrong2 = String.fromInt (coeff + 1) ++ "x + " ++ String.fromInt constant
-                    wrong3 = String.fromInt a ++ "x + " ++ String.fromInt constant
-                    choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                    coeff =
+                        a + c
+
+                    constant =
+                        a * b
+
+                    correct =
+                        String.fromInt coeff ++ "x + " ++ String.fromInt constant
+
+                    wrong1 =
+                        String.fromInt coeff ++ "x + " ++ String.fromInt (constant + 1)
+
+                    wrong2 =
+                        String.fromInt (coeff + 1) ++ "x + " ++ String.fromInt constant
+
+                    wrong3 =
+                        String.fromInt a ++ "x + " ++ String.fromInt constant
+
+                    choices =
+                        shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                 in
                 Random.constant
                     { prompt = "Simplify: " ++ String.fromInt a ++ "(x + " ++ String.fromInt b ++ ") + " ++ String.fromInt c ++ "x"
+                    , visual = Nothing
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
@@ -995,15 +1521,29 @@ genFactorExpr =
         |> Random.map
             (\( f, a, b ) ->
                 let
-                    termA = f * a
-                    termB = f * b
-                    correct = String.fromInt f ++ "(" ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ ")"
-                    wrong1 = String.fromInt termA ++ "(x + " ++ String.fromInt termB ++ ")"
-                    wrong2 = String.fromInt f ++ "(" ++ String.fromInt (a + 1) ++ "x + " ++ String.fromInt b ++ ")"
-                    wrong3 = String.fromInt (f + 1) ++ "(" ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ ")"
-                    choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                    termA =
+                        f * a
+
+                    termB =
+                        f * b
+
+                    correct =
+                        String.fromInt f ++ "(" ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ ")"
+
+                    wrong1 =
+                        String.fromInt termA ++ "(x + " ++ String.fromInt termB ++ ")"
+
+                    wrong2 =
+                        String.fromInt f ++ "(" ++ String.fromInt (a + 1) ++ "x + " ++ String.fromInt b ++ ")"
+
+                    wrong3 =
+                        String.fromInt (f + 1) ++ "(" ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ ")"
+
+                    choices =
+                        shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                 in
                 { prompt = "Factor: " ++ String.fromInt termA ++ "x + " ++ String.fromInt termB
+                , visual = Nothing
                 , inputType = TChoice choices
                 , answer = AChoice 0
                 , hint =
@@ -1028,19 +1568,36 @@ genMonomialOps =
                     0 ->
                         -- Multiply monomials: ax^m × bx^n = (ab)x^(m+n)
                         Random.map4 (\a b m n -> { a = a, b = b, m = m, n = n })
-                            (randInt 2 6) (randInt 2 6) (randInt 1 4) (randInt 1 4)
+                            (randInt 2 6)
+                            (randInt 2 6)
+                            (randInt 1 4)
+                            (randInt 1 4)
                             |> Random.map
                                 (\r ->
                                     let
-                                        coeff = r.a * r.b
-                                        exp_ = r.m + r.n
-                                        correct = String.fromInt coeff ++ "x" ++ superscript exp_
-                                        wrong1 = String.fromInt (coeff + 1) ++ "x" ++ superscript exp_
-                                        wrong2 = String.fromInt coeff ++ "x" ++ superscript (exp_ + 1)
-                                        wrong3 = String.fromInt (coeff - 1) ++ "x" ++ superscript exp_
-                                        choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                                        coeff =
+                                            r.a * r.b
+
+                                        exp_ =
+                                            r.m + r.n
+
+                                        correct =
+                                            String.fromInt coeff ++ "x" ++ superscript exp_
+
+                                        wrong1 =
+                                            String.fromInt (coeff + 1) ++ "x" ++ superscript exp_
+
+                                        wrong2 =
+                                            String.fromInt coeff ++ "x" ++ superscript (exp_ + 1)
+
+                                        wrong3 =
+                                            String.fromInt (coeff - 1) ++ "x" ++ superscript exp_
+
+                                        choices =
+                                            shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                                     in
                                     { prompt = "Simplify: " ++ String.fromInt r.a ++ "x" ++ superscript r.m ++ " × " ++ String.fromInt r.b ++ "x" ++ superscript r.n
+                                    , visual = Nothing
                                     , inputType = TChoice choices
                                     , answer = AChoice 0
                                     , hint =
@@ -1058,21 +1615,42 @@ genMonomialOps =
                     1 ->
                         -- Divide monomials: ax^m / bx^n (m > n, a divisible by b)
                         Random.map4 (\b q m n -> { b = b, q = q, m = m, n = n })
-                            (randInt 2 5) (randInt 2 5) (randInt 3 6) (randInt 1 2)
+                            (randInt 2 5)
+                            (randInt 2 5)
+                            (randInt 3 6)
+                            (randInt 1 2)
                             |> Random.map
                                 (\r ->
                                     let
-                                        a = r.b * r.q
-                                        m = r.m
-                                        n_ = min r.n (m - 1)
-                                        expResult = m - n_
-                                        correct = String.fromInt r.q ++ "x" ++ superscript expResult
-                                        wrong1 = String.fromInt r.q ++ "x" ++ superscript (expResult + 1)
-                                        wrong2 = String.fromInt (r.q + 1) ++ "x" ++ superscript expResult
-                                        wrong3 = String.fromInt r.q ++ "x" ++ superscript (expResult - 1)
-                                        choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                                        a =
+                                            r.b * r.q
+
+                                        m =
+                                            r.m
+
+                                        n_ =
+                                            min r.n (m - 1)
+
+                                        expResult =
+                                            m - n_
+
+                                        correct =
+                                            String.fromInt r.q ++ "x" ++ superscript expResult
+
+                                        wrong1 =
+                                            String.fromInt r.q ++ "x" ++ superscript (expResult + 1)
+
+                                        wrong2 =
+                                            String.fromInt (r.q + 1) ++ "x" ++ superscript expResult
+
+                                        wrong3 =
+                                            String.fromInt r.q ++ "x" ++ superscript (expResult - 1)
+
+                                        choices =
+                                            shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                                     in
                                     { prompt = "Simplify: " ++ String.fromInt a ++ "x" ++ superscript m ++ " / " ++ String.fromInt r.b ++ "x" ++ superscript n_
+                                    , visual = Nothing
                                     , inputType = TChoice choices
                                     , answer = AChoice 0
                                     , hint =
@@ -1093,15 +1671,29 @@ genMonomialOps =
                             |> Random.map
                                 (\( a, m, n ) ->
                                     let
-                                        coeffResult = a ^ n
-                                        expResult = m * n
-                                        correct = String.fromInt coeffResult ++ "x" ++ superscript expResult
-                                        wrong1 = String.fromInt (a * n) ++ "x" ++ superscript expResult
-                                        wrong2 = String.fromInt coeffResult ++ "x" ++ superscript (m + n)
-                                        wrong3 = String.fromInt coeffResult ++ "x" ++ superscript (expResult + 1)
-                                        choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                                        coeffResult =
+                                            a ^ n
+
+                                        expResult =
+                                            m * n
+
+                                        correct =
+                                            String.fromInt coeffResult ++ "x" ++ superscript expResult
+
+                                        wrong1 =
+                                            String.fromInt (a * n) ++ "x" ++ superscript expResult
+
+                                        wrong2 =
+                                            String.fromInt coeffResult ++ "x" ++ superscript (m + n)
+
+                                        wrong3 =
+                                            String.fromInt coeffResult ++ "x" ++ superscript (expResult + 1)
+
+                                        choices =
+                                            shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                                     in
                                     { prompt = "Simplify: (" ++ String.fromInt a ++ "x" ++ superscript m ++ ")" ++ superscript n
+                                    , visual = Nothing
                                     , inputType = TChoice choices
                                     , answer = AChoice 0
                                     , hint =
@@ -1116,6 +1708,7 @@ genMonomialOps =
                                     }
                                 )
             )
+
 
 
 -- ── UNIT 3: Equations and Inequalities ────────────────────────────────────
@@ -1133,6 +1726,7 @@ genOneStepEq =
                             |> Random.map
                                 (\( a, x ) ->
                                     { prompt = "Solve: x + " ++ String.fromInt a ++ " = " ++ String.fromInt (a + x)
+                                    , visual = Nothing
                                     , inputType = TInteger
                                     , answer = AInt x
                                     , hint =
@@ -1149,6 +1743,7 @@ genOneStepEq =
                             |> Random.map
                                 (\( a, x ) ->
                                     { prompt = "Solve: x - " ++ String.fromInt a ++ " = " ++ String.fromInt (x - a)
+                                    , visual = Nothing
                                     , inputType = TInteger
                                     , answer = AInt x
                                     , hint =
@@ -1165,6 +1760,7 @@ genOneStepEq =
                             |> Random.map
                                 (\( a, x ) ->
                                     { prompt = "Solve: " ++ String.fromInt a ++ "x = " ++ String.fromInt (a * x)
+                                    , visual = Nothing
                                     , inputType = TInteger
                                     , answer = AInt x
                                     , hint =
@@ -1181,6 +1777,7 @@ genOneStepEq =
                             |> Random.map
                                 (\( a, x ) ->
                                     { prompt = "Solve: x/" ++ String.fromInt a ++ " = " ++ String.fromInt x
+                                    , visual = Nothing
                                     , inputType = TInteger
                                     , answer = AInt (x * a)
                                     , hint =
@@ -1198,8 +1795,12 @@ genTwoStepEq =
     Random.map3 (\a b x -> ( a, b, x )) (randInt 2 7) (randInt 1 9) (randInt 1 10)
         |> Random.map
             (\( a, b, x ) ->
-                let c = a * x + b in
+                let
+                    c =
+                        a * x + b
+                in
                 { prompt = "Solve: " ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ " = " ++ String.fromInt c
+                , visual = Nothing
                 , inputType = TInteger
                 , answer = AInt x
                 , hint =
@@ -1220,8 +1821,12 @@ genMultiStepEq =
     Random.map3 (\a b x -> ( a, b, x )) (randInt 2 5) (randInt 1 6) (randInt 1 8)
         |> Random.map
             (\( a, b, x ) ->
-                let c = a * (x + b) in
+                let
+                    c =
+                        a * (x + b)
+                in
                 { prompt = "Solve: " ++ String.fromInt a ++ "(x + " ++ String.fromInt b ++ ") = " ++ String.fromInt c
+                , visual = Nothing
                 , inputType = TInteger
                 , answer = AInt x
                 , hint =
@@ -1241,15 +1846,30 @@ genOneStepIneq =
     Random.map2 Tuple.pair (randIntNonZero 2 9) (randInt 1 12)
         |> Random.andThen
             (\( a, x ) ->
-                let b = a * x in
+                let
+                    b =
+                        a * x
+                in
                 Random.int 0 1
                     |> Random.map
                         (\dirN ->
                             let
-                                dir = if dirN == 0 then IGt else ILt
-                                dirStr = if dirN == 0 then ">" else "<"
+                                dir =
+                                    if dirN == 0 then
+                                        IGt
+
+                                    else
+                                        ILt
+
+                                dirStr =
+                                    if dirN == 0 then
+                                        ">"
+
+                                    else
+                                        "<"
                             in
                             { prompt = "Solve: " ++ String.fromInt a ++ "x " ++ dirStr ++ " " ++ String.fromInt b
+                            , visual = Nothing
                             , inputType = TInequality
                             , answer = AInequality dir (toFloat x)
                             , hint =
@@ -1271,15 +1891,30 @@ genTwoStepIneq =
     Random.map3 (\a b x -> ( a, b, x )) (randInt 2 6) (randInt 1 8) (randInt 1 10)
         |> Random.andThen
             (\( a, b, x ) ->
-                let c = a * x + b in
+                let
+                    c =
+                        a * x + b
+                in
                 Random.int 0 1
                     |> Random.map
                         (\dirN ->
                             let
-                                dir = if dirN == 0 then IGt else ILt
-                                dirStr = if dirN == 0 then ">" else "<"
+                                dir =
+                                    if dirN == 0 then
+                                        IGt
+
+                                    else
+                                        ILt
+
+                                dirStr =
+                                    if dirN == 0 then
+                                        ">"
+
+                                    else
+                                        "<"
                             in
                             { prompt = "Solve: " ++ String.fromInt a ++ "x + " ++ String.fromInt b ++ " " ++ dirStr ++ " " ++ String.fromInt c
+                            , visual = Nothing
                             , inputType = TInequality
                             , answer = AInequality dir (toFloat x)
                             , hint =
@@ -1295,6 +1930,7 @@ genTwoStepIneq =
             )
 
 
+
 -- ── UNIT 4: Ratios, Proportions, and Percents ─────────────────────────────
 
 
@@ -1307,21 +1943,32 @@ genRatioSimplify =
                     |> Random.andThen
                         (\b ->
                             let
-                                n = k * a
-                                d = k * b
-                                g = gcd n d
-                                rn = n // g
-                                rd = d // g
+                                n =
+                                    k * a
+
+                                d =
+                                    k * b
+
+                                g =
+                                    gcd n d
+
+                                rn =
+                                    n // g
+
+                                rd =
+                                    d // g
                             in
                             wrongChoicesInt rn
                                 |> Random.map
                                     (\wrong ->
                                         let
-                                            choices = shuffleChoices
-                                                (String.fromInt rn ++ ":" ++ String.fromInt rd)
-                                                (List.map (\w -> w ++ ":" ++ String.fromInt rd) wrong)
+                                            choices =
+                                                shuffleChoices
+                                                    (String.fromInt rn ++ ":" ++ String.fromInt rd)
+                                                    (List.map (\w -> w ++ ":" ++ String.fromInt rd) wrong)
                                         in
                                         { prompt = "Simplify the ratio " ++ String.fromInt n ++ ":" ++ String.fromInt d
+                                        , visual = Nothing
                                         , inputType = TChoice choices
                                         , answer = AChoice 0
                                         , hint =
@@ -1348,12 +1995,19 @@ genUnitRate =
                     Random.map2 Tuple.pair (randInt 2 8) (randInt 1 9)
                         |> Random.andThen
                             (\( units, rate ) ->
-                                let total = units * rate in
+                                let
+                                    total =
+                                        units * rate
+                                in
                                 wrongChoicesInt rate
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt rate) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt rate) wrong
+                                            in
                                             { prompt = String.fromInt units ++ " books cost $" ++ String.fromInt total ++ ". Cost per book?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -1364,16 +2018,24 @@ genUnitRate =
                                             }
                                         )
                             )
+
                 else
                     Random.map2 Tuple.pair (randInt 2 6) (randInt 30 90)
                         |> Random.andThen
                             (\( hours, miles ) ->
-                                let rate = miles // hours in
+                                let
+                                    rate =
+                                        miles // hours
+                                in
                                 wrongChoicesInt rate
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt rate ++ " mph") (List.map (\w -> w ++ " mph") wrong) in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt rate ++ " mph") (List.map (\w -> w ++ " mph") wrong)
+                                            in
                                             { prompt = "A car travels " ++ String.fromInt miles ++ " miles in " ++ String.fromInt hours ++ " hours. What is the unit rate?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -1393,11 +2055,17 @@ genSolveProportion =
         |> Random.map
             (\( a, k ) ->
                 let
-                    b = a * k
-                    c = a + 1
-                    x = c * k
+                    b =
+                        a * k
+
+                    c =
+                        a + 1
+
+                    x =
+                        c * k
                 in
                 { prompt = String.fromInt a ++ "/" ++ String.fromInt b ++ " = " ++ String.fromInt c ++ "/x. Solve for x."
+                , visual = Nothing
                 , inputType = TInteger
                 , answer = AInt x
                 , hint =
@@ -1419,12 +2087,19 @@ genScaleDrawing =
     Random.map2 Tuple.pair (randChoice [ 5, 10, 20, 50 ] 10) (randInt 2 8)
         |> Random.andThen
             (\( scale, drawing ) ->
-                let actual = scale * drawing in
+                let
+                    actual =
+                        scale * drawing
+                in
                 wrongChoicesInt actual
                     |> Random.map
                         (\wrong ->
-                            let choices = shuffleChoices (String.fromInt actual ++ " m") (List.map (\w -> w ++ " m") wrong) in
+                            let
+                                choices =
+                                    shuffleChoices (String.fromInt actual ++ " m") (List.map (\w -> w ++ " m") wrong)
+                            in
                             { prompt = "A map scale is 1 cm = " ++ String.fromInt scale ++ " m. A road is " ++ String.fromInt drawing ++ " cm on the map. How long is the actual road?"
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -1449,12 +2124,19 @@ genSimilarFigures =
                 randInt 3 8
                     |> Random.andThen
                         (\b ->
-                            let x = b * k in
+                            let
+                                x =
+                                    b * k
+                            in
                             wrongChoicesInt x
                                 |> Random.map
                                     (\wrong ->
-                                        let choices = shuffleChoices (String.fromInt x) wrong in
+                                        let
+                                            choices =
+                                                shuffleChoices (String.fromInt x) wrong
+                                        in
                                         { prompt = "Two similar rectangles. First has sides " ++ String.fromInt a ++ " and " ++ String.fromInt (a * k) ++ ". Second has short side " ++ String.fromInt b ++ ". Find the long side."
+                                        , visual = Nothing
                                         , inputType = TChoice choices
                                         , answer = AChoice 0
                                         , hint =
@@ -1481,12 +2163,19 @@ genPercentProportion =
                     Random.map2 Tuple.pair (randChoice [ 10, 20, 25, 50, 75 ] 25) (randChoice [ 40, 60, 80, 100, 120, 200 ] 100)
                         |> Random.andThen
                             (\( pct, whole ) ->
-                                let correct = (pct * whole) // 100 in
+                                let
+                                    correct =
+                                        (pct * whole) // 100
+                                in
                                 wrongChoicesInt correct
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt correct) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt correct) wrong
+                                            in
                                             { prompt = "What is " ++ String.fromInt pct ++ "% of " ++ String.fromInt whole ++ "?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -1501,17 +2190,25 @@ genPercentProportion =
                                             }
                                         )
                             )
+
                 else
                     -- What percent is part of whole?
                     Random.map2 Tuple.pair (randChoice [ 10, 20, 25, 50 ] 25) (randChoice [ 40, 80, 100, 200 ] 100)
                         |> Random.andThen
                             (\( pct, whole ) ->
-                                let part = (pct * whole) // 100 in
+                                let
+                                    part =
+                                        (pct * whole) // 100
+                                in
                                 wrongChoicesInt pct
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt pct ++ "%") (List.map (\w -> w ++ "%") wrong) in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt pct ++ "%") (List.map (\w -> w ++ "%") wrong)
+                                            in
                                             { prompt = String.fromInt part ++ " is what percent of " ++ String.fromInt whole ++ "?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -1538,18 +2235,39 @@ genDiscountMarkup =
                     |> Random.andThen
                         (\( pct, price ) ->
                             let
-                                amount = (pct * price) // 100
-                                salePrice = if t == 0 then price - amount else price + amount
+                                amount =
+                                    (pct * price) // 100
+
+                                salePrice =
+                                    if t == 0 then
+                                        price - amount
+
+                                    else
+                                        price + amount
                             in
                             wrongChoicesInt salePrice
                                 |> Random.map
                                     (\wrong ->
                                         let
-                                            choices = shuffleChoices ("$" ++ String.fromInt salePrice) (List.map (\w -> "$" ++ w) wrong)
-                                            verb = if t == 0 then "discount" else "markup"
-                                            action = if t == 0 then "sale price" else "new price"
+                                            choices =
+                                                shuffleChoices ("$" ++ String.fromInt salePrice) (List.map (\w -> "$" ++ w) wrong)
+
+                                            verb =
+                                                if t == 0 then
+                                                    "discount"
+
+                                                else
+                                                    "markup"
+
+                                            action =
+                                                if t == 0 then
+                                                    "sale price"
+
+                                                else
+                                                    "new price"
                                         in
                                         { prompt = "An item costs $" ++ String.fromInt price ++ ". There is a " ++ String.fromInt pct ++ "% " ++ verb ++ ". What is the " ++ action ++ "?"
+                                        , visual = Nothing
                                         , inputType = TChoice choices
                                         , answer = AChoice 0
                                         , hint =
@@ -1560,6 +2278,7 @@ genDiscountMarkup =
                                                     [ verb ++ " amount: " ++ String.fromInt pct ++ "% × $" ++ String.fromInt price ++ " = $" ++ String.fromInt amount
                                                     , action ++ ": $" ++ String.fromInt price ++ " - $" ++ String.fromInt amount ++ " = $" ++ String.fromInt salePrice
                                                     ]
+
                                                 else
                                                     [ verb ++ " amount: " ++ String.fromInt pct ++ "% × $" ++ String.fromInt price ++ " = $" ++ String.fromInt amount
                                                     , action ++ ": $" ++ String.fromInt price ++ " + $" ++ String.fromInt amount ++ " = $" ++ String.fromInt salePrice
@@ -1580,12 +2299,19 @@ genSimpleInterest =
         (randInt 1 5)
         |> Random.andThen
             (\( p, r, t ) ->
-                let interest = (p * r * t) // 100 in
+                let
+                    interest =
+                        (p * r * t) // 100
+                in
                 wrongChoicesInt interest
                     |> Random.map
                         (\wrong ->
-                            let choices = shuffleChoices ("$" ++ String.fromInt interest) (List.map (\w -> "$" ++ w) wrong) in
+                            let
+                                choices =
+                                    shuffleChoices ("$" ++ String.fromInt interest) (List.map (\w -> "$" ++ w) wrong)
+                            in
                             { prompt = "Principal: $" ++ String.fromInt p ++ ", Rate: " ++ String.fromInt r ++ "% per year, Time: " ++ String.fromInt t ++ " years. Find the simple interest."
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -1602,6 +2328,7 @@ genSimpleInterest =
             )
 
 
+
 -- ── UNIT 5: Functions and Graphing ────────────────────────────────────────
 
 
@@ -1612,29 +2339,74 @@ genQuadrant =
             (\( x, y ) ->
                 let
                     q =
-                        if x > 0 && y > 0 then 0
-                        else if x < 0 && y > 0 then 1
-                        else if x < 0 && y < 0 then 2
-                        else 3
+                        if x > 0 && y > 0 then
+                            0
+
+                        else if x < 0 && y > 0 then
+                            1
+
+                        else if x < 0 && y < 0 then
+                            2
+
+                        else
+                            3
                 in
                 { prompt = "The point (" ++ String.fromInt x ++ ", " ++ String.fromInt y ++ ") lies in which quadrant?"
+                , visual = Nothing
                 , inputType = TChoice [ "Quadrant I", "Quadrant II", "Quadrant III", "Quadrant IV" ]
                 , answer = AChoice q
                 , hint =
                     { prompt = "The point (" ++ String.fromInt x ++ ", " ++ String.fromInt y ++ ") lies in which quadrant?"
-                    , answer = "Quadrant " ++ (case q of
-                            0 -> "I"
-                            1 -> "II"
-                            2 -> "III"
-                            _ -> "IV")
+                    , answer =
+                        "Quadrant "
+                            ++ (case q of
+                                    0 ->
+                                        "I"
+
+                                    1 ->
+                                        "II"
+
+                                    2 ->
+                                        "III"
+
+                                    _ ->
+                                        "IV"
+                               )
                     , steps =
                         [ "Quadrant I: (+, +), Quadrant II: (-, +)"
                         , "Quadrant III: (-, -), Quadrant IV: (+, -)"
-                        , "(" ++ String.fromInt x ++ ", " ++ String.fromInt y ++ "): x " ++ (if x > 0 then "positive" else "negative") ++ ", y " ++ (if y > 0 then "positive" else "negative") ++ " → Quadrant " ++ (case q of
-                                0 -> "I"
-                                1 -> "II"
-                                2 -> "III"
-                                _ -> "IV")
+                        , "("
+                            ++ String.fromInt x
+                            ++ ", "
+                            ++ String.fromInt y
+                            ++ "): x "
+                            ++ (if x > 0 then
+                                    "positive"
+
+                                else
+                                    "negative"
+                               )
+                            ++ ", y "
+                            ++ (if y > 0 then
+                                    "positive"
+
+                                else
+                                    "negative"
+                               )
+                            ++ " → Quadrant "
+                            ++ (case q of
+                                    0 ->
+                                        "I"
+
+                                    1 ->
+                                        "II"
+
+                                    2 ->
+                                        "III"
+
+                                    _ ->
+                                        "IV"
+                               )
                         ]
                     }
                 }
@@ -1649,6 +2421,7 @@ genIsFunction =
                 if t == 0 then
                     -- IS a function (each x maps to exactly one y)
                     { prompt = "Is {(1,2), (2,4), (3,6), (4,8)} a function?"
+                    , visual = Nothing
                     , inputType = TChoice [ "Yes", "No" ]
                     , answer = AChoice 0
                     , hint =
@@ -1661,9 +2434,11 @@ genIsFunction =
                             ]
                         }
                     }
+
                 else
                     -- NOT a function (x repeats with different y)
                     { prompt = "Is {(1,2), (2,5), (1,4), (3,7)} a function?"
+                    , visual = Nothing
                     , inputType = TChoice [ "No", "Yes" ]
                     , answer = AChoice 0
                     , hint =
@@ -1683,31 +2458,71 @@ genSlopeFromPoints : Generator Problem
 genSlopeFromPoints =
     -- Generate two points with integer slope
     Random.map4 (\x1 run rise x2start -> { x1 = x1, run = run, rise = rise, x2start = x2start })
-        (randInt -5 3) (randInt 1 4) (randInt -4 4) (randInt 0 1)
+        (randInt -5 3)
+        (randInt 1 4)
+        (randInt -4 4)
+        (randInt 0 1)
         |> Random.andThen
             (\r ->
                 let
-                    x1 = r.x1
-                    y1 = randInt -5 5
+                    x1 =
+                        r.x1
+
+                    y1 =
+                        randInt -5 5
                 in
                 y1
                     |> Random.map
                         (\y1val ->
                             let
-                                x2 = x1 + r.run
-                                y2 = y1val + r.rise
-                                slope = r.rise
-                                denom = r.run
-                                ( sn, sd ) = reduceFraction slope denom
+                                x2 =
+                                    x1 + r.run
+
+                                y2 =
+                                    y1val + r.rise
+
+                                slope =
+                                    r.rise
+
+                                denom =
+                                    r.run
+
+                                ( sn, sd ) =
+                                    reduceFraction slope denom
+
                                 slopeStr =
-                                    if sd == 1 then String.fromInt sn
-                                    else showFrac sn sd
-                                wrong1 = if sd == 1 then String.fromInt (sn + 1) else showFrac (sn + 1) sd
-                                wrong2 = if sd == 1 then String.fromInt (sn - 1) else showFrac (sn - 1) sd
-                                wrong3 = if sd == 1 then String.fromInt (-sn) else showFrac (-sn) sd
-                                choices = shuffleChoices slopeStr [ wrong1, wrong2, wrong3 ]
+                                    if sd == 1 then
+                                        String.fromInt sn
+
+                                    else
+                                        showFrac sn sd
+
+                                wrong1 =
+                                    if sd == 1 then
+                                        String.fromInt (sn + 1)
+
+                                    else
+                                        showFrac (sn + 1) sd
+
+                                wrong2 =
+                                    if sd == 1 then
+                                        String.fromInt (sn - 1)
+
+                                    else
+                                        showFrac (sn - 1) sd
+
+                                wrong3 =
+                                    if sd == 1 then
+                                        String.fromInt -sn
+
+                                    else
+                                        showFrac -sn sd
+
+                                choices =
+                                    shuffleChoices slopeStr [ wrong1, wrong2, wrong3 ]
                             in
                             { prompt = "Find the slope of the line through (" ++ String.fromInt x1 ++ ", " ++ String.fromInt y1val ++ ") and (" ++ String.fromInt x2 ++ ", " ++ String.fromInt y2 ++ ")."
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -1730,8 +2545,12 @@ genSlopeIntercept =
     Random.map3 (\m b x -> ( m, b, x )) (randInt -4 4) (randInt -5 5) (randInt 1 6)
         |> Random.map
             (\( m, b, x ) ->
-                let y = m * x + b in
+                let
+                    y =
+                        m * x + b
+                in
                 { prompt = "For y = " ++ showSigned m ++ "x + " ++ showSigned b ++ ", find y when x = " ++ String.fromInt x
+                , visual = Nothing
                 , inputType = TInteger
                 , answer = AInt y
                 , hint =
@@ -1752,12 +2571,19 @@ genLinearFuncValue =
     Random.map3 (\m b x -> ( m, b, x )) (randInt 1 5) (randInt 0 8) (randInt 1 8)
         |> Random.andThen
             (\( m, b, x ) ->
-                let correct = m * x + b in
+                let
+                    correct =
+                        m * x + b
+                in
                 wrongChoicesInt correct
                     |> Random.map
                         (\wrong ->
-                            let choices = shuffleChoices (String.fromInt correct) wrong in
+                            let
+                                choices =
+                                    shuffleChoices (String.fromInt correct) wrong
+                            in
                             { prompt = "If f(x) = " ++ String.fromInt m ++ "x + " ++ String.fromInt b ++ ", find f(" ++ String.fromInt x ++ ")."
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -1782,6 +2608,7 @@ genProportionalRelation =
                     -- Identify proportional relationship: is y/x constant?
                     Random.constant
                         { prompt = "Does the table {(1,3),(2,6),(3,9),(4,12)} show a proportional relationship?"
+                        , visual = Nothing
                         , inputType = TChoice [ "Yes — y = 3x", "No", "Yes — y = x + 2", "Cannot tell" ]
                         , answer = AChoice 0
                         , hint =
@@ -1793,17 +2620,25 @@ genProportionalRelation =
                                 ]
                             }
                         }
+
                 else
                     -- k = y/x direct variation
                     Random.map2 Tuple.pair (randInt 2 6) (randInt 2 8)
                         |> Random.andThen
                             (\( k, x ) ->
-                                let y = k * x in
+                                let
+                                    y =
+                                        k * x
+                                in
                                 wrongChoicesInt y
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt y) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt y) wrong
+                                            in
                                             { prompt = "y varies directly with x. When x=1, y=" ++ String.fromInt k ++ ". Find y when x=" ++ String.fromInt x ++ "."
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -1821,6 +2656,7 @@ genProportionalRelation =
             )
 
 
+
 -- ── UNIT 6: Geometry ──────────────────────────────────────────────────────
 
 
@@ -1833,6 +2669,7 @@ genAngleClassify =
                     0 ->
                         Random.constant
                             { prompt = "An angle measuring 90° is called:"
+                            , visual = Nothing
                             , inputType = TChoice [ "Right", "Acute", "Obtuse", "Straight" ]
                             , answer = AChoice 0
                             , hint =
@@ -1848,6 +2685,7 @@ genAngleClassify =
                             |> Random.map
                                 (\deg ->
                                     { prompt = "An angle measuring " ++ String.fromInt deg ++ "° is:"
+                                    , visual = Nothing
                                     , inputType = TChoice [ "Acute", "Right", "Obtuse", "Straight" ]
                                     , answer = AChoice 0
                                     , hint =
@@ -1864,6 +2702,7 @@ genAngleClassify =
                             |> Random.map
                                 (\deg ->
                                     { prompt = "An angle measuring " ++ String.fromInt deg ++ "° is:"
+                                    , visual = Nothing
                                     , inputType = TChoice [ "Obtuse", "Acute", "Right", "Straight" ]
                                     , answer = AChoice 0
                                     , hint =
@@ -1877,6 +2716,7 @@ genAngleClassify =
                     _ ->
                         Random.constant
                             { prompt = "An angle measuring 180° is called:"
+                            , visual = Nothing
                             , inputType = TChoice [ "Straight", "Right", "Obtuse", "Reflex" ]
                             , answer = AChoice 0
                             , hint =
@@ -1898,12 +2738,19 @@ genCompSuppl =
                     randChoice [ 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70 ] 40
                         |> Random.andThen
                             (\a ->
-                                let x = 90 - a in
+                                let
+                                    x =
+                                        90 - a
+                                in
                                 wrongChoicesInt x
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt x ++ "°") (List.map (\w -> w ++ "°") wrong) in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt x ++ "°") (List.map (\w -> w ++ "°") wrong)
+                                            in
                                             { prompt = "Two angles are complementary. One measures " ++ String.fromInt a ++ "°. Find the other."
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -1917,17 +2764,25 @@ genCompSuppl =
                                             }
                                         )
                             )
+
                 else
                     -- Supplementary: a + x = 180
                     randChoice [ 30, 45, 60, 75, 90, 100, 110, 120, 135, 150 ] 60
                         |> Random.andThen
                             (\a ->
-                                let x = 180 - a in
+                                let
+                                    x =
+                                        180 - a
+                                in
                                 wrongChoicesInt x
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt x ++ "°") (List.map (\w -> w ++ "°") wrong) in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt x ++ "°") (List.map (\w -> w ++ "°") wrong)
+                                            in
                                             { prompt = "Two angles are supplementary. One measures " ++ String.fromInt a ++ "°. Find the other."
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -1953,8 +2808,12 @@ genVerticalAngles =
                 wrongChoicesInt a
                     |> Random.map
                         (\wrong ->
-                            let choices = shuffleChoices (String.fromInt a ++ "°") (List.map (\w -> w ++ "°") wrong) in
+                            let
+                                choices =
+                                    shuffleChoices (String.fromInt a ++ "°") (List.map (\w -> w ++ "°") wrong)
+                            in
                             { prompt = "Two lines intersect. One angle is " ++ String.fromInt a ++ "°. What is the vertical angle?"
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -1978,16 +2837,39 @@ genTriangleSum =
         |> Random.andThen
             (\( a, b ) ->
                 let
-                    c = 180 - a - b
-                    safeC = if c <= 0 then 30 else c
-                    safeA = if c <= 0 then 80 else a
-                    safeB = if c <= 0 then 70 else b
+                    c =
+                        180 - a - b
+
+                    safeC =
+                        if c <= 0 then
+                            30
+
+                        else
+                            c
+
+                    safeA =
+                        if c <= 0 then
+                            80
+
+                        else
+                            a
+
+                    safeB =
+                        if c <= 0 then
+                            70
+
+                        else
+                            b
                 in
                 wrongChoicesInt safeC
                     |> Random.map
                         (\wrong ->
-                            let choices = shuffleChoices (String.fromInt safeC ++ "°") (List.map (\w -> w ++ "°") wrong) in
+                            let
+                                choices =
+                                    shuffleChoices (String.fromInt safeC ++ "°") (List.map (\w -> w ++ "°") wrong)
+                            in
                             { prompt = "A triangle has angles " ++ String.fromInt safeA ++ "° and " ++ String.fromInt safeB ++ "°. Find the third angle."
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -2011,6 +2893,7 @@ genTriangleClassify =
                 case t of
                     0 ->
                         { prompt = "A triangle with all sides equal is called:"
+                        , visual = Nothing
                         , inputType = TChoice [ "Equilateral", "Isosceles", "Scalene", "Right" ]
                         , answer = AChoice 0
                         , hint =
@@ -2026,6 +2909,7 @@ genTriangleClassify =
 
                     1 ->
                         { prompt = "A triangle with exactly two equal sides is:"
+                        , visual = Nothing
                         , inputType = TChoice [ "Isosceles", "Equilateral", "Scalene", "Obtuse" ]
                         , answer = AChoice 0
                         , hint =
@@ -2037,6 +2921,7 @@ genTriangleClassify =
 
                     _ ->
                         { prompt = "A triangle with angles 90°, 45°, and 45° is what type by angles?"
+                        , visual = Nothing
                         , inputType = TChoice [ "Right", "Acute", "Obtuse", "Equilateral" ]
                         , answer = AChoice 0
                         , hint =
@@ -2056,20 +2941,37 @@ genTranslation : Generator Problem
 genTranslation =
     -- Translate a point by (dx, dy)
     Random.map4 (\x y dx dy -> { x = x, y = y, dx = dx, dy = dy })
-        (randInt -5 5) (randInt -5 5) (randInt -4 4) (randInt -4 4)
+        (randInt -5 5)
+        (randInt -5 5)
+        (randInt -4 4)
+        (randInt -4 4)
         |> Random.andThen
             (\r ->
                 let
-                    nx = r.x + r.dx
-                    ny = r.y + r.dy
-                    correct = "(" ++ String.fromInt nx ++ ", " ++ String.fromInt ny ++ ")"
-                    wrong1 = "(" ++ String.fromInt (nx + 1) ++ ", " ++ String.fromInt ny ++ ")"
-                    wrong2 = "(" ++ String.fromInt nx ++ ", " ++ String.fromInt (ny + 1) ++ ")"
-                    wrong3 = "(" ++ String.fromInt (r.x - r.dx) ++ ", " ++ String.fromInt (r.y - r.dy) ++ ")"
-                    choices = shuffleChoices correct [ wrong1, wrong2, wrong3 ]
+                    nx =
+                        r.x + r.dx
+
+                    ny =
+                        r.y + r.dy
+
+                    correct =
+                        "(" ++ String.fromInt nx ++ ", " ++ String.fromInt ny ++ ")"
+
+                    wrong1 =
+                        "(" ++ String.fromInt (nx + 1) ++ ", " ++ String.fromInt ny ++ ")"
+
+                    wrong2 =
+                        "(" ++ String.fromInt nx ++ ", " ++ String.fromInt (ny + 1) ++ ")"
+
+                    wrong3 =
+                        "(" ++ String.fromInt (r.x - r.dx) ++ ", " ++ String.fromInt (r.y - r.dy) ++ ")"
+
+                    choices =
+                        shuffleChoices correct [ wrong1, wrong2, wrong3 ]
                 in
                 Random.constant
                     { prompt = "Translate point (" ++ String.fromInt r.x ++ ", " ++ String.fromInt r.y ++ ") by (" ++ showSigned r.dx ++ ", " ++ showSigned r.dy ++ "). New point?"
+                    , visual = Nothing
                     , inputType = TChoice choices
                     , answer = AChoice 0
                     , hint =
@@ -2083,6 +2985,7 @@ genTranslation =
                         }
                     }
             )
+
 
 
 -- ── UNIT 7: Measurement ───────────────────────────────────────────────────
@@ -2099,12 +3002,19 @@ genPerimArea =
                         Random.map2 Tuple.pair (randInt 3 12) (randInt 3 12)
                             |> Random.andThen
                                 (\( w, h ) ->
-                                    let correct = 2 * (w + h) in
+                                    let
+                                        correct =
+                                            2 * (w + h)
+                                    in
                                     wrongChoicesInt correct
                                         |> Random.map
                                             (\wrong ->
-                                                let choices = shuffleChoices (String.fromInt correct) wrong in
+                                                let
+                                                    choices =
+                                                        shuffleChoices (String.fromInt correct) wrong
+                                                in
                                                 { prompt = "Perimeter of a rectangle with width " ++ String.fromInt w ++ " and height " ++ String.fromInt h ++ "?"
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -2125,6 +3035,7 @@ genPerimArea =
                             |> Random.map
                                 (\( w, h ) ->
                                     { prompt = "Area of rectangle: width=" ++ String.fromInt w ++ ", height=" ++ String.fromInt h ++ "?"
+                                    , visual = Nothing
                                     , inputType = TInteger
                                     , answer = AInt (w * h)
                                     , hint =
@@ -2140,8 +3051,12 @@ genPerimArea =
                         Random.map2 Tuple.pair (randInt 2 8) (randInt 1 6)
                             |> Random.map
                                 (\( bHalf, h ) ->
-                                    let b = bHalf * 2 in
+                                    let
+                                        b =
+                                            bHalf * 2
+                                    in
                                     { prompt = "Area of triangle: base=" ++ String.fromInt b ++ ", height=" ++ String.fromInt h ++ "?"
+                                    , visual = Nothing
                                     , inputType = TInteger
                                     , answer = AInt (b * h // 2)
                                     , hint =
@@ -2165,6 +3080,7 @@ genCircleCalc =
                             if t == 0 then
                                 -- Circumference
                                 { prompt = "Circumference of a circle with radius " ++ String.fromInt r ++ "? (use π≈3.14)"
+                                , visual = Nothing
                                 , inputType = TDecimal
                                 , answer = AFloat (2.0 * 3.14 * toFloat r) 0.1
                                 , hint =
@@ -2176,9 +3092,11 @@ genCircleCalc =
                                         ]
                                     }
                                 }
+
                             else
                                 -- Area
                                 { prompt = "Area of a circle with radius " ++ String.fromInt r ++ "? (use π≈3.14)"
+                                , visual = Nothing
                                 , inputType = TDecimal
                                 , answer = AFloat (3.14 * toFloat r * toFloat r) 0.5
                                 , hint =
@@ -2200,12 +3118,19 @@ genSurfaceAreaRect =
     Random.map3 (\l w h -> ( l, w, h )) (randInt 2 8) (randInt 2 8) (randInt 2 8)
         |> Random.andThen
             (\( l, w, h ) ->
-                let correct = 2 * (l * w + l * h + w * h) in
+                let
+                    correct =
+                        2 * (l * w + l * h + w * h)
+                in
                 wrongChoicesInt correct
                     |> Random.map
                         (\wrong ->
-                            let choices = shuffleChoices (String.fromInt correct) wrong in
+                            let
+                                choices =
+                                    shuffleChoices (String.fromInt correct) wrong
+                            in
                             { prompt = "Surface area of a rectangular prism: " ++ String.fromInt l ++ "×" ++ String.fromInt w ++ "×" ++ String.fromInt h ++ "?"
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -2232,10 +3157,14 @@ genSurfaceAreaCylinder =
                     |> Random.map
                         (\h ->
                             let
-                                pi_ = 3.14
-                                sa = 2.0 * pi_ * toFloat r * toFloat r + 2.0 * pi_ * toFloat r * toFloat h
+                                pi_ =
+                                    3.14
+
+                                sa =
+                                    2.0 * pi_ * toFloat r * toFloat r + 2.0 * pi_ * toFloat r * toFloat h
                             in
                             { prompt = "Surface area of a cylinder with radius " ++ String.fromInt r ++ " and height " ++ String.fromInt h ++ "? (use π≈3.14)"
+                            , visual = Nothing
                             , inputType = TDecimal
                             , answer = AFloat sa 1.0
                             , hint =
@@ -2243,8 +3172,11 @@ genSurfaceAreaCylinder =
                                 , answer = String.fromFloat sa
                                 , steps =
                                     let
-                                        topBottom = 2.0 * pi_ * toFloat r * toFloat r
-                                        side = 2.0 * pi_ * toFloat r * toFloat h
+                                        topBottom =
+                                            2.0 * pi_ * toFloat r * toFloat r
+
+                                        side =
+                                            2.0 * pi_ * toFloat r * toFloat h
                                     in
                                     [ "SA = 2πr² + 2πrh"
                                     , "= 2×3.14×" ++ String.fromInt (r * r) ++ " + 2×3.14×" ++ String.fromInt r ++ "×" ++ String.fromInt h
@@ -2262,6 +3194,7 @@ genVolumeRect =
         |> Random.map
             (\( l, w, h ) ->
                 { prompt = "Volume of rectangular prism: " ++ String.fromInt l ++ "×" ++ String.fromInt w ++ "×" ++ String.fromInt h ++ "?"
+                , visual = Nothing
                 , inputType = TInteger
                 , answer = AInt (l * w * h)
                 , hint =
@@ -2283,9 +3216,11 @@ genVolumeCylinder =
                     |> Random.map
                         (\h ->
                             let
-                                v = 3.14 * toFloat r * toFloat r * toFloat h
+                                v =
+                                    3.14 * toFloat r * toFloat r * toFloat h
                             in
                             { prompt = "Volume of a cylinder with radius " ++ String.fromInt r ++ " and height " ++ String.fromInt h ++ "? (use π≈3.14)"
+                            , visual = Nothing
                             , inputType = TDecimal
                             , answer = AFloat v 1.0
                             , hint =
@@ -2302,6 +3237,7 @@ genVolumeCylinder =
             )
 
 
+
 -- ── UNIT 8: Probability and Statistics ────────────────────────────────────
 
 
@@ -2316,9 +3252,11 @@ genSimpleProb =
                         |> Random.map
                             (\( fav, total ) ->
                                 let
-                                    ( rn, rd ) = reduceFraction fav total
+                                    ( rn, rd ) =
+                                        reduceFraction fav total
                                 in
                                 { prompt = "A bag has " ++ String.fromInt total ++ " marbles. " ++ String.fromInt fav ++ " are red. What is P(red)?"
+                                , visual = Nothing
                                 , inputType = TFraction
                                 , answer = AFraction rn rd
                                 , hint =
@@ -2331,6 +3269,7 @@ genSimpleProb =
                                     }
                                 }
                             )
+
                 else
                     -- Probability with a die
                     Random.int 0 2
@@ -2339,6 +3278,7 @@ genSimpleProb =
                                 case n of
                                     0 ->
                                         { prompt = "A fair 6-sided die is rolled. What is P(rolling a 4)?"
+                                        , visual = Nothing
                                         , inputType = TFraction
                                         , answer = AFraction 1 6
                                         , hint =
@@ -2354,6 +3294,7 @@ genSimpleProb =
 
                                     1 ->
                                         { prompt = "A fair 6-sided die is rolled. What is P(rolling an even number)?"
+                                        , visual = Nothing
                                         , inputType = TFraction
                                         , answer = AFraction 1 2
                                         , hint =
@@ -2369,6 +3310,7 @@ genSimpleProb =
 
                                     _ ->
                                         { prompt = "A fair 6-sided die is rolled. What is P(rolling a number > 4)?"
+                                        , visual = Nothing
                                         , inputType = TFraction
                                         , answer = AFraction 1 3
                                         , hint =
@@ -2395,12 +3337,19 @@ genCountingPrinciple =
                     Random.map2 Tuple.pair (randInt 2 5) (randInt 2 5)
                         |> Random.andThen
                             (\( a, b ) ->
-                                let correct = a * b in
+                                let
+                                    correct =
+                                        a * b
+                                in
                                 wrongChoicesInt correct
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt correct) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt correct) wrong
+                                            in
                                             { prompt = "A restaurant offers " ++ String.fromInt a ++ " main dishes and " ++ String.fromInt b ++ " drinks. How many different meal combinations are possible?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -2414,17 +3363,25 @@ genCountingPrinciple =
                                             }
                                         )
                             )
+
                 else
                     -- Tree diagram / 3-event counting
                     Random.map3 (\a b c -> ( a, b, c )) (randInt 2 4) (randInt 2 3) (randInt 2 3)
                         |> Random.andThen
                             (\( a, b, c ) ->
-                                let correct = a * b * c in
+                                let
+                                    correct =
+                                        a * b * c
+                                in
                                 wrongChoicesInt correct
                                     |> Random.map
                                         (\wrong ->
-                                            let choices = shuffleChoices (String.fromInt correct) wrong in
+                                            let
+                                                choices =
+                                                    shuffleChoices (String.fromInt correct) wrong
+                                            in
                                             { prompt = "A shirt comes in " ++ String.fromInt a ++ " colors, " ++ String.fromInt b ++ " sizes, and " ++ String.fromInt c ++ " styles. How many different shirts are possible?"
+                                            , visual = Nothing
                                             , inputType = TChoice choices
                                             , answer = AChoice 0
                                             , hint =
@@ -2449,6 +3406,7 @@ genCompoundProb =
                     -- P(A and B) independent: flip coin AND roll die
                     Random.constant
                         { prompt = "You flip a fair coin and roll a 6-sided die. What is P(heads AND rolling a 3)?"
+                        , visual = Nothing
                         , inputType = TFraction
                         , answer = AFraction 1 12
                         , hint =
@@ -2461,10 +3419,12 @@ genCompoundProb =
                                 ]
                             }
                         }
+
                 else
                     -- P(A or B) mutually exclusive
                     Random.constant
                         { prompt = "A bag has 3 red and 4 blue marbles (7 total). What is P(red or blue)?"
+                        , visual = Nothing
                         , inputType = TFraction
                         , answer = AFraction 1 1
                         , hint =
@@ -2490,22 +3450,34 @@ genMeanMedianMode =
                     0 ->
                         -- Mean
                         Random.map4 (\a b c d -> [ a, b, c, d ])
-                            (randInt 1 20) (randInt 1 20) (randInt 1 20) (randInt 1 20)
+                            (randInt 1 20)
+                            (randInt 1 20)
+                            (randInt 1 20)
+                            (randInt 1 20)
                             |> Random.andThen
                                 (\nums ->
                                     let
-                                        s = List.sum nums
-                                        n = List.length nums
-                                        correct = s // n
+                                        s =
+                                            List.sum nums
+
+                                        n =
+                                            List.length nums
+
+                                        correct =
+                                            s // n
                                     in
                                     wrongChoicesInt correct
                                         |> Random.map
                                             (\wrong ->
                                                 let
-                                                    numStr = String.join ", " (List.map String.fromInt nums)
-                                                    choices = shuffleChoices (String.fromInt correct) wrong
+                                                    numStr =
+                                                        String.join ", " (List.map String.fromInt nums)
+
+                                                    choices =
+                                                        shuffleChoices (String.fromInt correct) wrong
                                                 in
                                                 { prompt = "Mean of {" ++ numStr ++ "}?"
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -2523,22 +3495,34 @@ genMeanMedianMode =
                     1 ->
                         -- Median
                         Random.map4 (\a b c d -> List.sort [ a, b, c, d ])
-                            (randInt 1 20) (randInt 1 20) (randInt 1 20) (randInt 1 20)
+                            (randInt 1 20)
+                            (randInt 1 20)
+                            (randInt 1 20)
+                            (randInt 1 20)
                             |> Random.andThen
                                 (\sorted ->
                                     let
-                                        mid1 = List.drop 1 sorted |> List.head |> Maybe.withDefault 0
-                                        mid2 = List.drop 2 sorted |> List.head |> Maybe.withDefault 0
-                                        correct = (mid1 + mid2) // 2
+                                        mid1 =
+                                            List.drop 1 sorted |> List.head |> Maybe.withDefault 0
+
+                                        mid2 =
+                                            List.drop 2 sorted |> List.head |> Maybe.withDefault 0
+
+                                        correct =
+                                            (mid1 + mid2) // 2
                                     in
                                     wrongChoicesInt correct
                                         |> Random.map
                                             (\wrong ->
                                                 let
-                                                    numStr = String.join ", " (List.map String.fromInt sorted)
-                                                    choices = shuffleChoices (String.fromInt correct) wrong
+                                                    numStr =
+                                                        String.join ", " (List.map String.fromInt sorted)
+
+                                                    choices =
+                                                        shuffleChoices (String.fromInt correct) wrong
                                                 in
                                                 { prompt = "Median of {" ++ numStr ++ "}?"
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -2556,18 +3540,27 @@ genMeanMedianMode =
                     _ ->
                         -- Mode
                         Random.map3 (\mode other1 other2 -> List.sort [ mode, mode, other1, other2, other1 + 1 ])
-                            (randInt 5 15) (randInt 1 4) (randInt 16 20)
+                            (randInt 5 15)
+                            (randInt 1 4)
+                            (randInt 16 20)
                             |> Random.andThen
                                 (\nums ->
                                     let
-                                        correct = nums |> List.head |> Maybe.withDefault 0
-                                        numStr = String.join ", " (List.map String.fromInt nums)
+                                        correct =
+                                            nums |> List.head |> Maybe.withDefault 0
+
+                                        numStr =
+                                            String.join ", " (List.map String.fromInt nums)
                                     in
                                     wrongChoicesInt correct
                                         |> Random.map
                                             (\wrong ->
-                                                let choices = shuffleChoices (String.fromInt correct) wrong in
+                                                let
+                                                    choices =
+                                                        shuffleChoices (String.fromInt correct) wrong
+                                                in
                                                 { prompt = "Mode of {" ++ numStr ++ "}? (most frequent)"
+                                                , visual = Nothing
                                                 , inputType = TChoice choices
                                                 , answer = AChoice 0
                                                 , hint =
@@ -2589,22 +3582,34 @@ genBoxWhisker : Generator Problem
 genBoxWhisker =
     -- Q1, Q2(median), Q3 of a sorted set
     Random.map4 (\a b c d -> List.sort [ a, b, c, d ])
-        (randInt 1 10) (randInt 11 20) (randInt 21 30) (randInt 31 40)
+        (randInt 1 10)
+        (randInt 11 20)
+        (randInt 21 30)
+        (randInt 31 40)
         |> Random.andThen
             (\sorted ->
                 let
-                    q1 = List.head sorted |> Maybe.withDefault 0
-                    q3 = List.drop 3 sorted |> List.head |> Maybe.withDefault 0
-                    iqr = q3 - q1
+                    q1 =
+                        List.head sorted |> Maybe.withDefault 0
+
+                    q3 =
+                        List.drop 3 sorted |> List.head |> Maybe.withDefault 0
+
+                    iqr =
+                        q3 - q1
                 in
                 wrongChoicesInt iqr
                     |> Random.map
                         (\wrong ->
                             let
-                                numStr = String.join ", " (List.map String.fromInt sorted)
-                                choices = shuffleChoices (String.fromInt iqr) wrong
+                                numStr =
+                                    String.join ", " (List.map String.fromInt sorted)
+
+                                choices =
+                                    shuffleChoices (String.fromInt iqr) wrong
                             in
                             { prompt = "For data {" ++ numStr ++ "}: Q1=" ++ String.fromInt q1 ++ ", Q3=" ++ String.fromInt q3 ++ ". Find the IQR (interquartile range)."
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -2626,12 +3631,19 @@ genStemLeaf =
     Random.map2 Tuple.pair (randInt 2 7) (randInt 0 9)
         |> Random.andThen
             (\( stem, leaf ) ->
-                let value = stem * 10 + leaf in
+                let
+                    value =
+                        stem * 10 + leaf
+                in
                 wrongChoicesInt value
                     |> Random.map
                         (\wrong ->
-                            let choices = shuffleChoices (String.fromInt value) wrong in
+                            let
+                                choices =
+                                    shuffleChoices (String.fromInt value) wrong
+                            in
                             { prompt = "In a stem-and-leaf plot, stem=" ++ String.fromInt stem ++ " and leaf=" ++ String.fromInt leaf ++ ". What number does this represent?"
+                            , visual = Nothing
                             , inputType = TChoice choices
                             , answer = AChoice 0
                             , hint =
@@ -2648,6 +3660,7 @@ genStemLeaf =
             )
 
 
+
 -- ── HELPERS ───────────────────────────────────────────────────────────────
 
 
@@ -2660,6 +3673,7 @@ showSigned : Int -> String
 showSigned n =
     if n < 0 then
         "(" ++ String.fromInt n ++ ")"
+
     else
         String.fromInt n
 
@@ -2667,12 +3681,23 @@ showSigned n =
 superscript : Int -> String
 superscript n =
     case n of
-        2 -> "²"
-        3 -> "³"
-        4 -> "⁴"
-        5 -> "⁵"
-        6 -> "⁶"
-        _ -> "^" ++ String.fromInt n
+        2 ->
+            "²"
+
+        3 ->
+            "³"
+
+        4 ->
+            "⁴"
+
+        5 ->
+            "⁵"
+
+        6 ->
+            "⁶"
+
+        _ ->
+            "^" ++ String.fromInt n
 
 
 shuffleChoices : String -> List String -> List String

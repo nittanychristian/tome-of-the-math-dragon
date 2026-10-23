@@ -1,9 +1,10 @@
 module View.Map exposing (viewMap)
 
 import Game.Curriculum as Curriculum
-import Html exposing (Html, button, div, text)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Game.Elementary as Elementary
+import Html exposing (Html, button, div, option, p, select, text)
+import Html.Attributes exposing (disabled, selected, style, value)
+import Html.Events exposing (onClick, onInput)
 import Types exposing (Course(..), Msg(..), UnitId, UnitSlot(..))
 import View.Theme as T
 
@@ -19,6 +20,23 @@ viewMap playerName course highestUnlocked =
         , style "gap" "12px"
         ]
         [ header playerName course highestUnlocked
+        , select
+            [ onInput (\raw -> String.toInt raw |> Maybe.andThen (\i -> List.drop i Curriculum.allCourses |> List.head) |> Maybe.map GoToAct |> Maybe.withDefault NoOp)
+            , style "width" "100%"
+            , style "padding" "10px"
+            , style "background" T.bgDark
+            , style "color" T.cream
+            , style "font-family" T.fontFamily
+            , style "font-size" "11px"
+            , Html.Attributes.attribute "aria-label" "Choose your grade or course"
+            ]
+            (List.indexedMap (\i c -> option [ value (String.fromInt i), selected (c == course), disabled (not (Curriculum.isUnlocked (Curriculum.firstUnit c) highestUnlocked)) ] [ text (Curriculum.courseName c) ]) Curriculum.allCourses)
+        , case course of
+            Elementary grade ->
+                p [ style "color" T.cream, style "font-size" "11px", style "line-height" "1.8", style "margin" "0" ] [ text (Elementary.introduction grade) ]
+
+            _ ->
+                text ""
         , unitList course highestUnlocked
         , div [ style "display" "flex", style "justify-content" "flex-end" ]
             [ button
@@ -40,22 +58,28 @@ viewMap playerName course highestUnlocked =
 header : String -> Course -> UnitId -> Html Msg
 header playerName course highestUnlocked =
     let
+        adjacent offset =
+            Curriculum.allCourses
+                |> List.indexedMap Tuple.pair
+                |> List.filter (\( _, c ) -> c == course)
+                |> List.head
+                |> Maybe.andThen
+                    (\( i, _ ) ->
+                        if i + offset < 0 then
+                            Nothing
+
+                        else
+                            List.drop (i + offset) Curriculum.allCourses |> List.head
+                    )
+
         prevCourse =
-            case course of
-                Course1 -> Nothing
-                Course2 -> Just Course1
-                PreAlgebra -> Just Course2
-                Algebra1 -> Just PreAlgebra
+            adjacent -1
 
         nextCourse =
-            case course of
-                Course1 -> Just Course2
-                Course2 -> Just PreAlgebra
-                PreAlgebra -> Just Algebra1
-                Algebra1 -> Nothing
+            adjacent 1
 
         actUnlocked c =
-            compareUnits (Curriculum.firstUnit c) highestUnlocked /= GT
+            Curriculum.isUnlocked (Curriculum.firstUnit c) highestUnlocked
 
         navBtn label maybeCourse =
             case maybeCourse of
@@ -75,6 +99,7 @@ header playerName course highestUnlocked =
                             , style "padding" "0 4px"
                             ]
                             [ text label ]
+
                     else
                         div [ style "width" "48px" ] []
     in
@@ -109,6 +134,9 @@ header playerName course highestUnlocked =
 courseLabel : Course -> String
 courseLabel course =
     case course of
+        Elementary grade ->
+            "GRADE " ++ String.fromInt grade
+
         Course1 ->
             "ACT I"
 
@@ -129,7 +157,7 @@ unitList course highestUnlocked =
             Curriculum.unitsForCourse course
 
         isUnlocked uid =
-            compareUnits uid highestUnlocked /= GT
+            Curriculum.isUnlocked uid highestUnlocked
 
         isCompleted uid =
             compareUnits uid highestUnlocked == LT
@@ -151,11 +179,14 @@ unitList course highestUnlocked =
 
 chapterPrefix : UnitId -> String
 chapterPrefix uid =
-    case uid.unit of
-        Unit n ->
+    case ( uid.course, uid.unit ) of
+        ( Elementary grade, _ ) ->
+            "Grade " ++ String.fromInt grade ++ ": "
+
+        ( _, Unit n ) ->
             "Ch." ++ String.fromInt n ++ ": "
 
-        MegaBoss ->
+        ( _, MegaBoss ) ->
             "MEGA: "
 
 
@@ -240,23 +271,5 @@ unitButton uid unlocked completed =
 
 
 compareUnits : UnitId -> UnitId -> Order
-compareUnits a b =
-    let
-        courseRank c =
-            case c of
-                Course1 -> 0
-                Course2 -> 1
-                PreAlgebra -> 2
-                Algebra1 -> 3
-
-        slotRank s =
-            case s of
-                Unit n -> n
-                MegaBoss -> 99
-    in
-    case compare (courseRank a.course) (courseRank b.course) of
-        EQ ->
-            compare (slotRank a.unit) (slotRank b.unit)
-
-        other ->
-            other
+compareUnits =
+    Curriculum.compareUnits

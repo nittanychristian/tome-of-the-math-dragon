@@ -5,6 +5,7 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Types exposing (BattleState, HelpState, Msg(..))
 import View.Math exposing (renderMath)
+import View.ProblemVisual as ProblemVisual
 import View.Theme as T
 import View.Window as W
 
@@ -18,9 +19,10 @@ viewHelp helpState battleState =
         , style "height" "100%"
         , style "padding" "16px"
         , style "gap" "16px"
+        , style "overflow-y" "auto"
         ]
         [ header
-        , hintSection helpState
+        , hintSection helpState battleState
         , stepSection helpState
         , buttons helpState
         ]
@@ -38,9 +40,9 @@ header =
         [ text "THE TOME SPEAKS..." ]
 
 
-hintSection : HelpState -> Html Msg
-hintSection helpState =
-    W.windowTitle "SIMILAR PROBLEM"
+hintSection : HelpState -> BattleState -> Html Msg
+hintSection helpState battleState =
+    W.windowTitle "THE PROBLEM"
         [ p
             [ style "font-family" T.fontFamily
             , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
@@ -49,6 +51,7 @@ hintSection helpState =
             , style "white-space" "pre-wrap"
             ]
             [ renderMath helpState.hint.prompt ]
+        , ProblemVisual.view battleState.problem.visual
         , p
             [ style "font-family" T.fontFamily
             , style "font-size" (String.fromInt T.fontSizeNormal ++ "px")
